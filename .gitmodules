@@ -1,0 +1,9 @@
+[submodule "modules/utils"]
+	path = modules/utils
+	url = https://dirk_vdb@bitbucket.org/dirk_vdb/utils.git
+[submodule "modules/upnp"]
+	path = modules/upnp
+	url = https://dirk_vdb@bitbucket.org/dirk_vdb/upnpframework.git
+[submodule "modules/audio"]
+	path = modules/audio
+	url = https://dirk_vdb@bitbucket.org/dirk_vdb/audio.git
