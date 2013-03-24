@@ -21,9 +21,13 @@
 
 #include "utils/log.h"
 
+#include "doozy.h"
+
 static bool set_signal_handlers();
 
 using namespace utils;
+
+static doozy::Doozy d;
 
 int main(int argc, char **argv)
 {
@@ -35,13 +39,24 @@ int main(int argc, char **argv)
 #endif
 
     log::info("Doozy");
+    
+    d.run();
 
+    log::info("Bye");
+    
     return 0;
 }
 
 static void sigterm(int signo)
 {
-    // TODO: cancel running threads
+    try
+    {
+        d.stop();
+    }
+    catch (std::exception& e)
+    {
+        log::error(e.what());
+    }    
 }
 
 #ifndef WIN32

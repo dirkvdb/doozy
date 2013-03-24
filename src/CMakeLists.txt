@@ -22,7 +22,10 @@ SET(LINK_LIBS
     ${UPNPFRAMEWORK_LIBRARIES}
 )
 
-ADD_EXECUTABLE(doozy main.cpp)
+ADD_EXECUTABLE(doozy
+    main.cpp
+    devicedescriptions.h
+    doozy.h doozy.cpp)
 
 TARGET_LINK_LIBRARIES(doozy ${LINK_LIBS})
 INSTALL(TARGETS doozy RUNTIME DESTINATION bin)
