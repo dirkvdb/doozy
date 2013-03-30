@@ -26,7 +26,6 @@ ADD_EXECUTABLE(doozy
     main.cpp
     devicedescriptions.h
     doozy.h                     doozy.cpp
-    httpreaderbuilder.h
     mediarendererdevice.h       mediarendererdevice.cpp
     playqueue.h                 playqueue.cpp
 )
