@@ -77,14 +77,18 @@ void PlayQueue::clear()
 
 bool PlayQueue::getNextTrack(std::string& track)
 {
+    // The first item in the playlist is the item that is currently being played
+
     std::lock_guard<std::mutex> lock(m_TracksMutex);
-    if (m_Tracks.empty())
+    if (m_Tracks.size() <= 1)
     {
         return false;
     }
-
-    track = m_Tracks.front();
+    
+    // A new track will be played, so pop the current one
     m_Tracks.pop_front();
+    track = m_Tracks.front();
+    
     return true;
 }
 
