@@ -25,7 +25,11 @@ SET(LINK_LIBS
 ADD_EXECUTABLE(doozy
     main.cpp
     devicedescriptions.h
-    doozy.h doozy.cpp)
+    doozy.h                     doozy.cpp
+    httpreaderbuilder.h
+    mediarendererdevice.h       mediarendererdevice.cpp
+    playqueue.h                 playqueue.cpp
+)
 
 TARGET_LINK_LIBRARIES(doozy ${LINK_LIBS})
 INSTALL(TARGETS doozy RUNTIME DESTINATION bin)
