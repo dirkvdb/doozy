@@ -54,7 +54,7 @@ void PlayQueue::addTrack(const std::string& trackUri)
         
         log::debug("Number of tracks in m3u: %d", uris.size());
         
-        std::lock_guard<std::mutex> lock(m_TracksMutex);
+        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
         for (auto& uri : uris)
         {
             m_Tracks.push_back(uri);
@@ -63,7 +63,7 @@ void PlayQueue::addTrack(const std::string& trackUri)
     }
     else
     {
-        std::lock_guard<std::mutex> lock(m_TracksMutex);
+        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
         m_Tracks.push_back(trackUri);
         log::debug("Track queued: %s", trackUri);
     }
@@ -71,30 +71,57 @@ void PlayQueue::addTrack(const std::string& trackUri)
 
 void PlayQueue::clear()
 {
-    std::lock_guard<std::mutex> lock(m_TracksMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
     m_Tracks.clear();
+    QueueChanged();
 }
 
-bool PlayQueue::getNextTrack(std::string& track)
+std::string PlayQueue::currentTrack() const
+{
+    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+    if (m_Tracks.empty())
+    {
+        return "";
+    }
+    
+    return m_Tracks.front();
+}
+
+std::string PlayQueue::nextTrack() const
+{
+    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+    if (m_Tracks.size() <= 1)
+    {
+        return "";
+    }
+    
+    return m_Tracks[1];
+}
+
+bool PlayQueue::dequeueNextTrack(std::string& track)
 {
     // The first item in the playlist is the item that is currently being played
 
-    std::lock_guard<std::mutex> lock(m_TracksMutex);
-    if (m_Tracks.size() <= 1)
     {
-        return false;
+        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+        if (m_Tracks.size() <= 1)
+        {
+            return false;
+        }
+        
+        // A new track will be played, so pop the current one
+        m_Tracks.pop_front();
+        track = m_Tracks.front();
     }
     
-    // A new track will be played, so pop the current one
-    m_Tracks.pop_front();
-    track = m_Tracks.front();
+    QueueChanged();
     
     return true;
 }
 
 size_t PlayQueue::getNumberOfTracks() const
 {
-    std::lock_guard<std::mutex> lock(m_TracksMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
     return m_Tracks.size();
 }
 

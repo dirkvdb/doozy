@@ -19,11 +19,10 @@
 
 #include "utils/subscriber.h"
 #include "utils/types.h"
+#include "utils/signal.h"
 #include "audio/audioplaylistinterface.h"
 
-#include <list>
-#include <vector>
-#include <map>
+#include <deque>
 #include <string>
 #include <mutex>
 
@@ -37,18 +36,22 @@ public:
     virtual ~PlayQueue();
 
     void addTrack(const std::string& track);
-
     void clear();
     
+    std::string currentTrack() const;
+    std::string nextTrack() const;
+    
     // IPlaylist
-    virtual bool getNextTrack(std::string& track);
+    virtual bool dequeueNextTrack(std::string& track);
     size_t getNumberOfTracks() const;
+    
+    utils::Signal<void()> QueueChanged;
 
 private:
-    std::list<std::string>              m_Tracks;
+    std::deque<std::string>             m_Tracks;
     std::map<std::string, int32_t>		m_IndexMap;
 
-    mutable std::mutex                  m_TracksMutex;
+    mutable std::recursive_mutex        m_TracksMutex;
     std::mutex                          m_SubscribersMutex;
 
     bool                                m_Destroy;

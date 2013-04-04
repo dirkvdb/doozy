@@ -28,6 +28,7 @@ ADD_EXECUTABLE(doozy
     doozy.h                     doozy.cpp
     mediarendererdevice.h       mediarendererdevice.cpp
     playqueue.h                 playqueue.cpp
+    typeconversions.h
 )
 
 TARGET_LINK_LIBRARIES(doozy ${LINK_LIBS})

@@ -22,6 +22,8 @@
 
 #include "audio/audioplaybackfactory.h"
 
+#include "typeconversions.h"
+
 #include <sstream>
 
 using namespace utils;
@@ -76,6 +78,21 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
     
     m_Playback->AvailableActionsChanged.connect([this] (const std::set<PlaybackAction>& actions) {
         m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTransportActions, toString(actions));
+    }, this);
+    
+    m_Playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, toString(state));
+    }, this);
+    
+    m_Playback->ProgressChanged.connect([this] (double progress) {
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(progress));
+    }, this);
+    
+    m_Queue.QueueChanged.connect([this] () {
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackURI, m_Queue.currentTrack());
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NextAVTransportURI, m_Queue.nextTrack());
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NumberOfTracks, std::to_string(m_Queue.getNumberOfTracks()));
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(m_Playback->getDuration()));
     }, this);
 }
 
@@ -138,6 +155,14 @@ void MediaRendererDevice::setInitialValues()
     m_RenderingControl.setMute(0, RenderingControl::Channel::Master, m_Playback->getMute());
     
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTransportActions, toString(m_Playback->getAvailableActions()));
+    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::PlaybackStorageMedium, "NETWORK");
+    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, toString(m_Playback->getState()));
+    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, toString(AVTransport::Status::Ok));
+    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentPlayMode, toString(AVTransport::PlayMode::Normal));
+    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NumberOfTracks, std::to_string(m_Queue.getNumberOfTracks()));
+    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(0));
+    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(0));
+    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::AbsoluteTimePosition, "NOT_IMPLEMENTED");
 }
     
 void MediaRendererDevice::onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest)
@@ -275,24 +300,13 @@ void MediaRendererDevice::setAVTransportURI(uint32_t instanceId, const std::stri
     try
     {
         log::info("Play uri (%d): %s", instanceId, uri);
+        m_Queue.clear();
         m_Queue.addTrack(uri);
-        
-        m_AVTransport.setVariable(AVTransport::Variable::CurrentTrackURI, uri);
-        m_AVTransport.setVariable(AVTransport::Variable::CurrentTrackMetaData, metaData);
-        
-        // setting the current uri, overwrites queued items
-        m_AVTransport.setVariable(AVTransport::Variable::NextAVTransportURI, "");
-        m_AVTransport.setVariable(AVTransport::Variable::NextAVTransportURIMetaData, "");
     }
     catch (std::exception& e)
     {
         log::error(e.what());
         throw AVTransport::IllegalMimeTypeException();
-        
-        m_AVTransport.setVariable(AVTransport::Variable::CurrentTrackURI, "");
-        m_AVTransport.setVariable(AVTransport::Variable::CurrentTrackMetaData, "");
-        m_AVTransport.setVariable(AVTransport::Variable::NextAVTransportURI, "");
-        m_AVTransport.setVariable(AVTransport::Variable::NextAVTransportURIMetaData, "");
     }
 }
 
@@ -318,11 +332,13 @@ void MediaRendererDevice::seek(uint32_t instanceId, upnp::AVTransport::SeekMode 
 void MediaRendererDevice::next(uint32_t instanceId)
 {
     throwOnBadInstanceId(instanceId);
+    m_Playback->next();
 }
 
 void MediaRendererDevice::previous(uint32_t instanceId)
 {
     throwOnBadInstanceId(instanceId);
+    m_Playback->prev();
 }
 
 void MediaRendererDevice::pause(uint32_t instanceId)
