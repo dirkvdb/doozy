@@ -48,7 +48,7 @@ std::string toString(const std::set<PlaybackAction>& actions)
 }
 
 MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds)
-: m_Playback(PlaybackFactory::create("FFmpeg", "OpenAL", m_Queue))
+: m_Playback(PlaybackFactory::create("FFmpeg", "OpenAL", "default", m_Queue))
 , m_RootDevice(udn, descriptionXml, advertiseIntervalInSeconds)
 , m_ConnectionManager(m_RootDevice, *this)
 , m_RenderingControl(m_RootDevice, *this)
