@@ -38,7 +38,6 @@ public:
     void addTrack(const std::string& track);
     void clear();
     
-    std::string currentTrack() const;
     std::string nextTrack() const;
     
     // IPlaylist

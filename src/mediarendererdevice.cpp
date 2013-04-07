@@ -88,8 +88,11 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
         m_AVTransport.setInstanceVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(progress));
     }, this);
     
+    m_Playback->NewTrackStarted.connect([this] (const std::string& track) {
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackURI, track);
+    }, this);
+    
     m_Queue.QueueChanged.connect([this] () {
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackURI, m_Queue.currentTrack());
         m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NextAVTransportURI, m_Queue.nextTrack());
         m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NumberOfTracks, std::to_string(m_Queue.getNumberOfTracks()));
         m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(m_Playback->getDuration()));
@@ -301,6 +304,24 @@ void MediaRendererDevice::setAVTransportURI(uint32_t instanceId, const std::stri
     {
         log::info("Play uri (%d): %s", instanceId, uri);
         m_Queue.clear();
+        m_Queue.addTrack(uri);
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackURI, uri);
+    }
+    catch (std::exception& e)
+    {
+        log::error(e.what());
+        throw AVTransport::IllegalMimeTypeException();
+    }
+}
+
+void MediaRendererDevice::setNextAVTransportURI(uint32_t instanceId, const std::string& uri, const std::string& metaData)
+{
+    try
+    {
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NextAVTransportURI, uri);
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NextAVTransportURIMetaData, metaData);
+    
+        // This will not work in all cases, think of something better
         m_Queue.addTrack(uri);
     }
     catch (std::exception& e)

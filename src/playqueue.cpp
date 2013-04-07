@@ -48,24 +48,20 @@ void PlayQueue::addTrack(const std::string& trackUri)
     {
         upnp::HttpClient client(5);
         auto m3ufile = client.getText(trackUri);
-        log::debug("m3u: %s", m3ufile);
-        
         auto uris = audio::M3uParser::parseFileContents(m3ufile);
-        
-        log::debug("Number of tracks in m3u: %d", uris.size());
         
         std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
         for (auto& uri : uris)
         {
             m_Tracks.push_back(uri);
-            log::debug("Track queued: %s", uri);
+            log::info("Track queued: %s", uri);
         }
     }
     else
     {
         std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
         m_Tracks.push_back(trackUri);
-        log::debug("Track queued: %s", trackUri);
+        log::info("Track queued: %s", trackUri);
     }
 }
 
@@ -76,7 +72,7 @@ void PlayQueue::clear()
     QueueChanged();
 }
 
-std::string PlayQueue::currentTrack() const
+std::string PlayQueue::nextTrack() const
 {
     std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
     if (m_Tracks.empty())
@@ -87,31 +83,17 @@ std::string PlayQueue::currentTrack() const
     return m_Tracks.front();
 }
 
-std::string PlayQueue::nextTrack() const
-{
-    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
-    if (m_Tracks.size() <= 1)
-    {
-        return "";
-    }
-    
-    return m_Tracks[1];
-}
-
 bool PlayQueue::dequeueNextTrack(std::string& track)
 {
-    // The first item in the playlist is the item that is currently being played
-
     {
         std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
-        if (m_Tracks.size() <= 1)
+        if (m_Tracks.empty())
         {
             return false;
         }
         
-        // A new track will be played, so pop the current one
-        m_Tracks.pop_front();
         track = m_Tracks.front();
+        m_Tracks.pop_front();
     }
     
     QueueChanged();

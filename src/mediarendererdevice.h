@@ -55,6 +55,7 @@ public:
     
     //IAVTransport
     virtual void setAVTransportURI(uint32_t instanceId, const std::string& uri, const std::string& metaData);
+    virtual void setNextAVTransportURI(uint32_t instanceId, const std::string& uri, const std::string& metaData);
     virtual void stop(uint32_t instanceId);
     virtual void play(uint32_t instanceId, const std::string& speed);
     virtual void seek(uint32_t instanceId, upnp::AVTransport::SeekMode mode, const std::string& target);
