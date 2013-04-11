@@ -42,7 +42,11 @@ void Doozy::run()
     
         m_Client.initialize();
         
-        std::string description = format(g_mediaRendererDevice.c_str(), m_Client.getIpAddress(), m_Client.getPort());
+        std::string friendlyName = "Doozy";
+        std::string udn = "uuid:356a6e90-8e58-11e2-9e96-0800200c9a66";
+        
+        std::string description = format(g_mediaRendererDevice.c_str(), m_Client.getIpAddress(), m_Client.getPort(),
+                                                                        friendlyName, udn);
         
         upnp::WebServer webserver("/opt/");
         
@@ -51,7 +55,7 @@ void Doozy::run()
         addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
         addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
         
-        MediaRendererDevice dev("uuid:356a6e90-8e58-11e2-9e96-0800200c9a66", description, 180);
+        MediaRendererDevice dev(udn, description, 180);
         dev.start();
         
         std::unique_lock<std::mutex> lock(m_Mutex);

@@ -18,6 +18,7 @@
 #include <cerrno>
 #include <string>
 #include <cstring>
+#include <execinfo.h>
 
 #include "utils/log.h"
 
@@ -51,12 +52,23 @@ static void sigterm(int signo)
 {
     try
     {
+        log::info("Sigterm %d", signo);
         d.stop();
     }
     catch (std::exception& e)
     {
         log::error(e.what());
     }    
+}
+
+static void sigsegv(int signo)
+{
+    void* array[20];
+    size_t size = backtrace(array, 20);
+    
+    log::critical("Segfault: %d", signo);
+    backtrace_symbols_fd(array, size, 2);
+    exit(1);
 }
 
 #ifndef WIN32
@@ -99,6 +111,8 @@ static bool set_signal_handlers()
         log::error("Can't catch SIGTERM: %s", strerror(errno));
         return false;
     }
+    
+    signal(SIGSEGV, sigsegv);
 
     return true;
 }
