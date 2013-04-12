@@ -37,7 +37,8 @@ class MediaRendererDevice : public upnp::IConnectionManager
                           , public upnp::IAVTransport
 {
 public:
-    MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds);
+    MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
+                        const std::string& audioOutput, const std::string& audioDevice);
     MediaRendererDevice(const MediaRendererDevice&) = delete;
     
     void start();

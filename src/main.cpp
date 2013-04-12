@@ -14,13 +14,18 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+#define _XOPEN_SOURCE
+
 #include <csignal>
 #include <cerrno>
 #include <string>
 #include <cstring>
+#include <unistd.h>
 #include <execinfo.h>
+#include <ucontext.h>
 
 #include "utils/log.h"
+#include "crashhandler.h"
 
 #include "doozy.h"
 
@@ -41,7 +46,29 @@ int main(int argc, char **argv)
 
     log::info("Doozy");
     
-    d.run();
+    int option;
+    bool daemonize = false;
+    std::string configFile;
+    
+    while ((option = getopt (argc, argv, "f:d")) != -1)
+    {
+        switch (option)
+        {
+        case 'f':
+            configFile = optarg != nullptr ? optarg : "";
+            break;
+        case 'd':
+            daemonize = true;
+            break;
+        case '?':
+        default:
+            log::error("invalid arguments");
+            //printUsage();
+            return -1;
+        }
+    }
+    
+    d.run(configFile);
 
     log::info("Bye");
     
@@ -59,16 +86,6 @@ static void sigterm(int signo)
     {
         log::error(e.what());
     }    
-}
-
-static void sigsegv(int signo)
-{
-    void* array[20];
-    size_t size = backtrace(array, 20);
-    
-    log::critical("Segfault: %d", signo);
-    backtrace_symbols_fd(array, size, 2);
-    exit(1);
 }
 
 #ifndef WIN32
@@ -112,7 +129,15 @@ static bool set_signal_handlers()
         return false;
     }
     
-    signal(SIGSEGV, sigsegv);
+    sigemptyset(&sa.sa_mask);
+    sa.sa_sigaction = doozy::sigsegv;
+    sa.sa_flags = SA_RESTART | SA_SIGINFO;
+    
+    if (sigaction(SIGSEGV, &sa, nullptr) < 0)
+    {
+        log::error("Can't catch SIGSEGV: %s", strerror(errno));
+        return false;
+    }
 
     return true;
 }

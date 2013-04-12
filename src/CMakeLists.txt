@@ -1,6 +1,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -rdynamic -O0 -Wall -Werror -Wfatal-errors -Wno-deprecated-declarations")
+IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Gcc")
+    SET(CMAKE_CXX_FLAGS_DEBUG "-rdynamic ")
+ENDIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Gcc")
+
+SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -Wall -Wfatal-errors")
 
 INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -24,10 +28,12 @@ SET(LINK_LIBS
 
 ADD_EXECUTABLE(doozy
     main.cpp
+    crashhandler.h
     devicedescriptions.h
     doozy.h                     doozy.cpp
     mediarendererdevice.h       mediarendererdevice.cpp
     playqueue.h                 playqueue.cpp
+    settings.h                  settings.cpp
     typeconversions.h
 )
 

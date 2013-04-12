@@ -35,7 +35,7 @@ namespace doozy
 class Doozy
 {
 public:
-    void run();
+    void run(const std::string& configFile);
     void stop();
     
 private:
