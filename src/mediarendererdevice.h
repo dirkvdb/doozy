@@ -19,6 +19,8 @@
 
 #include <memory>
 
+#include "utils/workerthread.h"
+
 #include "upnp/upnprootdevice.h"
 #include "upnp/upnpdeviceservice.h"
 #include "upnp/upnpactionresponse.h"
@@ -66,6 +68,8 @@ public:
     
 private:
     void setInitialValues();
+    void setTransportVariable(uint32_t instanceId, upnp::AVTransport::Variable var, const std::string& value);
+    
     void onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest);
     void onControlActionRequest(Upnp_Action_Request* pRequest);
     bool supportsProtocol(const upnp::ProtocolInfo& info) const;
@@ -84,6 +88,8 @@ private:
     
     std::vector<upnp::ProtocolInfo>             m_SupportedProtocols;
     upnp::ConnectionManager::ConnectionInfo     m_CurrentConnectionInfo;
+    
+    utils::WorkerThread                         m_Thread;
 };
 
 

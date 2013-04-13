@@ -31,6 +31,28 @@ using namespace utils;
 namespace doozy
 {
 
+PlayQueueItem::PlayQueueItem(const std::string& avTransportUri)
+: m_TrackUri(avTransportUri)
+, m_AVTransportUri(avTransportUri)
+{
+}
+
+PlayQueueItem::PlayQueueItem(const std::string& trackUri, const std::string& avTransportUri)
+: m_TrackUri(trackUri)
+, m_AVTransportUri(avTransportUri)
+{
+}
+
+std::string PlayQueueItem::getUri() const
+{
+    return m_TrackUri;
+}
+
+std::string PlayQueueItem::getAVTransportUri() const
+{
+    return m_AVTransportUri;
+}
+
 PlayQueue::PlayQueue()
 : m_Destroy(false)
 {
@@ -41,70 +63,114 @@ PlayQueue::~PlayQueue()
     m_Destroy = true;
 }
 
-void PlayQueue::addTrack(const std::string& trackUri)
+static std::deque<PlayQueueItemPtr> getTracksFromUri(const std::string& transportUri)
 {
-    const std::string extension = fileops::getFileExtension(trackUri);
+    std::deque<PlayQueueItemPtr> items;
+
+    const std::string extension = fileops::getFileExtension(transportUri);
     if (stringops::lowercase(extension) == "m3u")
     {
         upnp::HttpClient client(5);
-        auto m3ufile = client.getText(trackUri);
+        auto m3ufile = client.getText(transportUri);
         auto uris = audio::M3uParser::parseFileContents(m3ufile);
         
-        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
         for (auto& uri : uris)
         {
-            m_Tracks.push_back(uri);
-            log::info("Track queued: %s", uri);
+            items.push_back(std::make_shared<PlayQueueItem>(uri, transportUri));
         }
     }
     else
     {
-        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
-        m_Tracks.push_back(trackUri);
-        log::info("Track queued: %s", trackUri);
+        items.push_back(std::make_shared<PlayQueueItem>(transportUri));
     }
+    
+    return items;
+}
+
+void PlayQueue::setCurrentUri(const std::string& avTransportUri)
+{
+    {
+        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+        m_CurrenURITracks = getTracksFromUri(avTransportUri);
+    }
+    
+    CurrentTransportUriChanged(avTransportUri);
+    QueueChanged();
+}
+
+void PlayQueue::setNextUri(const std::string& avTransportUri)
+{
+    {
+        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+        m_NextURITracks = getTracksFromUri(avTransportUri);
+    }
+    
+    NextTransportUriChanged(avTransportUri);
+    QueueChanged();
+}
+
+std::string PlayQueue::getCurrentUri() const
+{
+    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+    return m_CurrenURITracks.empty() ? "" : m_CurrenURITracks.front()->getAVTransportUri();
+}
+
+std::string PlayQueue::getNextUri() const
+{
+    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+    return m_NextURITracks.empty() ? "" : m_NextURITracks.front()->getAVTransportUri();
 }
 
 void PlayQueue::clear()
 {
-    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
-    m_Tracks.clear();
-    QueueChanged();
-}
-
-std::string PlayQueue::nextTrack() const
-{
-    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
-    if (m_Tracks.empty())
-    {
-        return "";
-    }
-    
-    return m_Tracks.front();
-}
-
-bool PlayQueue::dequeueNextTrack(std::string& track)
-{
     {
         std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
-        if (m_Tracks.empty())
+        m_CurrenURITracks.clear();
+        m_NextURITracks.clear();
+    }
+    
+    QueueChanged();
+}
+
+std::shared_ptr<audio::ITrack> PlayQueue::dequeueNextTrack()
+{
+    bool avTransportUriChange = false;
+    PlayQueueItemPtr track;
+
+    {
+        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+        if (m_CurrenURITracks.empty() && m_NextURITracks.empty())
         {
-            return false;
+            return track;
+        }
+        else if (m_CurrenURITracks.empty() && !m_NextURITracks.empty())
+        {
+            std::swap(m_CurrenURITracks, m_NextURITracks);
+            avTransportUriChange = true;
         }
         
-        track = m_Tracks.front();
-        m_Tracks.pop_front();
+        if (!m_CurrenURITracks.empty())
+        {
+            track = m_CurrenURITracks.front();
+            m_CurrenURITracks.pop_front();
+        }
+    }
+    
+    if (avTransportUriChange)
+    {
+        CurrentTransportUriChanged(m_CurrenURITracks.front()->getAVTransportUri());
+        NextTransportUriChanged("");
     }
     
     QueueChanged();
     
-    return true;
+    return track;
 }
 
 size_t PlayQueue::getNumberOfTracks() const
 {
     std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
-    return m_Tracks.size();
+    return m_CurrenURITracks.size();
 }
 
 }

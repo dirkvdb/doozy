@@ -73,35 +73,40 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
         
         if (!str.empty())
         {
-            m_AVTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, str);
+            setTransportVariable(0, AVTransport::Variable::TransportState, str);
         }
     }, this);
     
     m_Playback->AvailableActionsChanged.connect([this] (const std::set<PlaybackAction>& actions) {
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTransportActions, toString(actions));
+        setTransportVariable(0, AVTransport::Variable::CurrentTransportActions, toString(actions));
     }, this);
     
     m_Playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, toString(state));
+        setTransportVariable(0, AVTransport::Variable::TransportState, toString(state));
     }, this);
     
     m_Playback->ProgressChanged.connect([this] (double progress) {
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(progress));
+        setTransportVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(progress));
     }, this);
     
-    m_Playback->NewTrackStarted.connect([this] (const std::string& track) {
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackURI, track);
-    }, this);
+    m_Playback->NewTrackStarted.connect([this] (const std::shared_ptr<ITrack>& track) {
+        auto item = std::dynamic_pointer_cast<PlayQueueItem>(track);
+        assert(item);
     
-    m_Queue.QueueChanged.connect([this] () {
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NextAVTransportURI, m_Queue.nextTrack());
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NumberOfTracks, std::to_string(m_Queue.getNumberOfTracks()));
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(m_Playback->getDuration()));
+        setTransportVariable(0, AVTransport::Variable::CurrentTrackURI,         item->getUri());
+        setTransportVariable(0, AVTransport::Variable::AVTransportURI,          item->getAVTransportUri());
+        setTransportVariable(0, AVTransport::Variable::NextAVTransportURI,      m_Queue.getNextUri());
+        setTransportVariable(0, AVTransport::Variable::CurrentTrackDuration,    durationToString(m_Playback->getDuration()));
+        setTransportVariable(0, AVTransport::Variable::NumberOfTracks,          std::to_string(m_Queue.getNumberOfTracks()));
+
+        // TODO: metadata
     }, this);
 }
 
 void MediaRendererDevice::start()
 {
+    m_Thread.start();
+
     m_RootDevice.ControlActionRequested.connect(std::bind(&MediaRendererDevice::onControlActionRequest, this, _1), this);
     m_RootDevice.EventSubscriptionRequested.connect(std::bind(&MediaRendererDevice::onEventSubscriptionRequest, this, _1), this);
 
@@ -111,6 +116,8 @@ void MediaRendererDevice::start()
 
 void MediaRendererDevice::stop()
 {
+    m_Thread.stop();
+
     m_RootDevice.ControlActionRequested.disconnect(this);
     m_RootDevice.EventSubscriptionRequested.disconnect(this);
 
@@ -168,7 +175,15 @@ void MediaRendererDevice::setInitialValues()
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(0));
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::AbsoluteTimePosition, "NOT_IMPLEMENTED");
 }
-    
+
+void MediaRendererDevice::setTransportVariable(uint32_t instanceId, AVTransport::Variable var, const std::string& value)
+{
+    // Set the variable on the workerthread to avoid blocking the playback thread
+    m_Thread.addJob([=] () {
+        m_AVTransport.setInstanceVariable(instanceId, var, value);
+    });
+}
+
 void MediaRendererDevice::onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest)
 {
     log::debug("Renderer: event subscription request %s", pRequest->ServiceId);
@@ -304,9 +319,15 @@ void MediaRendererDevice::setAVTransportURI(uint32_t instanceId, const std::stri
     try
     {
         log::info("Play uri (%d): %s", instanceId, uri);
-        m_Queue.clear();
-        m_Queue.addTrack(uri);
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackURI, uri);
+        m_Queue.setCurrentUri(uri);
+        if (m_Playback->isPlaying())
+        {
+            m_Playback->stop();
+            m_Playback->play();
+        }
+        
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::AVTransportURI, uri);
+        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::AVTransportURIMetaData, metaData);
     }
     catch (std::exception& e)
     {
@@ -319,11 +340,10 @@ void MediaRendererDevice::setNextAVTransportURI(uint32_t instanceId, const std::
 {
     try
     {
+        m_Queue.setNextUri(uri);
+        
         m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NextAVTransportURI, uri);
         m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NextAVTransportURIMetaData, metaData);
-    
-        // This will not work in all cases, think of something better
-        m_Queue.addTrack(uri);
     }
     catch (std::exception& e)
     {

@@ -20,6 +20,8 @@
 #include "utils/subscriber.h"
 #include "utils/types.h"
 #include "utils/signal.h"
+
+#include "audio/audiotrackinterface.h"
 #include "audio/audioplaylistinterface.h"
 
 #include <deque>
@@ -29,25 +31,49 @@
 namespace doozy
 {
 
+class PlayQueueItem : public audio::ITrack
+{
+public:
+    PlayQueueItem() = default;
+    PlayQueueItem(const std::string& avTransportUri);
+    PlayQueueItem(const std::string& trackUri, const std::string& avTransportUri);
+
+    // ITrack
+    virtual std::string getUri() const;
+    
+    std::string getAVTransportUri() const;
+    
+private:
+    std::string m_TrackUri;
+    std::string m_AVTransportUri;
+};
+
+typedef std::shared_ptr<PlayQueueItem> PlayQueueItemPtr;
+
 class PlayQueue : public audio::IPlaylist
 {
 public:
     PlayQueue();
     virtual ~PlayQueue();
 
-    void addTrack(const std::string& track);
+    void setCurrentUri(const std::string& avTransportUri);
+    void setNextUri(const std::string& avTransportUri);
+    std::string getCurrentUri() const;
+    std::string getNextUri() const;
+    
     void clear();
     
-    std::string nextTrack() const;
-    
     // IPlaylist
-    virtual bool dequeueNextTrack(std::string& track);
+    virtual std::shared_ptr<audio::ITrack> dequeueNextTrack();
     size_t getNumberOfTracks() const;
     
     utils::Signal<void()> QueueChanged;
+    utils::Signal<void(std::string)> CurrentTransportUriChanged;
+    utils::Signal<void(std::string)> NextTransportUriChanged;
 
 private:
-    std::deque<std::string>             m_Tracks;
+    std::deque<PlayQueueItemPtr>        m_CurrenURITracks;
+    std::deque<PlayQueueItemPtr>        m_NextURITracks;
     std::map<std::string, int32_t>		m_IndexMap;
 
     mutable std::recursive_mutex        m_TracksMutex;
