@@ -71,9 +71,9 @@ static void sigsegv(int signo, siginfo_t* pInfo, void* pContext)
     char** messages = backtrace_symbols(array, size);
     
     // skip first stack frame (points here)
-    for (auto i = 1; i < size && messages != nullptr; ++i)
+    for (size_t i = 1; i < size && messages != nullptr; ++i)
     {
-        log::critical("[bt]: (%d) %s", i, messages[i]);
+        utils::log::critical("[bt]: (%d) %s", i, messages[i]);
     }
     
     free(messages);
