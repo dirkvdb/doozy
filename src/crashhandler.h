@@ -61,9 +61,9 @@ static void sigsegv(int signo, siginfo_t* pInfo, void* pContext)
     
     /* Get the address at the time the signal was raised from the EIP (x86) */
 #ifdef __arm__
-    void* pCallerAddress = (void*) uc->uc_mcontext.arm_pc;
+    void* pCallerAddress = (void*) pSigContext->uc_mcontext.arm_pc;
 #else
-    void* pCallerAddress = (void*) uc->uc_mcontext.eip;
+    void* pCallerAddress = (void*) pSigContext->uc_mcontext.eip;
 #endif
     
     size_t size     = backtrace(array, 50);
