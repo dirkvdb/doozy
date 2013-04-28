@@ -21,10 +21,15 @@
 #include "utils/fileoperations.h"
 
 #include "audio/audioplaybackfactory.h"
+#include "audio/audiometadata.h"
+
+#include "upnp/upnpitem.h"
+#include "upnp/upnpxmlutils.h"
 
 #include "typeconversions.h"
 
 #include <sstream>
+#include <Magick++.h>
 
 using namespace utils;
 using namespace upnp;
@@ -34,7 +39,7 @@ using namespace std::placeholders;
 namespace doozy
 {
 
-std::string toString(const std::set<PlaybackAction>& actions)
+static std::string toString(const std::set<PlaybackAction>& actions)
 {
     std::stringstream ss;
     for (auto& action : actions)
@@ -45,6 +50,61 @@ std::string toString(const std::set<PlaybackAction>& actions)
     }
     
     return ss.str();
+}
+
+//static void resizeImage(std::vector<uint8_t>& data, uint32_t resizedWith, uint32_t resizedHeight)
+//{
+//    try
+//    {
+//        std::stringstream sizeString;
+//        sizeString << resizedWith << "x" << resizedHeight;
+//    
+//        Magick::Blob resizedBlob;
+//        Magick::Blob albumArtBlob(data.data(), data.size());
+//        Magick::Image albumArt(albumArtBlob);
+//
+//        albumArt.resize(sizeString.str());
+//        albumArt.write(&resizedBlob, "PNG");
+//        albumArt.magick("PNG");
+//
+//        data.resize(resizedBlob.length());
+//        memcpy(data.data(), resizedBlob.data(), data.size());
+//    }
+//    catch (Magick::Exception& e)
+//    {
+//        throw std::logic_error(stringops::format("Failed to scale image: %s", e.what()));
+//    }
+//}
+
+static void addMetaIfExists(Item& item, Property prop, uint32_t value)
+{
+    if (value != 0)
+    {
+        item.addMetaData(prop, std::to_string(value));
+    }
+}
+
+static void addMetaIfExists(Item& item, Property prop, const std::string& value)
+{
+    if (!value.empty())
+    {
+        item.addMetaData(prop, value);
+    }
+}
+
+std::string createMetaStringFromUri(const std::string& uri)
+{
+    audio::Metadata meta(uri);
+    
+    Item item;
+    addMetaIfExists(item, Property::Title,          meta.getTitle());
+    addMetaIfExists(item, Property::Artist,         meta.getArtist());
+    addMetaIfExists(item, Property::Album,          meta.getAlbum());
+    
+    addMetaIfExists(item, Property::TrackNumber,    meta.getTrackNr());
+    addMetaIfExists(item, Property::Date,           meta.getYear());
+    
+    return xml::getItemDocument(item).toString();
 }
 
 MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
@@ -131,13 +191,13 @@ void MediaRendererDevice::setInitialValues()
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-flac:*"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=1:DLNA.ORG_PN=LPCM"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=2:DLNA.ORG_PN=LPCM"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=1:DLNA.ORG_PN=LPCM"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=2:DLNA.ORG_PN=LPCM"));
+    //m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=1:DLNA.ORG_PN=LPCM"));
+    //m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=2:DLNA.ORG_PN=LPCM"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-ms-wma:DLNA.ORG_PN=WMABASE"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-ms-wma:DLNA.ORG_PN=WMAFULL"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/mp4:DLNA.ORG_PN=AAC_ISO"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/3gpp:DLNA.ORG_PN=AAC_ISO"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/vnd.dlna.adts:DLNA.ORG_PN=AAC_ADTS_320"));
+    //m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/vnd.dlna.adts:DLNA.ORG_PN=AAC_ADTS_320"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-wavetunes:*:audio/x-ms-wma:*"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/wav:*"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-wav:*"));
@@ -326,8 +386,15 @@ void MediaRendererDevice::setAVTransportURI(uint32_t instanceId, const std::stri
             m_Playback->play();
         }
         
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::AVTransportURI, uri);
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::AVTransportURIMetaData, metaData);
+        m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::AVTransportURI, uri);
+        m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::AVTransportURIMetaData, metaData);
+        
+        if (metaData.empty())
+        {
+            m_Thread.addJob([this, uri, instanceId] () {
+                m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::AVTransportURIMetaData, createMetaStringFromUri(uri));
+            });
+        }
     }
     catch (std::exception& e)
     {
@@ -342,8 +409,15 @@ void MediaRendererDevice::setNextAVTransportURI(uint32_t instanceId, const std::
     {
         m_Queue.setNextUri(uri);
         
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NextAVTransportURI, uri);
-        m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NextAVTransportURIMetaData, metaData);
+        m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::NextAVTransportURI, uri);
+        m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::NextAVTransportURIMetaData, metaData);
+        
+        if (metaData.empty())
+        {
+            m_Thread.addJob([this, uri, instanceId] () {
+                m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::NextAVTransportURIMetaData, createMetaStringFromUri(uri));
+            });
+        }
     }
     catch (std::exception& e)
     {

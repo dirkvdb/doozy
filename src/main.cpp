@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <execinfo.h>
 #include <ucontext.h>
+#include <Magick++.h>
 
 #include "utils/log.h"
 #include "crashhandler.h"
@@ -43,6 +44,8 @@ int main(int argc, char **argv)
         return -1;
     }
 #endif
+
+    Magick::InitializeMagick(*argv);
 
     log::info("Doozy");
     
