@@ -31,6 +31,11 @@
 #include "audio/audioplaybackinterface.h"
 #include "playqueue.h"
 
+namespace upnp
+{
+class WebServer;
+}
+
 namespace doozy
 {
 
@@ -40,7 +45,7 @@ class MediaRendererDevice : public upnp::IConnectionManager
 {
 public:
     MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
-                        const std::string& audioOutput, const std::string& audioDevice);
+                        const std::string& audioOutput, const std::string& audioDevice, upnp::WebServer& webServer);
     MediaRendererDevice(const MediaRendererDevice&) = delete;
     
     void start();
@@ -73,6 +78,7 @@ private:
     void onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest);
     void onControlActionRequest(Upnp_Action_Request* pRequest);
     bool supportsProtocol(const upnp::ProtocolInfo& info) const;
+    void addAlbumArtToWebServer(const PlayQueueItemPtr& item);
     
     void throwOnBadInstanceId(uint32_t id) const;
 
@@ -85,6 +91,7 @@ private:
     upnp::ConnectionManager::Service            m_ConnectionManager;
     upnp::RenderingControl::Service             m_RenderingControl;
     upnp::AVTransport::Service                  m_AVTransport;
+    upnp::WebServer&                            m_WebServer;
     
     std::vector<upnp::ProtocolInfo>             m_SupportedProtocols;
     upnp::ConnectionManager::ConnectionInfo     m_CurrentConnectionInfo;

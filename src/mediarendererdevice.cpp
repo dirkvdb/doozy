@@ -23,13 +23,11 @@
 #include "audio/audioplaybackfactory.h"
 #include "audio/audiometadata.h"
 
-#include "upnp/upnpitem.h"
-#include "upnp/upnpxmlutils.h"
+#include "upnp/upnpwebserver.h"
 
 #include "typeconversions.h"
 
 #include <sstream>
-#include <Magick++.h>
 
 using namespace utils;
 using namespace upnp;
@@ -52,68 +50,14 @@ static std::string toString(const std::set<PlaybackAction>& actions)
     return ss.str();
 }
 
-//static void resizeImage(std::vector<uint8_t>& data, uint32_t resizedWith, uint32_t resizedHeight)
-//{
-//    try
-//    {
-//        std::stringstream sizeString;
-//        sizeString << resizedWith << "x" << resizedHeight;
-//    
-//        Magick::Blob resizedBlob;
-//        Magick::Blob albumArtBlob(data.data(), data.size());
-//        Magick::Image albumArt(albumArtBlob);
-//
-//        albumArt.resize(sizeString.str());
-//        albumArt.write(&resizedBlob, "PNG");
-//        albumArt.magick("PNG");
-//
-//        data.resize(resizedBlob.length());
-//        memcpy(data.data(), resizedBlob.data(), data.size());
-//    }
-//    catch (Magick::Exception& e)
-//    {
-//        throw std::logic_error(stringops::format("Failed to scale image: %s", e.what()));
-//    }
-//}
-
-static void addMetaIfExists(Item& item, Property prop, uint32_t value)
-{
-    if (value != 0)
-    {
-        item.addMetaData(prop, std::to_string(value));
-    }
-}
-
-static void addMetaIfExists(Item& item, Property prop, const std::string& value)
-{
-    if (!value.empty())
-    {
-        item.addMetaData(prop, value);
-    }
-}
-
-std::string createMetaStringFromUri(const std::string& uri)
-{
-    audio::Metadata meta(uri);
-    
-    Item item;
-    addMetaIfExists(item, Property::Title,          meta.getTitle());
-    addMetaIfExists(item, Property::Artist,         meta.getArtist());
-    addMetaIfExists(item, Property::Album,          meta.getAlbum());
-    
-    addMetaIfExists(item, Property::TrackNumber,    meta.getTrackNr());
-    addMetaIfExists(item, Property::Date,           meta.getYear());
-    
-    return xml::getItemDocument(item).toString();
-}
-
 MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
-                                         const std::string& audioOutput, const std::string& audioDevice)
+                                         const std::string& audioOutput, const std::string& audioDevice, upnp::WebServer& webServer)
 : m_Playback(PlaybackFactory::create("FFmpeg", audioOutput, audioDevice, m_Queue))
 , m_RootDevice(udn, descriptionXml, advertiseIntervalInSeconds)
 , m_ConnectionManager(m_RootDevice, *this)
 , m_RenderingControl(m_RootDevice, *this)
 , m_AVTransport(m_RootDevice, *this)
+, m_WebServer(webServer)
 {
     m_Playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
         std::string str;
@@ -152,14 +96,15 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
     m_Playback->NewTrackStarted.connect([this] (const std::shared_ptr<ITrack>& track) {
         auto item = std::dynamic_pointer_cast<PlayQueueItem>(track);
         assert(item);
+        
+        addAlbumArtToWebServer(item);
     
         setTransportVariable(0, AVTransport::Variable::CurrentTrackURI,         item->getUri());
+        setTransportVariable(0, AVTransport::Variable::CurrentTrackMetaData,    item->getMetadataString());
         setTransportVariable(0, AVTransport::Variable::AVTransportURI,          item->getAVTransportUri());
         setTransportVariable(0, AVTransport::Variable::NextAVTransportURI,      m_Queue.getNextUri());
         setTransportVariable(0, AVTransport::Variable::CurrentTrackDuration,    durationToString(m_Playback->getDuration()));
         setTransportVariable(0, AVTransport::Variable::NumberOfTracks,          std::to_string(m_Queue.getNumberOfTracks()));
-
-        // TODO: metadata
     }, this);
 }
 
@@ -228,7 +173,6 @@ void MediaRendererDevice::setInitialValues()
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTransportActions, toString(m_Playback->getAvailableActions()));
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::PlaybackStorageMedium, "NETWORK");
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, toString(m_Playback->getState()));
-    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, toString(AVTransport::Status::Ok));
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentPlayMode, toString(AVTransport::PlayMode::Normal));
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NumberOfTracks, std::to_string(m_Queue.getNumberOfTracks()));
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(0));
@@ -292,6 +236,25 @@ bool MediaRendererDevice::supportsProtocol(const ProtocolInfo& info) const
     }
     
     return false;
+}
+
+void MediaRendererDevice::addAlbumArtToWebServer(const PlayQueueItemPtr& item)
+{
+    auto thumb = item->getAlbumArtThumb();
+    if (!thumb.empty())
+    {
+        m_WebServer.removeFile("Doozy", "albumartthumb.jpg");
+        m_WebServer.addFile("Doozy", "albumartthumb.jpg", "image/jpeg", thumb);
+        item->setAlbumArtUri(m_WebServer.getWebRootUrl() + "Doozy/albumartthumb.jpg", upnp::dlna::ProfileId::JpegThumbnail);
+    }
+    
+    auto art = item->getAlbumArt();
+    if (!art.empty())
+    {
+        m_WebServer.removeFile("Doozy", "albumart.jpg");
+        m_WebServer.addFile("Doozy", "albumart.jpg", "image/jpeg", art);
+        item->setAlbumArtUri(m_WebServer.getWebRootUrl() + "Doozy/albumart.jpg", upnp::dlna::ProfileId::JpegLarge);
+    }
 }
 
 void MediaRendererDevice::throwOnBadInstanceId(uint32_t id) const
@@ -388,13 +351,6 @@ void MediaRendererDevice::setAVTransportURI(uint32_t instanceId, const std::stri
         
         m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::AVTransportURI, uri);
         m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::AVTransportURIMetaData, metaData);
-        
-        if (metaData.empty())
-        {
-            m_Thread.addJob([this, uri, instanceId] () {
-                m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::AVTransportURIMetaData, createMetaStringFromUri(uri));
-            });
-        }
     }
     catch (std::exception& e)
     {
@@ -411,13 +367,6 @@ void MediaRendererDevice::setNextAVTransportURI(uint32_t instanceId, const std::
         
         m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::NextAVTransportURI, uri);
         m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::NextAVTransportURIMetaData, metaData);
-        
-        if (metaData.empty())
-        {
-            m_Thread.addJob([this, uri, instanceId] () {
-                m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::NextAVTransportURIMetaData, createMetaStringFromUri(uri));
-            });
-        }
     }
     catch (std::exception& e)
     {

@@ -20,9 +20,12 @@
 #include "utils/subscriber.h"
 #include "utils/types.h"
 #include "utils/signal.h"
+#include "utils/workerthread.h"
 
 #include "audio/audiotrackinterface.h"
 #include "audio/audioplaylistinterface.h"
+
+#include "upnp/upnpitem.h"
 
 #include <deque>
 #include <string>
@@ -41,11 +44,30 @@ public:
     // ITrack
     virtual std::string getUri() const;
     
+    void setItem(const upnp::ItemPtr& item);
+    
     std::string getAVTransportUri() const;
+    std::string getMetadataString() const;
+    
+    const std::vector<uint8_t>& getAlbumArt() const;
+    const std::vector<uint8_t>& getAlbumArtThumb() const;
+    
+    void setAlbumArtUri(const std::string& uri);
+    void setAlbumArtUri(const std::string& uri, upnp::dlna::ProfileId profile);
+    
+    void setAlbumArt(std::vector<uint8_t>&& data);
+    void setAlbumArt(const std::vector<uint8_t>& data);
+    void setAlbumArtThumb(std::vector<uint8_t>&& data);
+    void setAlbumArtThumb(const std::vector<uint8_t>& data);
     
 private:
-    std::string m_TrackUri;
-    std::string m_AVTransportUri;
+    std::string             m_TrackUri;
+    std::string             m_AVTransportUri;
+    
+    std::vector<uint8_t>    m_AlbumArt;
+    std::vector<uint8_t>    m_AlbumArtThumb;
+    
+    upnp::ItemPtr   m_Item;
 };
 
 typedef std::shared_ptr<PlayQueueItem> PlayQueueItemPtr;
@@ -72,14 +94,13 @@ public:
     utils::Signal<void(std::string)> NextTransportUriChanged;
 
 private:
+    utils::WorkerThread                 m_Thread;
     std::deque<PlayQueueItemPtr>        m_CurrenURITracks;
     std::deque<PlayQueueItemPtr>        m_NextURITracks;
     std::map<std::string, int32_t>		m_IndexMap;
 
     mutable std::recursive_mutex        m_TracksMutex;
     std::mutex                          m_SubscribersMutex;
-
-    bool                                m_Destroy;
 };
 
 }

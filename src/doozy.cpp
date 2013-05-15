@@ -69,7 +69,7 @@ void Doozy::run(const std::string& configFile)
         addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
         addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
         
-        MediaRendererDevice dev(udn, description, 180, audioOutput, audioDevice);
+        MediaRendererDevice dev(udn, description, 180, audioOutput, audioDevice, webserver);
         dev.start();
         
         std::unique_lock<std::mutex> lock(m_Mutex);
