@@ -190,7 +190,7 @@ void MediaRendererDevice::setTransportVariable(uint32_t instanceId, AVTransport:
 
 void MediaRendererDevice::onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest)
 {
-    log::debug("Renderer: event subscription request %s", pRequest->ServiceId);
+    //log::debug("Renderer: event subscription request %s", pRequest->ServiceId);
     
     switch (serviceIdUrnStringToService(pRequest->ServiceId))
     {

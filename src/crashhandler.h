@@ -29,7 +29,7 @@ namespace doozy
 static void sigsegv(int signo, siginfo_t* pInfo, void* pContext)
 {
     void* array[50];
-    size_t size     = backtrace(array, 50);
+    auto size       = backtrace(array, 50);
     char** messages = backtrace_symbols(array, size);
     
     // skip first stack frame (points here)

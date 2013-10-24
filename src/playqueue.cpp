@@ -139,7 +139,7 @@ static void convertImageToJpeg(std::vector<uint8_t>& data)
         Magick::Blob albumArtBlob(data.data(), data.size());
         Magick::Image albumArt(albumArtBlob);
         
-        //albumArt.write(&convertedBlob, "JPEG");
+        albumArt.write(&convertedBlob, "JPEG");
         
         data.resize(convertedBlob.length());
         memcpy(data.data(), convertedBlob.data(), data.size());
@@ -161,7 +161,7 @@ static void resizeImage(std::vector<uint8_t>& data, uint32_t resizedWith, uint32
         Magick::Image albumArt(albumArtBlob);
         
         albumArt.resize(size);
-        //albumArt.write(&resizedBlob, "JPEG");
+        albumArt.write(&resizedBlob, "JPEG");
 
         data.resize(resizedBlob.length());
         memcpy(data.data(), resizedBlob.data(), data.size());
@@ -174,43 +174,50 @@ static void resizeImage(std::vector<uint8_t>& data, uint32_t resizedWith, uint32
 
 static void obtainMetadata(PlayQueueItemPtr qItem)
 {
-    audio::Metadata meta(qItem->getUri());
-    
-    auto item = std::make_shared<Item>();
-    addMetaIfExists(*item, Property::Title,          meta.getTitle());
-    addMetaIfExists(*item, Property::Artist,         meta.getArtist());
-    addMetaIfExists(*item, Property::Album,          meta.getAlbum());
-    addMetaIfExists(*item, Property::Genre,          meta.getGenre());
-    
-    addMetaIfExists(*item, Property::TrackNumber,    meta.getTrackNr());
-    addMetaIfExists(*item, Property::Date,           meta.getYear());
-    
-    qItem->setItem(item);
-    
-    auto art = meta.getAlbumArt();
+    try
+    {
+        audio::Metadata meta(qItem->getUri());
+        
+        auto item = std::make_shared<Item>();
+        addMetaIfExists(*item, Property::Title,          meta.getTitle());
+        addMetaIfExists(*item, Property::Artist,         meta.getArtist());
+        addMetaIfExists(*item, Property::Album,          meta.getAlbum());
+        addMetaIfExists(*item, Property::Genre,          meta.getGenre());
+        
+        addMetaIfExists(*item, Property::TrackNumber,    meta.getTrackNr());
+        addMetaIfExists(*item, Property::Date,           meta.getYear());
+        
+        qItem->setItem(item);
+        
+        auto art = meta.getAlbumArt();
 
-    try
-    {
-        if (art.format != audio::Metadata::ImageFormat::Jpeg)
+        try
         {
-            convertImageToJpeg(art.data);
+            if (art.format != audio::Metadata::ImageFormat::Jpeg)
+            {
+                convertImageToJpeg(art.data);
+            }
+        
+            qItem->setAlbumArt(art.data);
         }
-    
-        qItem->setAlbumArt(art.data);
+        catch (std::exception& e)
+        {
+            log::warn("Failed to set album art: %s", e.what());
+        }
+        
+        try
+        {
+            resizeImage(art.data, 160, 160);
+            qItem->setAlbumArtThumb(art.data);
+        }
+        catch (std::exception& e)
+        {
+            log::warn("Failed to set album art thumbnail: %s", e.what());
+        }
     }
     catch (std::exception& e)
     {
-        log::warn("Failed to set album art");
-    }
-    
-    try
-    {
-        resizeImage(art.data, 160, 160);
-        qItem->setAlbumArtThumb(art.data);
-    }
-    catch (std::exception& e)
-    {
-        log::warn("Failed to set album art thumbnail");
+        log::warn("Failed to obtain metadata for url: %s", qItem->getUri());
     }
 }
 

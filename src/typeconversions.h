@@ -60,11 +60,9 @@ inline std::string durationToString(uint32_t durationInSecs)
 
     std::stringstream ss;
 
-    if (hours > 0)
-    {
-        ss << std::setfill('0') << hours << ':';
-    }
-    ss << std::setw(2) << std::setfill('0') << minutes << ':' << std::setw(2) << std::setfill('0')  << seconds;
+    ss << std::setw(2) << std::setfill('0') << hours << ':'
+       << std::setw(2) << std::setfill('0') << minutes << ':'
+       << std::setw(2) << std::setfill('0') << seconds;
     return ss.str();
 }
 
