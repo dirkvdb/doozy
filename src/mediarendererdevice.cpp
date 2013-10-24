@@ -50,6 +50,17 @@ static std::string toString(const std::set<PlaybackAction>& actions)
     return ss.str();
 }
 
+static AVTransport::State PlaybackStateToTransportState(PlaybackState state)
+{
+    switch (state)
+    {
+    case PlaybackState::Playing:        return AVTransport::State::Playing;
+    case PlaybackState::Paused:         return AVTransport::State::PausedPlayback;
+    case PlaybackState::Stopped:
+    default:                            return AVTransport::State::Stopped;
+    }
+}
+
 MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
                                          const std::string& audioOutput, const std::string& audioDevice, upnp::WebServer& webServer)
 : m_Playback(PlaybackFactory::create("FFmpeg", audioOutput, audioDevice, m_Queue))
@@ -60,25 +71,7 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
 , m_WebServer(webServer)
 {
     m_Playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
-        std::string str;
-        
-        switch (state)
-        {
-        case PlaybackState::Playing:
-            str = AVTransport::toString(AVTransport::State::Playing);
-            break;
-        case PlaybackState::Paused:
-            str = AVTransport::toString(AVTransport::State::PausedPlayback);
-            break;
-        case PlaybackState::Stopped:
-            str = AVTransport::toString(AVTransport::State::Stopped);
-            break;
-        }
-        
-        if (!str.empty())
-        {
-            setTransportVariable(0, AVTransport::Variable::TransportState, str);
-        }
+        setTransportVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(state)));
     }, this);
     
     m_Playback->AvailableActionsChanged.connect([this] (const std::set<PlaybackAction>& actions) {
@@ -86,7 +79,7 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
     }, this);
     
     m_Playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
-        setTransportVariable(0, AVTransport::Variable::TransportState, toString(state));
+        setTransportVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(state)));
     }, this);
     
     m_Playback->ProgressChanged.connect([this] (double progress) {
@@ -172,7 +165,7 @@ void MediaRendererDevice::setInitialValues()
     
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTransportActions, toString(m_Playback->getAvailableActions()));
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::PlaybackStorageMedium, "NETWORK");
-    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, toString(m_Playback->getState()));
+    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(m_Playback->getState())));
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentPlayMode, toString(AVTransport::PlayMode::Normal));
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NumberOfTracks, std::to_string(m_Queue.getNumberOfTracks()));
     m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(0));
