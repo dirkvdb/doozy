@@ -26,14 +26,18 @@
 #include "audio/audiom3uparser.h"
 #include "audio/audiometadata.h"
 
+#include "image/image.h"
+#include "image/imageloadstoreinterface.h"
+#include "image/imagefactory.h"
+
 #include <fstream>
 #include <cstring>
 #include <cassert>
-#include <Magick++.h>
 
 using namespace std;
 using namespace utils;
 using namespace upnp;
+using namespace image;
 
 namespace doozy
 {
@@ -72,7 +76,7 @@ std::string PlayQueueItem::getMetadataString() const
         return "";
     }
 
-    return xml::getItemDocument(*m_Item).toString();
+    return xml::utils::getItemDocument(*m_Item).toString();
 }
 
 const std::vector<uint8_t>& PlayQueueItem::getAlbumArt() const
@@ -135,40 +139,14 @@ static void convertImageToJpeg(std::vector<uint8_t>& data)
 {
     try
     {
-        Magick::Blob convertedBlob;
-        Magick::Blob albumArtBlob(data.data(), data.size());
-        Magick::Image albumArt(albumArtBlob);
+        auto image = Factory::createFromData(data);
+        auto loadStore = Factory::createLoadStore(Type::Jpeg);
         
-        albumArt.write(&convertedBlob, "JPEG");
-        
-        data.resize(convertedBlob.length());
-        memcpy(data.data(), convertedBlob.data(), data.size());
+        data = loadStore->storeToMemory(*image);
     }
-    catch (Magick::Exception& e)
+    catch (std::exception& e)
     {
-        throw std::logic_error(stringops::format("Failed to convert image: %s", e.what()));
-    }
-}
-
-static void resizeImage(std::vector<uint8_t>& data, uint32_t resizedWith, uint32_t resizedHeight)
-{
-    try
-    {
-        auto size = Magick::Geometry(resizedWith, resizedHeight);
-    
-        Magick::Blob resizedBlob;
-        Magick::Blob albumArtBlob(data.data(), data.size());
-        Magick::Image albumArt(albumArtBlob);
-        
-        albumArt.resize(size);
-        albumArt.write(&resizedBlob, "JPEG");
-
-        data.resize(resizedBlob.length());
-        memcpy(data.data(), resizedBlob.data(), data.size());
-    }
-    catch (Magick::Exception& e)
-    {
-        throw std::logic_error(stringops::format("Failed to scale image: %s", e.what()));
+        throw std::runtime_error(stringops::format("Failed to convert image: %s", e.what()));
     }
 }
 
@@ -190,6 +168,7 @@ static void obtainMetadata(PlayQueueItemPtr qItem)
         qItem->setItem(item);
         
         auto art = meta.getAlbumArt();
+        utils::fileops::writeFile(art.data, "/Users/dirk/corrupt.jpg");
 
         try
         {
@@ -207,8 +186,11 @@ static void obtainMetadata(PlayQueueItemPtr qItem)
         
         try
         {
-            resizeImage(art.data, 160, 160);
-            qItem->setAlbumArtThumb(art.data);
+            auto image = Factory::createFromData(art.data, Type::Jpeg);
+            image->resize(160, 160, ResizeAlgorithm::Bilinear);
+            
+            auto jpegStore = Factory::createLoadStore(Type::Jpeg);
+            qItem->setAlbumArtThumb(jpegStore->storeToMemory(*image));
         }
         catch (std::exception& e)
         {

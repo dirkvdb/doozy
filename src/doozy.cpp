@@ -21,12 +21,11 @@
 #include "mediarendererdevice.h"
 
 #include "utils/log.h"
+#include "utils/readerfactory.h"
 #include "utils/stringoperations.h"
 
 #include "upnp/upnpwebserver.h"
 #include "upnp/upnphttpreader.h"
-
-#include "audio/audioreaderfactory.h"
 
 using namespace utils;
 using namespace utils::stringops;
@@ -39,7 +38,7 @@ void Doozy::run(const std::string& configFile)
     try
     {
         // make sure we can read http urls
-        audio::ReaderFactory::registerBuilder(std::unique_ptr<IReaderBuilder>(new upnp::HttpReaderBuilder()));
+        ReaderFactory::registerBuilder(std::unique_ptr<IReaderBuilder>(new upnp::HttpReaderBuilder()));
         
         m_Client.initialize();
         
