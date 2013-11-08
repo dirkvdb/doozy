@@ -99,7 +99,7 @@ private:
     std::deque<PlayQueueItemPtr>        m_NextURITracks;
     std::map<std::string, int32_t>		m_IndexMap;
 
-    mutable std::recursive_mutex        m_TracksMutex;
+    mutable std::mutex                  m_TracksMutex;
     std::mutex                          m_SubscribersMutex;
 };
 

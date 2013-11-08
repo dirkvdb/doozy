@@ -26,6 +26,7 @@
 #include "upnp/upnpwebserver.h"
 
 #include "typeconversions.h"
+#include "audioconfig.h"
 
 #include <sstream>
 
@@ -63,7 +64,7 @@ static AVTransport::State PlaybackStateToTransportState(PlaybackState state)
 
 MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
                                          const std::string& audioOutput, const std::string& audioDevice, upnp::WebServer& webServer)
-: m_Playback(PlaybackFactory::create("FFmpeg", audioOutput, audioDevice, m_Queue))
+: m_Playback(PlaybackFactory::create("Custom", "Doozy", audioOutput, audioDevice, m_Queue))
 , m_RootDevice(udn, descriptionXml, advertiseIntervalInSeconds)
 , m_ConnectionManager(m_RootDevice, *this)
 , m_RenderingControl(m_RootDevice, *this)
@@ -124,9 +125,16 @@ void MediaRendererDevice::stop()
 
 void MediaRendererDevice::setInitialValues()
 {
+#if defined(HAVE_MAD) || defined(HAVE_FFMPEG)
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3"));
+#endif
+
+#if defined(HAVE_FLAC) || defined(HAVE_FFMPEG)
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/flac:*"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-flac:*"));
+#endif
+
+#ifdef HAVE_FFMPEG // assume ffmpeg supports these formats (possibly make this more smart and actually check ffmpeg config options)
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=1:DLNA.ORG_PN=LPCM"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=2:DLNA.ORG_PN=LPCM"));
     //m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=1:DLNA.ORG_PN=LPCM"));
@@ -139,6 +147,7 @@ void MediaRendererDevice::setInitialValues()
     m_SupportedProtocols.push_back(ProtocolInfo("http-wavetunes:*:audio/x-ms-wma:*"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/wav:*"));
     m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-wav:*"));
+#endif
     
     std::stringstream ss;
     for (auto& protocol : m_SupportedProtocols)

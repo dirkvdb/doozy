@@ -168,7 +168,6 @@ static void obtainMetadata(PlayQueueItemPtr qItem)
         qItem->setItem(item);
         
         auto art = meta.getAlbumArt();
-        utils::fileops::writeFile(art.data, "/Users/dirk/corrupt.jpg");
 
         try
         {
@@ -267,7 +266,7 @@ void PlayQueue::setCurrentUri(const std::string& avTransportUri)
     }
     
     {
-        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+        std::lock_guard<std::mutex> lock(m_TracksMutex);
         m_CurrenURITracks = items;
     }
     
@@ -291,7 +290,7 @@ void PlayQueue::setNextUri(const std::string& avTransportUri)
     }
     
     {
-        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+        std::lock_guard<std::mutex> lock(m_TracksMutex);
         m_NextURITracks = items;
     }
     
@@ -301,20 +300,20 @@ void PlayQueue::setNextUri(const std::string& avTransportUri)
 
 std::string PlayQueue::getCurrentUri() const
 {
-    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+    std::lock_guard<std::mutex> lock(m_TracksMutex);
     return m_CurrenURITracks.empty() ? "" : m_CurrenURITracks.front()->getAVTransportUri();
 }
 
 std::string PlayQueue::getNextUri() const
 {
-    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+    std::lock_guard<std::mutex> lock(m_TracksMutex);
     return m_NextURITracks.empty() ? "" : m_NextURITracks.front()->getAVTransportUri();
 }
 
 void PlayQueue::clear()
 {
     {
-        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+        std::lock_guard<std::mutex> lock(m_TracksMutex);
         m_CurrenURITracks.clear();
         m_NextURITracks.clear();
     }
@@ -328,7 +327,7 @@ std::shared_ptr<audio::ITrack> PlayQueue::dequeueNextTrack()
     PlayQueueItemPtr track;
 
     {
-        std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+        std::lock_guard<std::mutex> lock(m_TracksMutex);
         if (m_CurrenURITracks.empty() && m_NextURITracks.empty())
         {
             return track;
@@ -359,7 +358,7 @@ std::shared_ptr<audio::ITrack> PlayQueue::dequeueNextTrack()
 
 size_t PlayQueue::getNumberOfTracks() const
 {
-    std::lock_guard<std::recursive_mutex> lock(m_TracksMutex);
+    std::lock_guard<std::mutex> lock(m_TracksMutex);
     return m_CurrenURITracks.size();
 }
 
