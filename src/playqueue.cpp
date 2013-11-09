@@ -154,7 +154,7 @@ static void obtainMetadata(PlayQueueItemPtr qItem)
 {
     try
     {
-        audio::Metadata meta(qItem->getUri());
+        audio::Metadata meta(qItem->getUri(), audio::Metadata::ReadAudioProperties::No);
         
         auto item = std::make_shared<Item>();
         addMetaIfExists(*item, Property::Title,          meta.getTitle());
