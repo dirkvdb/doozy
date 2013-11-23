@@ -168,32 +168,34 @@ static void obtainMetadata(PlayQueueItemPtr qItem)
         qItem->setItem(item);
         
         auto art = meta.getAlbumArt();
-
-        try
+        if (!art.data.empty())
         {
-            if (art.format != audio::Metadata::ImageFormat::Jpeg)
+            try
             {
-                convertImageToJpeg(art.data);
-            }
-        
-            qItem->setAlbumArt(art.data);
-        }
-        catch (std::exception& e)
-        {
-            log::warn("Failed to set album art: %s", e.what());
-        }
-        
-        try
-        {
-            auto image = Factory::createFromData(art.data, Type::Jpeg);
-            image->resize(160, 160, ResizeAlgorithm::Bilinear);
+                if (art.format != audio::Metadata::ImageFormat::Jpeg)
+                {
+                    convertImageToJpeg(art.data);
+                }
             
-            auto jpegStore = Factory::createLoadStore(Type::Jpeg);
-            qItem->setAlbumArtThumb(jpegStore->storeToMemory(*image));
-        }
-        catch (std::exception& e)
-        {
-            log::warn("Failed to set album art thumbnail: %s", e.what());
+                qItem->setAlbumArt(art.data);
+            }
+            catch (std::exception& e)
+            {
+                log::warn("Failed to set album art: %s", e.what());
+            }
+            
+            try
+            {
+                auto image = Factory::createFromData(art.data, Type::Jpeg);
+                image->resize(160, 160, ResizeAlgorithm::Bilinear);
+                
+                auto jpegStore = Factory::createLoadStore(Type::Jpeg);
+                qItem->setAlbumArtThumb(jpegStore->storeToMemory(*image));
+            }
+            catch (std::exception& e)
+            {
+                log::warn("Failed to set album art thumbnail: %s", e.what());
+            }
         }
     }
     catch (std::exception& e)
