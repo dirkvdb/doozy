@@ -33,7 +33,7 @@ static bool set_signal_handlers();
 
 using namespace utils;
 
-static doozy::Doozy d;
+static std::unique_ptr<doozy::Doozy> doozyInstance;
 
 int main(int argc, char **argv)
 {
@@ -68,7 +68,8 @@ int main(int argc, char **argv)
         }
     }
     
-    d.run(configFile);
+    doozyInstance.reset(new doozy::Doozy());
+    doozyInstance->run(configFile);
 
     log::info("Bye");
     
@@ -80,7 +81,10 @@ static void sigterm(int signo)
     try
     {
         log::info("Sigterm %d", signo);
-        d.stop();
+        if (doozyInstance)
+        {
+            doozyInstance->stop();
+        }
     }
     catch (std::exception& e)
     {
