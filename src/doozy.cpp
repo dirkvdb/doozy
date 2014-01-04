@@ -33,13 +33,18 @@ using namespace utils::stringops;
 namespace doozy
 {
 
+Doozy::Doozy()
+: m_Stop(false)
+{
+    // make sure we can read http urls
+    ReaderFactory::registerBuilder(std::unique_ptr<IReaderBuilder>(new upnp::HttpReaderBuilder()));
+}
+
 void Doozy::run(const std::string& configFile)
 {
     try
     {
-        // make sure we can read http urls
-        ReaderFactory::registerBuilder(std::unique_ptr<IReaderBuilder>(new upnp::HttpReaderBuilder()));
-        
+        m_Stop = false;
         m_Client.initialize();
         
         // load settings
@@ -51,11 +56,12 @@ void Doozy::run(const std::string& configFile)
             settings.loadFromFile(configFile);
         }
     
-        auto udn             = "uuid:" + settings.get("UDN");
-        auto friendlyName    = settings.get("FriendlyName");
-        auto audioOutput     = settings.get("AudioOutput");
-        auto audioDevice     = settings.get("AudioDevice");
-        auto description     = format(g_mediaRendererDevice.c_str(), m_Client.getIpAddress(), m_Client.getPort(), friendlyName, udn);
+        auto udn                = "uuid:" + settings.get("UDN");
+        auto friendlyName       = settings.get("FriendlyName");
+        auto audioOutput        = settings.get("AudioOutput");
+        auto audioDevice        = settings.get("AudioDevice");
+        auto description        = format(g_mediaRendererDevice.c_str(), m_Client.getIpAddress(), m_Client.getPort(), friendlyName, udn);
+        auto advertiseInterval  = 180;
         
         log::info("FriendlyName = %s", friendlyName);
         log::info("AudioOutput = %s", audioOutput);
@@ -68,11 +74,11 @@ void Doozy::run(const std::string& configFile)
         addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
         addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
         
-        MediaRendererDevice dev(udn, description, 180, audioOutput, audioDevice, webserver);
+        MediaRendererDevice dev(udn, description, advertiseInterval, audioOutput, audioDevice, webserver);
         dev.start();
         
         std::unique_lock<std::mutex> lock(m_Mutex);
-        m_Condition.wait(lock);
+        m_Condition.wait(lock, [this] () { return m_Stop == true; });
         
         dev.stop();
         webserver.removeVirtualDirectory("Doozy");
@@ -88,6 +94,7 @@ void Doozy::run(const std::string& configFile)
 void Doozy::stop()
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
+    m_Stop = true;
     m_Condition.notify_all();
 }
     

@@ -35,6 +35,7 @@ namespace doozy
 class Doozy
 {
 public:
+    Doozy();
     void run(const std::string& configFile);
     void stop();
     
@@ -44,6 +45,7 @@ private:
     std::condition_variable     m_Condition;
     std::mutex                  m_Mutex;
     upnp::Client                m_Client;
+    bool                        m_Stop;
 };
     
 }
