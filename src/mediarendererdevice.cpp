@@ -21,19 +21,16 @@
 #include "utils/fileoperations.h"
 
 #include "audio/audioplaybackfactory.h"
-#include "audio/audiometadata.h"
-
 #include "upnp/upnpwebserver.h"
 
 #include "typeconversions.h"
-#include "audioconfig.h"
-
 #include <sstream>
 
 using namespace utils;
 using namespace upnp;
 using namespace audio;
 using namespace std::placeholders;
+
 
 namespace doozy
 {

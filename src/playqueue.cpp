@@ -23,6 +23,7 @@
 #include "upnp/upnpxmlutils.h"
 #include "upnp/upnphttpclient.h"
 
+#include "audioconfig.h"
 #include "audio/audiom3uparser.h"
 #include "audio/audiometadata.h"
 
@@ -41,6 +42,10 @@ using namespace image;
 
 namespace doozy
 {
+    
+#ifndef HAVE_TAGLIB
+    static_assert(false, "Audio library not compiled with metadata support");
+#endif
 
 PlayQueueItem::PlayQueueItem(const std::string& avTransportUri)
 : m_TrackUri(avTransportUri)
