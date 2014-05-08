@@ -1,0 +1,54 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
+IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Gcc")
+    SET(CMAKE_CXX_FLAGS_DEBUG "-rdynamic ")
+    SET(CMAKE_CXX_FLAGS "-stdlib=libstdc++")
+ENDIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Gcc")
+
+SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -Wall -Wfatal-errors")
+
+FIND_PACKAGE(PkgConfig)
+PKG_CHECK_MODULES(THRIFT_PKG thrift)
+FIND_PATH(THRIFT_INCLUDE_DIRS
+    NAMES thrift/Thrift.h
+    PATHS ${THRIFT_PKG_INCLUDE_DIRS}
+)
+
+FIND_LIBRARY(THRIFT_LIBRARIES
+    NAMES ${THRIFT_PKG_LIBRARIES}
+    HINTS ${THRIFT_PKG_LIBRARY_DIRS}
+)
+
+INCLUDE_DIRECTORIES(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${UTILS_INCLUDE_DIRS}
+    ${UPNPFRAMEWORK_INCLUDE_DIRS}
+    ${THRIFT_INCLUDE_DIRS}
+)
+
+LINK_DIRECTORIES(
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${UTILS_LIBRARY_DIRS}
+    ${UPNPFRAMEWORK_LIBRARY_DIRS}
+    ${THRIFT_LIBRARY_DIRS}
+)
+
+SET(LINK_LIBS
+    ${UTILS_LIBRARIES}
+    ${UPNPFRAMEWORK_LIBRARIES}
+    ${THRIFT_LIBRARIES}
+    ${THRIFT_LIBRARIES}
+)
+
+ADD_EXECUTABLE(doozycp
+    gen-cpp/controlpoint_constants.h gen-cpp/controlpoint_constants.cpp
+    gen-cpp/controlpoint_types.h gen-cpp/controlpoint_types.cpp
+    gen-cpp/ControlPoint.h gen-cpp/ControlPoint.cpp
+    doozycontrolpoint.h doozycontrolpoint.cpp
+    main.cpp
+)
+
+TARGET_LINK_LIBRARIES(doozycp ${LINK_LIBS})
+INSTALL(TARGETS doozycp RUNTIME DESTINATION bin)
+
