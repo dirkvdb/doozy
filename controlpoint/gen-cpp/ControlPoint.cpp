@@ -8,6 +8,11 @@
 
 namespace doozy { namespace rpc {
 
+
+ControlPoint_GetRenderers_args::~ControlPoint_GetRenderers_args() throw() {
+}
+
+
 uint32_t ControlPoint_GetRenderers_args::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   uint32_t xfer = 0;
@@ -37,21 +42,35 @@ uint32_t ControlPoint_GetRenderers_args::read(::apache::thrift::protocol::TProto
 
 uint32_t ControlPoint_GetRenderers_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
+  oprot->incrementRecursionDepth();
   xfer += oprot->writeStructBegin("ControlPoint_GetRenderers_args");
 
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
+  oprot->decrementRecursionDepth();
   return xfer;
 }
 
+
+ControlPoint_GetRenderers_pargs::~ControlPoint_GetRenderers_pargs() throw() {
+}
+
+
 uint32_t ControlPoint_GetRenderers_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
+  oprot->incrementRecursionDepth();
   xfer += oprot->writeStructBegin("ControlPoint_GetRenderers_pargs");
 
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
+  oprot->decrementRecursionDepth();
   return xfer;
 }
+
+
+ControlPoint_GetRenderers_result::~ControlPoint_GetRenderers_result() throw() {
+}
+
 
 uint32_t ControlPoint_GetRenderers_result::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -109,6 +128,11 @@ uint32_t ControlPoint_GetRenderers_result::write(::apache::thrift::protocol::TPr
   return xfer;
 }
 
+
+ControlPoint_GetRenderers_presult::~ControlPoint_GetRenderers_presult() throw() {
+}
+
+
 uint32_t ControlPoint_GetRenderers_presult::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   uint32_t xfer = 0;
@@ -149,6 +173,11 @@ uint32_t ControlPoint_GetRenderers_presult::read(::apache::thrift::protocol::TPr
   return xfer;
 }
 
+
+ControlPoint_GetServers_args::~ControlPoint_GetServers_args() throw() {
+}
+
+
 uint32_t ControlPoint_GetServers_args::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   uint32_t xfer = 0;
@@ -178,21 +207,35 @@ uint32_t ControlPoint_GetServers_args::read(::apache::thrift::protocol::TProtoco
 
 uint32_t ControlPoint_GetServers_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
+  oprot->incrementRecursionDepth();
   xfer += oprot->writeStructBegin("ControlPoint_GetServers_args");
 
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
+  oprot->decrementRecursionDepth();
   return xfer;
 }
 
+
+ControlPoint_GetServers_pargs::~ControlPoint_GetServers_pargs() throw() {
+}
+
+
 uint32_t ControlPoint_GetServers_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
+  oprot->incrementRecursionDepth();
   xfer += oprot->writeStructBegin("ControlPoint_GetServers_pargs");
 
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
+  oprot->decrementRecursionDepth();
   return xfer;
 }
+
+
+ControlPoint_GetServers_result::~ControlPoint_GetServers_result() throw() {
+}
+
 
 uint32_t ControlPoint_GetServers_result::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -249,6 +292,11 @@ uint32_t ControlPoint_GetServers_result::write(::apache::thrift::protocol::TProt
   xfer += oprot->writeStructEnd();
   return xfer;
 }
+
+
+ControlPoint_GetServers_presult::~ControlPoint_GetServers_presult() throw() {
+}
+
 
 uint32_t ControlPoint_GetServers_presult::read(::apache::thrift::protocol::TProtocol* iprot) {
 

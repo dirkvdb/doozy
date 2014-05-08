@@ -25,6 +25,7 @@
 #include "gen-cpp/ControlPoint.h"
 
 #include "upnp/upnpclient.h"
+#include "upnp/upnpwebserver.h"
 #include "upnp/upnpdevicescanner.h"
 #include "upnp/upnpcontrolpoint.h"
 
@@ -42,10 +43,11 @@ public:
     void GetServers(rpc::DeviceResponse& response) override;
     
 private:
-    upnp::Client                m_Client;
-    upnp::ControlPoint          m_Cp;
-    upnp::DeviceScanner         m_RendererScanner;
-    upnp::DeviceScanner         m_ServerScanner;
+    upnp::Client                        m_Client;
+    upnp::ControlPoint                  m_Cp;
+    upnp::DeviceScanner                 m_RendererScanner;
+    upnp::DeviceScanner                 m_ServerScanner;
+    std::unique_ptr<upnp::WebServer>    m_Webserver;
 };
     
 }

@@ -42,6 +42,9 @@ void ControlPoint::run()
         m_ServerScanner.start();
         m_ServerScanner.refresh();
         m_Cp.activate();
+        m_Webserver.reset(new upnp::WebServer("/Users/dirk/Projects/doozy/controlpoint"));
+        
+        log::info("Webserver listening url: %s", m_Webserver->getWebRootUrl());
         
     }
     catch(std::exception& e)
@@ -52,6 +55,7 @@ void ControlPoint::run()
     
 void ControlPoint::stop()
 {
+    m_Webserver.reset();
     m_RendererScanner.stop();
     m_ServerScanner.stop();
     m_Cp.deactivate();

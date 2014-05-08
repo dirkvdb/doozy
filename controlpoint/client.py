@@ -3,7 +3,7 @@
 from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
+from thrift.protocol import TJSONProtocol
 
 from genpy.controlpoint import ControlPoint
 
@@ -14,7 +14,7 @@ transport = TSocket.TSocket('localhost', 9090)
 transport = TTransport.TBufferedTransport(transport)
 
 # Wrap in a protocol
-protocol = TBinaryProtocol.TBinaryProtocol(transport)
+protocol = TJSONProtocol.TJSONProtocol(transport)
 
 # Create a client to use the protocol encoder
 client = ControlPoint.Client(protocol)

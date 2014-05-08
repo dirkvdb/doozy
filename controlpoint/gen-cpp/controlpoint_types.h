@@ -17,6 +17,10 @@
 
 namespace doozy { namespace rpc {
 
+class Device;
+
+class DeviceResponse;
+
 
 class Device {
  public:
@@ -24,21 +28,18 @@ class Device {
   static const char* ascii_fingerprint; // = "07A9615F837F7D0A952B595DD3020972";
   static const uint8_t binary_fingerprint[16]; // = {0x07,0xA9,0x61,0x5F,0x83,0x7F,0x7D,0x0A,0x95,0x2B,0x59,0x5D,0xD3,0x02,0x09,0x72};
 
+  Device(const Device&);
+  Device& operator=(const Device&);
   Device() : name(), udn() {
   }
 
-  virtual ~Device() throw() {}
-
+  virtual ~Device() throw();
   std::string name;
   std::string udn;
 
-  void __set_name(const std::string& val) {
-    name = val;
-  }
+  void __set_name(const std::string& val);
 
-  void __set_udn(const std::string& val) {
-    udn = val;
-  }
+  void __set_udn(const std::string& val);
 
   bool operator == (const Device & rhs) const
   {
@@ -72,18 +73,17 @@ class DeviceResponse {
   static const char* ascii_fingerprint; // = "006EFB9C0A4E436459CDFDF617590BB4";
   static const uint8_t binary_fingerprint[16]; // = {0x00,0x6E,0xFB,0x9C,0x0A,0x4E,0x43,0x64,0x59,0xCD,0xFD,0xF6,0x17,0x59,0x0B,0xB4};
 
+  DeviceResponse(const DeviceResponse&);
+  DeviceResponse& operator=(const DeviceResponse&);
   DeviceResponse() {
   }
 
-  virtual ~DeviceResponse() throw() {}
-
+  virtual ~DeviceResponse() throw();
   std::vector<Device>  devices;
 
   _DeviceResponse__isset __isset;
 
-  void __set_devices(const std::vector<Device> & val) {
-    devices = val;
-  }
+  void __set_devices(const std::vector<Device> & val);
 
   bool operator == (const DeviceResponse & rhs) const
   {

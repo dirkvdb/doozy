@@ -10,6 +10,19 @@
 
 namespace doozy { namespace rpc {
 
+
+Device::~Device() throw() {
+}
+
+
+void Device::__set_name(const std::string& val) {
+  name = val;
+}
+
+void Device::__set_udn(const std::string& val) {
+  udn = val;
+}
+
 const char* Device::ascii_fingerprint = "07A9615F837F7D0A952B595DD3020972";
 const uint8_t Device::binary_fingerprint[16] = {0x07,0xA9,0x61,0x5F,0x83,0x7F,0x7D,0x0A,0x95,0x2B,0x59,0x5D,0xD3,0x02,0x09,0x72};
 
@@ -69,6 +82,7 @@ uint32_t Device::read(::apache::thrift::protocol::TProtocol* iprot) {
 
 uint32_t Device::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
+  oprot->incrementRecursionDepth();
   xfer += oprot->writeStructBegin("Device");
 
   xfer += oprot->writeFieldBegin("name", ::apache::thrift::protocol::T_STRING, 1);
@@ -81,6 +95,7 @@ uint32_t Device::write(::apache::thrift::protocol::TProtocol* oprot) const {
 
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
+  oprot->decrementRecursionDepth();
   return xfer;
 }
 
@@ -88,6 +103,24 @@ void swap(Device &a, Device &b) {
   using ::std::swap;
   swap(a.name, b.name);
   swap(a.udn, b.udn);
+}
+
+Device::Device(const Device& other0) {
+  name = other0.name;
+  udn = other0.udn;
+}
+Device& Device::operator=(const Device& other1) {
+  name = other1.name;
+  udn = other1.udn;
+  return *this;
+}
+
+DeviceResponse::~DeviceResponse() throw() {
+}
+
+
+void DeviceResponse::__set_devices(const std::vector<Device> & val) {
+  devices = val;
 }
 
 const char* DeviceResponse::ascii_fingerprint = "006EFB9C0A4E436459CDFDF617590BB4";
@@ -117,14 +150,14 @@ uint32_t DeviceResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->devices.clear();
-            uint32_t _size0;
-            ::apache::thrift::protocol::TType _etype3;
-            xfer += iprot->readListBegin(_etype3, _size0);
-            this->devices.resize(_size0);
-            uint32_t _i4;
-            for (_i4 = 0; _i4 < _size0; ++_i4)
+            uint32_t _size2;
+            ::apache::thrift::protocol::TType _etype5;
+            xfer += iprot->readListBegin(_etype5, _size2);
+            this->devices.resize(_size2);
+            uint32_t _i6;
+            for (_i6 = 0; _i6 < _size2; ++_i6)
             {
-              xfer += this->devices[_i4].read(iprot);
+              xfer += this->devices[_i6].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -147,15 +180,16 @@ uint32_t DeviceResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
 
 uint32_t DeviceResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
+  oprot->incrementRecursionDepth();
   xfer += oprot->writeStructBegin("DeviceResponse");
 
   xfer += oprot->writeFieldBegin("devices", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->devices.size()));
-    std::vector<Device> ::const_iterator _iter5;
-    for (_iter5 = this->devices.begin(); _iter5 != this->devices.end(); ++_iter5)
+    std::vector<Device> ::const_iterator _iter7;
+    for (_iter7 = this->devices.begin(); _iter7 != this->devices.end(); ++_iter7)
     {
-      xfer += (*_iter5).write(oprot);
+      xfer += (*_iter7).write(oprot);
     }
     xfer += oprot->writeListEnd();
   }
@@ -163,6 +197,7 @@ uint32_t DeviceResponse::write(::apache::thrift::protocol::TProtocol* oprot) con
 
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
+  oprot->decrementRecursionDepth();
   return xfer;
 }
 
@@ -172,4 +207,11 @@ void swap(DeviceResponse &a, DeviceResponse &b) {
   swap(a.__isset, b.__isset);
 }
 
+DeviceResponse::DeviceResponse(const DeviceResponse& other8) {
+  devices = other8.devices;
+}
+DeviceResponse& DeviceResponse::operator=(const DeviceResponse& other9) {
+  devices = other9.devices;
+  return *this;
+}
 }} // namespace

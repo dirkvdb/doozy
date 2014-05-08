@@ -61,11 +61,12 @@ class ControlPoint_GetRenderers_args {
   static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
   static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
 
+  ControlPoint_GetRenderers_args(const ControlPoint_GetRenderers_args&);
+  ControlPoint_GetRenderers_args& operator=(const ControlPoint_GetRenderers_args&);
   ControlPoint_GetRenderers_args() {
   }
 
-  virtual ~ControlPoint_GetRenderers_args() throw() {}
-
+  virtual ~ControlPoint_GetRenderers_args() throw();
 
   bool operator == (const ControlPoint_GetRenderers_args & /* rhs */) const
   {
@@ -90,8 +91,7 @@ class ControlPoint_GetRenderers_pargs {
   static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
 
 
-  virtual ~ControlPoint_GetRenderers_pargs() throw() {}
-
+  virtual ~ControlPoint_GetRenderers_pargs() throw();
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -108,18 +108,17 @@ class ControlPoint_GetRenderers_result {
   static const char* ascii_fingerprint; // = "CBFF6EB1EDB1D2381B07A6FDC62945B3";
   static const uint8_t binary_fingerprint[16]; // = {0xCB,0xFF,0x6E,0xB1,0xED,0xB1,0xD2,0x38,0x1B,0x07,0xA6,0xFD,0xC6,0x29,0x45,0xB3};
 
+  ControlPoint_GetRenderers_result(const ControlPoint_GetRenderers_result&);
+  ControlPoint_GetRenderers_result& operator=(const ControlPoint_GetRenderers_result&);
   ControlPoint_GetRenderers_result() {
   }
 
-  virtual ~ControlPoint_GetRenderers_result() throw() {}
-
+  virtual ~ControlPoint_GetRenderers_result() throw();
   DeviceResponse success;
 
   _ControlPoint_GetRenderers_result__isset __isset;
 
-  void __set_success(const DeviceResponse& val) {
-    success = val;
-  }
+  void __set_success(const DeviceResponse& val);
 
   bool operator == (const ControlPoint_GetRenderers_result & rhs) const
   {
@@ -150,8 +149,7 @@ class ControlPoint_GetRenderers_presult {
   static const uint8_t binary_fingerprint[16]; // = {0xCB,0xFF,0x6E,0xB1,0xED,0xB1,0xD2,0x38,0x1B,0x07,0xA6,0xFD,0xC6,0x29,0x45,0xB3};
 
 
-  virtual ~ControlPoint_GetRenderers_presult() throw() {}
-
+  virtual ~ControlPoint_GetRenderers_presult() throw();
   DeviceResponse* success;
 
   _ControlPoint_GetRenderers_presult__isset __isset;
@@ -167,11 +165,12 @@ class ControlPoint_GetServers_args {
   static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
   static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
 
+  ControlPoint_GetServers_args(const ControlPoint_GetServers_args&);
+  ControlPoint_GetServers_args& operator=(const ControlPoint_GetServers_args&);
   ControlPoint_GetServers_args() {
   }
 
-  virtual ~ControlPoint_GetServers_args() throw() {}
-
+  virtual ~ControlPoint_GetServers_args() throw();
 
   bool operator == (const ControlPoint_GetServers_args & /* rhs */) const
   {
@@ -196,8 +195,7 @@ class ControlPoint_GetServers_pargs {
   static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
 
 
-  virtual ~ControlPoint_GetServers_pargs() throw() {}
-
+  virtual ~ControlPoint_GetServers_pargs() throw();
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
@@ -214,18 +212,17 @@ class ControlPoint_GetServers_result {
   static const char* ascii_fingerprint; // = "CBFF6EB1EDB1D2381B07A6FDC62945B3";
   static const uint8_t binary_fingerprint[16]; // = {0xCB,0xFF,0x6E,0xB1,0xED,0xB1,0xD2,0x38,0x1B,0x07,0xA6,0xFD,0xC6,0x29,0x45,0xB3};
 
+  ControlPoint_GetServers_result(const ControlPoint_GetServers_result&);
+  ControlPoint_GetServers_result& operator=(const ControlPoint_GetServers_result&);
   ControlPoint_GetServers_result() {
   }
 
-  virtual ~ControlPoint_GetServers_result() throw() {}
-
+  virtual ~ControlPoint_GetServers_result() throw();
   DeviceResponse success;
 
   _ControlPoint_GetServers_result__isset __isset;
 
-  void __set_success(const DeviceResponse& val) {
-    success = val;
-  }
+  void __set_success(const DeviceResponse& val);
 
   bool operator == (const ControlPoint_GetServers_result & rhs) const
   {
@@ -256,8 +253,7 @@ class ControlPoint_GetServers_presult {
   static const uint8_t binary_fingerprint[16]; // = {0xCB,0xFF,0x6E,0xB1,0xED,0xB1,0xD2,0x38,0x1B,0x07,0xA6,0xFD,0xC6,0x29,0x45,0xB3};
 
 
-  virtual ~ControlPoint_GetServers_presult() throw() {}
-
+  virtual ~ControlPoint_GetServers_presult() throw();
   DeviceResponse* success;
 
   _ControlPoint_GetServers_presult__isset __isset;
