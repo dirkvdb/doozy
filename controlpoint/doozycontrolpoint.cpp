@@ -26,6 +26,7 @@ namespace doozy
 
 ControlPoint::ControlPoint()
 : m_Cp(m_Client)
+, m_MediaServer(m_Client)
 , m_RendererScanner(m_Client, upnp::Device::Type::MediaRenderer)
 , m_ServerScanner(m_Client, upnp::Device::Type::MediaServer)
 {
@@ -92,6 +93,21 @@ void ControlPoint::GetServers(rpc::DeviceResponse& response)
     });
     
     response.__set_devices(rpcDevs);
+}
+    
+void ControlPoint::Browse(rpc::BrowseResponse& response, const rpc::BrowseRequest& request)
+{
+    auto item = std::make_shared<upnp::Item>(request.containerid);
+    m_MediaServer.setDevice(m_ServerScanner.getDevice(request.udn));
+    auto items = m_MediaServer.getAllInContainer(item);
+    
+    for (auto& item : items)
+    {
+        rpc::Item i;
+        i.id = item->getObjectId();
+        i.title = item->getTitle();
+        response.items.push_back(i);
+    }
 }
     
 }

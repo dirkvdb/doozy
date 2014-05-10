@@ -19,13 +19,14 @@ from controlpoint import ControlPoint
 from controlpoint.ttypes import *
 
 if len(sys.argv) <= 1 or sys.argv[1] == '--help':
-  print ''
-  print 'Usage: ' + sys.argv[0] + ' [-h host[:port]] [-u url] [-f[ramed]] function [arg1 [arg2...]]'
-  print ''
-  print 'Functions:'
-  print '  DeviceResponse GetRenderers()'
-  print '  DeviceResponse GetServers()'
-  print ''
+  print('')
+  print('Usage: ' + sys.argv[0] + ' [-h host[:port]] [-u url] [-f[ramed]] function [arg1 [arg2...]]')
+  print('')
+  print('Functions:')
+  print('  DeviceResponse GetRenderers()')
+  print('  DeviceResponse GetServers()')
+  print('  BrowseResponse Browse(BrowseRequest req)')
+  print('')
   sys.exit(0)
 
 pp = pprint.PrettyPrinter(indent = 2)
@@ -78,18 +79,24 @@ transport.open()
 
 if cmd == 'GetRenderers':
   if len(args) != 0:
-    print 'GetRenderers requires 0 args'
+    print('GetRenderers requires 0 args')
     sys.exit(1)
   pp.pprint(client.GetRenderers())
 
 elif cmd == 'GetServers':
   if len(args) != 0:
-    print 'GetServers requires 0 args'
+    print('GetServers requires 0 args')
     sys.exit(1)
   pp.pprint(client.GetServers())
 
+elif cmd == 'Browse':
+  if len(args) != 1:
+    print('Browse requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.Browse(eval(args[0]),))
+
 else:
-  print 'Unrecognized method %s' % cmd
+  print('Unrecognized method %s' % cmd)
   sys.exit(1)
 
 transport.close()

@@ -32,6 +32,11 @@ class ControlPointHandler : virtual public ControlPointIf {
     printf("GetServers\n");
   }
 
+  void Browse(BrowseResponse& _return, const BrowseRequest& req) {
+    // Your implementation goes here
+    printf("Browse\n");
+  }
+
 };
 
 int main(int argc, char **argv) {

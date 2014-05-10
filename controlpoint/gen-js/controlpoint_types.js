@@ -71,6 +71,72 @@ Device.prototype.write = function(output) {
   return;
 };
 
+Item = function(args) {
+  this.id = null;
+  this.title = null;
+  if (args) {
+    if (args.id !== undefined) {
+      this.id = args.id;
+    }
+    if (args.title !== undefined) {
+      this.title = args.title;
+    }
+  }
+};
+Item.prototype = {};
+Item.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true)
+  {
+    var ret = input.readFieldBegin();
+    var fname = ret.fname;
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+      if (ftype == Thrift.Type.STRING) {
+        this.id = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 2:
+      if (ftype == Thrift.Type.STRING) {
+        this.title = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+Item.prototype.write = function(output) {
+  output.writeStructBegin('Item');
+  if (this.id !== null && this.id !== undefined) {
+    output.writeFieldBegin('id', Thrift.Type.STRING, 1);
+    output.writeString(this.id);
+    output.writeFieldEnd();
+  }
+  if (this.title !== null && this.title !== undefined) {
+    output.writeFieldBegin('title', Thrift.Type.STRING, 2);
+    output.writeString(this.title);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
 DeviceResponse = function(args) {
   this.devices = null;
   if (args) {
@@ -137,6 +203,148 @@ DeviceResponse.prototype.write = function(output) {
       {
         iter7 = this.devices[iter7];
         iter7.write(output);
+      }
+    }
+    output.writeListEnd();
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+BrowseRequest = function(args) {
+  this.udn = null;
+  this.containerid = null;
+  if (args) {
+    if (args.udn !== undefined) {
+      this.udn = args.udn;
+    }
+    if (args.containerid !== undefined) {
+      this.containerid = args.containerid;
+    }
+  }
+};
+BrowseRequest.prototype = {};
+BrowseRequest.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true)
+  {
+    var ret = input.readFieldBegin();
+    var fname = ret.fname;
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+      if (ftype == Thrift.Type.STRING) {
+        this.udn = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 2:
+      if (ftype == Thrift.Type.STRING) {
+        this.containerid = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+BrowseRequest.prototype.write = function(output) {
+  output.writeStructBegin('BrowseRequest');
+  if (this.udn !== null && this.udn !== undefined) {
+    output.writeFieldBegin('udn', Thrift.Type.STRING, 1);
+    output.writeString(this.udn);
+    output.writeFieldEnd();
+  }
+  if (this.containerid !== null && this.containerid !== undefined) {
+    output.writeFieldBegin('containerid', Thrift.Type.STRING, 2);
+    output.writeString(this.containerid);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+BrowseResponse = function(args) {
+  this.items = null;
+  if (args) {
+    if (args.items !== undefined) {
+      this.items = args.items;
+    }
+  }
+};
+BrowseResponse.prototype = {};
+BrowseResponse.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true)
+  {
+    var ret = input.readFieldBegin();
+    var fname = ret.fname;
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+      if (ftype == Thrift.Type.LIST) {
+        var _size8 = 0;
+        var _rtmp312;
+        this.items = [];
+        var _etype11 = 0;
+        _rtmp312 = input.readListBegin();
+        _etype11 = _rtmp312.etype;
+        _size8 = _rtmp312.size;
+        for (var _i13 = 0; _i13 < _size8; ++_i13)
+        {
+          var elem14 = null;
+          elem14 = new Item();
+          elem14.read(input);
+          this.items.push(elem14);
+        }
+        input.readListEnd();
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+BrowseResponse.prototype.write = function(output) {
+  output.writeStructBegin('BrowseResponse');
+  if (this.items !== null && this.items !== undefined) {
+    output.writeFieldBegin('items', Thrift.Type.LIST, 1);
+    output.writeListBegin(Thrift.Type.STRUCT, this.items.length);
+    for (var iter15 in this.items)
+    {
+      if (this.items.hasOwnProperty(iter15))
+      {
+        iter15 = this.items[iter15];
+        iter15.write(output);
       }
     }
     output.writeListEnd();

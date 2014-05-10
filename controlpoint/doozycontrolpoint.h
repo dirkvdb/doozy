@@ -28,6 +28,7 @@
 #include "upnp/upnpwebserver.h"
 #include "upnp/upnpdevicescanner.h"
 #include "upnp/upnpcontrolpoint.h"
+#include "upnp/upnpmediaserver.h"
 
 namespace doozy
 {
@@ -41,10 +42,12 @@ public:
     
     void GetRenderers(rpc::DeviceResponse& response) override;
     void GetServers(rpc::DeviceResponse& response) override;
+    void Browse(rpc::BrowseResponse& response, const rpc::BrowseRequest& request) override;
     
 private:
     upnp::Client                        m_Client;
     upnp::ControlPoint                  m_Cp;
+    upnp::MediaServer                   m_MediaServer;
     upnp::DeviceScanner                 m_RendererScanner;
     upnp::DeviceScanner                 m_ServerScanner;
     std::unique_ptr<upnp::WebServer>    m_Webserver;

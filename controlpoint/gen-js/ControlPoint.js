@@ -171,6 +171,114 @@ ControlPoint_GetServers_result.prototype.write = function(output) {
   return;
 };
 
+ControlPoint_Browse_args = function(args) {
+  this.req = null;
+  if (args) {
+    if (args.req !== undefined) {
+      this.req = args.req;
+    }
+  }
+};
+ControlPoint_Browse_args.prototype = {};
+ControlPoint_Browse_args.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true)
+  {
+    var ret = input.readFieldBegin();
+    var fname = ret.fname;
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+      if (ftype == Thrift.Type.STRUCT) {
+        this.req = new BrowseRequest();
+        this.req.read(input);
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+ControlPoint_Browse_args.prototype.write = function(output) {
+  output.writeStructBegin('ControlPoint_Browse_args');
+  if (this.req !== null && this.req !== undefined) {
+    output.writeFieldBegin('req', Thrift.Type.STRUCT, 1);
+    this.req.write(output);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+ControlPoint_Browse_result = function(args) {
+  this.success = null;
+  if (args) {
+    if (args.success !== undefined) {
+      this.success = args.success;
+    }
+  }
+};
+ControlPoint_Browse_result.prototype = {};
+ControlPoint_Browse_result.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true)
+  {
+    var ret = input.readFieldBegin();
+    var fname = ret.fname;
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 0:
+      if (ftype == Thrift.Type.STRUCT) {
+        this.success = new BrowseResponse();
+        this.success.read(input);
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+ControlPoint_Browse_result.prototype.write = function(output) {
+  output.writeStructBegin('ControlPoint_Browse_result');
+  if (this.success !== null && this.success !== undefined) {
+    output.writeFieldBegin('success', Thrift.Type.STRUCT, 0);
+    this.success.write(output);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
 ControlPointClient = function(input, output) {
     this.input = input;
     this.output = (!output) ? input : output;
@@ -272,4 +380,53 @@ ControlPointClient.prototype.recv_GetServers = function() {
     return result.success;
   }
   throw 'GetServers failed: unknown result';
+};
+ControlPointClient.prototype.Browse = function(req, callback) {
+  this.send_Browse(req, callback); 
+  if (!callback) {
+    return this.recv_Browse();
+  }
+};
+
+ControlPointClient.prototype.send_Browse = function(req, callback) {
+  this.output.writeMessageBegin('Browse', Thrift.MessageType.CALL, this.seqid);
+  var args = new ControlPoint_Browse_args();
+  args.req = req;
+  args.write(this.output);
+  this.output.writeMessageEnd();
+  if (callback) {
+    var self = this;
+    this.output.getTransport().flush(true, function() {
+      var result = null;
+      try {
+        result = self.recv_Browse();
+      } catch (e) {
+        result = e;
+      }
+      callback(result);
+    });
+  } else {
+    return this.output.getTransport().flush();
+  }
+};
+
+ControlPointClient.prototype.recv_Browse = function() {
+  var ret = this.input.readMessageBegin();
+  var fname = ret.fname;
+  var mtype = ret.mtype;
+  var rseqid = ret.rseqid;
+  if (mtype == Thrift.MessageType.EXCEPTION) {
+    var x = new Thrift.TApplicationException();
+    x.read(this.input);
+    this.input.readMessageEnd();
+    throw x;
+  }
+  var result = new ControlPoint_Browse_result();
+  result.read(this.input);
+  this.input.readMessageEnd();
+
+  if (null !== result.success) {
+    return result.success;
+  }
+  throw 'Browse failed: unknown result';
 };

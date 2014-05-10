@@ -17,6 +17,7 @@ class ControlPointIf {
   virtual ~ControlPointIf() {}
   virtual void GetRenderers(DeviceResponse& _return) = 0;
   virtual void GetServers(DeviceResponse& _return) = 0;
+  virtual void Browse(BrowseResponse& _return, const BrowseRequest& req) = 0;
 };
 
 class ControlPointIfFactory {
@@ -50,6 +51,9 @@ class ControlPointNull : virtual public ControlPointIf {
     return;
   }
   void GetServers(DeviceResponse& /* _return */) {
+    return;
+  }
+  void Browse(BrowseResponse& /* _return */, const BrowseRequest& /* req */) {
     return;
   }
 };
@@ -262,6 +266,122 @@ class ControlPoint_GetServers_presult {
 
 };
 
+typedef struct _ControlPoint_Browse_args__isset {
+  _ControlPoint_Browse_args__isset() : req(false) {}
+  bool req;
+} _ControlPoint_Browse_args__isset;
+
+class ControlPoint_Browse_args {
+ public:
+
+  static const char* ascii_fingerprint; // = "A756D3DBE614FB13F70BF7F7B6EB3D73";
+  static const uint8_t binary_fingerprint[16]; // = {0xA7,0x56,0xD3,0xDB,0xE6,0x14,0xFB,0x13,0xF7,0x0B,0xF7,0xF7,0xB6,0xEB,0x3D,0x73};
+
+  ControlPoint_Browse_args(const ControlPoint_Browse_args&);
+  ControlPoint_Browse_args& operator=(const ControlPoint_Browse_args&);
+  ControlPoint_Browse_args() {
+  }
+
+  virtual ~ControlPoint_Browse_args() throw();
+  BrowseRequest req;
+
+  _ControlPoint_Browse_args__isset __isset;
+
+  void __set_req(const BrowseRequest& val);
+
+  bool operator == (const ControlPoint_Browse_args & rhs) const
+  {
+    if (!(req == rhs.req))
+      return false;
+    return true;
+  }
+  bool operator != (const ControlPoint_Browse_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const ControlPoint_Browse_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class ControlPoint_Browse_pargs {
+ public:
+
+  static const char* ascii_fingerprint; // = "A756D3DBE614FB13F70BF7F7B6EB3D73";
+  static const uint8_t binary_fingerprint[16]; // = {0xA7,0x56,0xD3,0xDB,0xE6,0x14,0xFB,0x13,0xF7,0x0B,0xF7,0xF7,0xB6,0xEB,0x3D,0x73};
+
+
+  virtual ~ControlPoint_Browse_pargs() throw();
+  const BrowseRequest* req;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _ControlPoint_Browse_result__isset {
+  _ControlPoint_Browse_result__isset() : success(false) {}
+  bool success;
+} _ControlPoint_Browse_result__isset;
+
+class ControlPoint_Browse_result {
+ public:
+
+  static const char* ascii_fingerprint; // = "CBFF6EB1EDB1D2381B07A6FDC62945B3";
+  static const uint8_t binary_fingerprint[16]; // = {0xCB,0xFF,0x6E,0xB1,0xED,0xB1,0xD2,0x38,0x1B,0x07,0xA6,0xFD,0xC6,0x29,0x45,0xB3};
+
+  ControlPoint_Browse_result(const ControlPoint_Browse_result&);
+  ControlPoint_Browse_result& operator=(const ControlPoint_Browse_result&);
+  ControlPoint_Browse_result() {
+  }
+
+  virtual ~ControlPoint_Browse_result() throw();
+  BrowseResponse success;
+
+  _ControlPoint_Browse_result__isset __isset;
+
+  void __set_success(const BrowseResponse& val);
+
+  bool operator == (const ControlPoint_Browse_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const ControlPoint_Browse_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const ControlPoint_Browse_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _ControlPoint_Browse_presult__isset {
+  _ControlPoint_Browse_presult__isset() : success(false) {}
+  bool success;
+} _ControlPoint_Browse_presult__isset;
+
+class ControlPoint_Browse_presult {
+ public:
+
+  static const char* ascii_fingerprint; // = "CBFF6EB1EDB1D2381B07A6FDC62945B3";
+  static const uint8_t binary_fingerprint[16]; // = {0xCB,0xFF,0x6E,0xB1,0xED,0xB1,0xD2,0x38,0x1B,0x07,0xA6,0xFD,0xC6,0x29,0x45,0xB3};
+
+
+  virtual ~ControlPoint_Browse_presult() throw();
+  BrowseResponse* success;
+
+  _ControlPoint_Browse_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 class ControlPointClient : virtual public ControlPointIf {
  public:
   ControlPointClient(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
@@ -293,6 +413,9 @@ class ControlPointClient : virtual public ControlPointIf {
   void GetServers(DeviceResponse& _return);
   void send_GetServers();
   void recv_GetServers(DeviceResponse& _return);
+  void Browse(BrowseResponse& _return, const BrowseRequest& req);
+  void send_Browse(const BrowseRequest& req);
+  void recv_Browse(BrowseResponse& _return);
  protected:
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
@@ -310,11 +433,13 @@ class ControlPointProcessor : public ::apache::thrift::TDispatchProcessor {
   ProcessMap processMap_;
   void process_GetRenderers(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_GetServers(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_Browse(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   ControlPointProcessor(boost::shared_ptr<ControlPointIf> iface) :
     iface_(iface) {
     processMap_["GetRenderers"] = &ControlPointProcessor::process_GetRenderers;
     processMap_["GetServers"] = &ControlPointProcessor::process_GetServers;
+    processMap_["Browse"] = &ControlPointProcessor::process_Browse;
   }
 
   virtual ~ControlPointProcessor() {}
@@ -360,6 +485,16 @@ class ControlPointMultiface : virtual public ControlPointIf {
       ifaces_[i]->GetServers(_return);
     }
     ifaces_[i]->GetServers(_return);
+    return;
+  }
+
+  void Browse(BrowseResponse& _return, const BrowseRequest& req) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->Browse(_return, req);
+    }
+    ifaces_[i]->Browse(_return, req);
     return;
   }
 

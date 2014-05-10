@@ -5,13 +5,28 @@ var Doozy = (function() {
 
     function Doozy(){};
 
-    function adddevice(combo, name) {
+    function adddevice(combo, dev) {
         var list = document.getElementById(combo);
         var entry = document.createElement('li');
 
         var a = document.createElement("a");
-        a.appendChild(document.createTextNode(name));
+        a.appendChild(document.createTextNode(dev.name));
         a.href = "#";
+        a.className = "server";
+        a.dataset.udn= dev.udn;
+        entry.appendChild(a);
+        list.appendChild(entry);
+    }
+
+    function additem(item) {
+        var list = document.getElementById("upnpitems");
+        var entry = document.createElement('li');
+        entry.className = "span3";
+
+        var a = document.createElement("a");
+        a.appendChild(document.createTextNode(item.title));
+        a.href = "#";
+        a.className = "thumbnail";
         entry.appendChild(a);
         list.appendChild(entry);
     }
@@ -19,11 +34,10 @@ var Doozy = (function() {
     Doozy.prototype.getservers = function() {
         try {
             console.info("Get Servers");
-            servers = _client.GetServers(function(resp) {
+            _client.GetServers(function(resp) {
                 for (var i = 0; i < resp.devices.length; ++i)
                 {
-                    console.info("Server: " + resp.devices[i].name);
-                    adddevice("serverlist", resp.devices[i].name);
+                    adddevice("serverlist", resp.devices[i]);
                 }
             });
         } catch(ouch){
@@ -34,15 +48,32 @@ var Doozy = (function() {
     Doozy.prototype.getrenderers = function () {
         try {
             console.info("Get Renderers");
-            servers = _client.GetRenderers(function(resp) {
+            _client.GetRenderers(function(resp) {
                 for (var i = 0; i < resp.devices.length; ++i)
                 {
-                    console.info("Renderer: " + resp.devices[i].name);
-                    adddevice("rendererlist", resp.devices[i].name);
+                    adddevice("rendererlist", resp.devices[i]);
                 }
             });
         } catch(ouch){
             console.error("Failed to get renderers: " + ouch);
+        }
+    }
+
+    Doozy.prototype.browse = function (serverudn, containerid) {
+        try {
+            console.info("Browse:" + serverudn + ' (' + containerid + ')');
+            var req = new BrowseRequest();
+            req.udn = serverudn;
+            req.containerid = containerid;
+            _client.Browse(req, function(resp) {
+                for (var i = 0; i < resp.items.length; ++i)
+                {
+                    console.info("item: " + resp.items[i].title);
+                    additem(resp.items[i]);
+                }
+            });
+        } catch(ouch){
+            console.error("Failed to get items: " + ouch);
         }
     }
 
