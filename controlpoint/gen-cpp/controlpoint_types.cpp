@@ -10,6 +10,24 @@
 
 namespace doozy { namespace rpc {
 
+int _kItemClassValues[] = {
+  ItemClass::Unknown,
+  ItemClass::Container,
+  ItemClass::Item,
+  ItemClass::AudioItem,
+  ItemClass::ImageItem,
+  ItemClass::VideoItem
+};
+const char* _kItemClassNames[] = {
+  "Unknown",
+  "Container",
+  "Item",
+  "AudioItem",
+  "ImageItem",
+  "VideoItem"
+};
+const std::map<int, const char*> _ItemClass_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(6, _kItemClassValues, _kItemClassNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+
 
 Device::~Device() throw() {
 }
@@ -127,8 +145,17 @@ void Item::__set_title(const std::string& val) {
   title = val;
 }
 
-const char* Item::ascii_fingerprint = "07A9615F837F7D0A952B595DD3020972";
-const uint8_t Item::binary_fingerprint[16] = {0x07,0xA9,0x61,0x5F,0x83,0x7F,0x7D,0x0A,0x95,0x2B,0x59,0x5D,0xD3,0x02,0x09,0x72};
+void Item::__set_itemclass(const ItemClass::type val) {
+  itemclass = val;
+}
+
+void Item::__set_thumbnailurl(const std::string& val) {
+  thumbnailurl = val;
+__isset.thumbnailurl = true;
+}
+
+const char* Item::ascii_fingerprint = "8CDAAA4EC40CD63F2ED04068E6960091";
+const uint8_t Item::binary_fingerprint[16] = {0x8C,0xDA,0xAA,0x4E,0xC4,0x0C,0xD6,0x3F,0x2E,0xD0,0x40,0x68,0xE6,0x96,0x00,0x91};
 
 uint32_t Item::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -143,6 +170,7 @@ uint32_t Item::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   bool isset_id = false;
   bool isset_title = false;
+  bool isset_itemclass = false;
 
   while (true)
   {
@@ -168,6 +196,24 @@ uint32_t Item::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          int32_t ecast2;
+          xfer += iprot->readI32(ecast2);
+          this->itemclass = (ItemClass::type)ecast2;
+          isset_itemclass = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->thumbnailurl);
+          this->__isset.thumbnailurl = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -180,6 +226,8 @@ uint32_t Item::read(::apache::thrift::protocol::TProtocol* iprot) {
   if (!isset_id)
     throw TProtocolException(TProtocolException::INVALID_DATA);
   if (!isset_title)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_itemclass)
     throw TProtocolException(TProtocolException::INVALID_DATA);
   return xfer;
 }
@@ -197,6 +245,15 @@ uint32_t Item::write(::apache::thrift::protocol::TProtocol* oprot) const {
   xfer += oprot->writeString(this->title);
   xfer += oprot->writeFieldEnd();
 
+  xfer += oprot->writeFieldBegin("itemclass", ::apache::thrift::protocol::T_I32, 3);
+  xfer += oprot->writeI32((int32_t)this->itemclass);
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.thumbnailurl) {
+    xfer += oprot->writeFieldBegin("thumbnailurl", ::apache::thrift::protocol::T_STRING, 4);
+    xfer += oprot->writeString(this->thumbnailurl);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   oprot->decrementRecursionDepth();
@@ -207,15 +264,24 @@ void swap(Item &a, Item &b) {
   using ::std::swap;
   swap(a.id, b.id);
   swap(a.title, b.title);
+  swap(a.itemclass, b.itemclass);
+  swap(a.thumbnailurl, b.thumbnailurl);
+  swap(a.__isset, b.__isset);
 }
 
-Item::Item(const Item& other2) {
-  id = other2.id;
-  title = other2.title;
-}
-Item& Item::operator=(const Item& other3) {
+Item::Item(const Item& other3) {
   id = other3.id;
   title = other3.title;
+  itemclass = other3.itemclass;
+  thumbnailurl = other3.thumbnailurl;
+  __isset = other3.__isset;
+}
+Item& Item::operator=(const Item& other4) {
+  id = other4.id;
+  title = other4.title;
+  itemclass = other4.itemclass;
+  thumbnailurl = other4.thumbnailurl;
+  __isset = other4.__isset;
   return *this;
 }
 
@@ -255,14 +321,14 @@ uint32_t DeviceResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->devices.clear();
-            uint32_t _size4;
-            ::apache::thrift::protocol::TType _etype7;
-            xfer += iprot->readListBegin(_etype7, _size4);
-            this->devices.resize(_size4);
-            uint32_t _i8;
-            for (_i8 = 0; _i8 < _size4; ++_i8)
+            uint32_t _size5;
+            ::apache::thrift::protocol::TType _etype8;
+            xfer += iprot->readListBegin(_etype8, _size5);
+            this->devices.resize(_size5);
+            uint32_t _i9;
+            for (_i9 = 0; _i9 < _size5; ++_i9)
             {
-              xfer += this->devices[_i8].read(iprot);
+              xfer += this->devices[_i9].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -293,10 +359,10 @@ uint32_t DeviceResponse::write(::apache::thrift::protocol::TProtocol* oprot) con
   xfer += oprot->writeFieldBegin("devices", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->devices.size()));
-    std::vector<Device> ::const_iterator _iter9;
-    for (_iter9 = this->devices.begin(); _iter9 != this->devices.end(); ++_iter9)
+    std::vector<Device> ::const_iterator _iter10;
+    for (_iter10 = this->devices.begin(); _iter10 != this->devices.end(); ++_iter10)
     {
-      xfer += (*_iter9).write(oprot);
+      xfer += (*_iter10).write(oprot);
     }
     xfer += oprot->writeListEnd();
   }
@@ -313,11 +379,11 @@ void swap(DeviceResponse &a, DeviceResponse &b) {
   swap(a.devices, b.devices);
 }
 
-DeviceResponse::DeviceResponse(const DeviceResponse& other10) {
-  devices = other10.devices;
-}
-DeviceResponse& DeviceResponse::operator=(const DeviceResponse& other11) {
+DeviceResponse::DeviceResponse(const DeviceResponse& other11) {
   devices = other11.devices;
+}
+DeviceResponse& DeviceResponse::operator=(const DeviceResponse& other12) {
+  devices = other12.devices;
   return *this;
 }
 
@@ -415,13 +481,13 @@ void swap(BrowseRequest &a, BrowseRequest &b) {
   swap(a.containerid, b.containerid);
 }
 
-BrowseRequest::BrowseRequest(const BrowseRequest& other12) {
-  udn = other12.udn;
-  containerid = other12.containerid;
-}
-BrowseRequest& BrowseRequest::operator=(const BrowseRequest& other13) {
+BrowseRequest::BrowseRequest(const BrowseRequest& other13) {
   udn = other13.udn;
   containerid = other13.containerid;
+}
+BrowseRequest& BrowseRequest::operator=(const BrowseRequest& other14) {
+  udn = other14.udn;
+  containerid = other14.containerid;
   return *this;
 }
 
@@ -433,8 +499,8 @@ void BrowseResponse::__set_items(const std::vector<Item> & val) {
   items = val;
 }
 
-const char* BrowseResponse::ascii_fingerprint = "006EFB9C0A4E436459CDFDF617590BB4";
-const uint8_t BrowseResponse::binary_fingerprint[16] = {0x00,0x6E,0xFB,0x9C,0x0A,0x4E,0x43,0x64,0x59,0xCD,0xFD,0xF6,0x17,0x59,0x0B,0xB4};
+const char* BrowseResponse::ascii_fingerprint = "F0604E84077F8A695D7FAADF9F917713";
+const uint8_t BrowseResponse::binary_fingerprint[16] = {0xF0,0x60,0x4E,0x84,0x07,0x7F,0x8A,0x69,0x5D,0x7F,0xAA,0xDF,0x9F,0x91,0x77,0x13};
 
 uint32_t BrowseResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -461,14 +527,14 @@ uint32_t BrowseResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->items.clear();
-            uint32_t _size14;
-            ::apache::thrift::protocol::TType _etype17;
-            xfer += iprot->readListBegin(_etype17, _size14);
-            this->items.resize(_size14);
-            uint32_t _i18;
-            for (_i18 = 0; _i18 < _size14; ++_i18)
+            uint32_t _size15;
+            ::apache::thrift::protocol::TType _etype18;
+            xfer += iprot->readListBegin(_etype18, _size15);
+            this->items.resize(_size15);
+            uint32_t _i19;
+            for (_i19 = 0; _i19 < _size15; ++_i19)
             {
-              xfer += this->items[_i18].read(iprot);
+              xfer += this->items[_i19].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -499,10 +565,10 @@ uint32_t BrowseResponse::write(::apache::thrift::protocol::TProtocol* oprot) con
   xfer += oprot->writeFieldBegin("items", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->items.size()));
-    std::vector<Item> ::const_iterator _iter19;
-    for (_iter19 = this->items.begin(); _iter19 != this->items.end(); ++_iter19)
+    std::vector<Item> ::const_iterator _iter20;
+    for (_iter20 = this->items.begin(); _iter20 != this->items.end(); ++_iter20)
     {
-      xfer += (*_iter19).write(oprot);
+      xfer += (*_iter20).write(oprot);
     }
     xfer += oprot->writeListEnd();
   }
@@ -519,11 +585,11 @@ void swap(BrowseResponse &a, BrowseResponse &b) {
   swap(a.items, b.items);
 }
 
-BrowseResponse::BrowseResponse(const BrowseResponse& other20) {
-  items = other20.items;
-}
-BrowseResponse& BrowseResponse::operator=(const BrowseResponse& other21) {
+BrowseResponse::BrowseResponse(const BrowseResponse& other21) {
   items = other21.items;
+}
+BrowseResponse& BrowseResponse::operator=(const BrowseResponse& other22) {
+  items = other22.items;
   return *this;
 }
 }} // namespace

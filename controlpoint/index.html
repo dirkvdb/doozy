@@ -13,9 +13,6 @@
     <!-- Bootstrap core CSS -->
     <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="doozycp.css" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
-    <link href="navbar.css" rel="stylesheet">
 </head>
 
 <body>
@@ -50,13 +47,21 @@
         <!-- Main component for a primary marketing message or call to action -->
         <div class="jumbotron">
             <div class="container-fluid">
-                <div class="row">
-                    <ul id="upnpitems" class="thumbnails"></ul>
+                <div id="upnpitems" class="row">
                 </div>
             </div>
         </div>
 
     </div> <!-- /container -->
+
+    <div class="col-sm-6 col-md-3 upnpitem" id="upnpitemtemplate" style='display:none'>
+        <a href="#">
+            <div class="thumbnail">
+                <img class="thumbnailimg" src="" alt="Generic placeholder thumbnail">
+            </div>
+            <div class="caption"></div>
+        </a>
+    </div>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -71,6 +76,7 @@
 
     <script type="text/javascript">
         var doozy = new Doozy();
+        var serverUdn = "";
 
         $(document).ready(function() {
             doozy.getservers();
@@ -78,7 +84,13 @@
         });
 
         $('ul#serverlist').on('click', '.server', function() {
+            serverUdn = $(this).data('udn');
             doozy.browse($(this).data('udn'), '0');
+        });
+
+        $('#upnpitems').on('click', '.upnpitem', function() {
+            console.info('click: ' + $(this).attr("id"));
+            doozy.browse(serverUdn, $(this).attr("id"));
         });
     </script>
 </body>

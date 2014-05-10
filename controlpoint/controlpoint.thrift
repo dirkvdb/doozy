@@ -6,10 +6,22 @@ struct Device
     2: required string udn;
 }
 
+enum ItemClass
+{
+    Unknown,
+    Container,
+    Item,
+    AudioItem,
+    ImageItem,
+    VideoItem
+}
+
 struct Item
 {
     1: required string id;
     2: required string title;
+    3: required ItemClass itemclass;
+    4: optional string thumbnailurl;
 }
 
 struct DeviceResponse

@@ -17,6 +17,19 @@
 
 namespace doozy { namespace rpc {
 
+struct ItemClass {
+  enum type {
+    Unknown = 0,
+    Container = 1,
+    Item = 2,
+    AudioItem = 3,
+    ImageItem = 4,
+    VideoItem = 5
+  };
+};
+
+extern const std::map<int, const char*> _ItemClass_VALUES_TO_NAMES;
+
 class Device;
 
 class Item;
@@ -68,31 +81,49 @@ class Device {
 
 void swap(Device &a, Device &b);
 
+typedef struct _Item__isset {
+  _Item__isset() : thumbnailurl(false) {}
+  bool thumbnailurl;
+} _Item__isset;
 
 class Item {
  public:
 
-  static const char* ascii_fingerprint; // = "07A9615F837F7D0A952B595DD3020972";
-  static const uint8_t binary_fingerprint[16]; // = {0x07,0xA9,0x61,0x5F,0x83,0x7F,0x7D,0x0A,0x95,0x2B,0x59,0x5D,0xD3,0x02,0x09,0x72};
+  static const char* ascii_fingerprint; // = "8CDAAA4EC40CD63F2ED04068E6960091";
+  static const uint8_t binary_fingerprint[16]; // = {0x8C,0xDA,0xAA,0x4E,0xC4,0x0C,0xD6,0x3F,0x2E,0xD0,0x40,0x68,0xE6,0x96,0x00,0x91};
 
   Item(const Item&);
   Item& operator=(const Item&);
-  Item() : id(), title() {
+  Item() : id(), title(), itemclass((ItemClass::type)0), thumbnailurl() {
   }
 
   virtual ~Item() throw();
   std::string id;
   std::string title;
+  ItemClass::type itemclass;
+  std::string thumbnailurl;
+
+  _Item__isset __isset;
 
   void __set_id(const std::string& val);
 
   void __set_title(const std::string& val);
+
+  void __set_itemclass(const ItemClass::type val);
+
+  void __set_thumbnailurl(const std::string& val);
 
   bool operator == (const Item & rhs) const
   {
     if (!(id == rhs.id))
       return false;
     if (!(title == rhs.title))
+      return false;
+    if (!(itemclass == rhs.itemclass))
+      return false;
+    if (__isset.thumbnailurl != rhs.__isset.thumbnailurl)
+      return false;
+    else if (__isset.thumbnailurl && !(thumbnailurl == rhs.thumbnailurl))
       return false;
     return true;
   }
@@ -190,8 +221,8 @@ void swap(BrowseRequest &a, BrowseRequest &b);
 class BrowseResponse {
  public:
 
-  static const char* ascii_fingerprint; // = "006EFB9C0A4E436459CDFDF617590BB4";
-  static const uint8_t binary_fingerprint[16]; // = {0x00,0x6E,0xFB,0x9C,0x0A,0x4E,0x43,0x64,0x59,0xCD,0xFD,0xF6,0x17,0x59,0x0B,0xB4};
+  static const char* ascii_fingerprint; // = "F0604E84077F8A695D7FAADF9F917713";
+  static const uint8_t binary_fingerprint[16]; // = {0xF0,0x60,0x4E,0x84,0x07,0x7F,0x8A,0x69,0x5D,0x7F,0xAA,0xDF,0x9F,0x91,0x77,0x13};
 
   BrowseResponse(const BrowseResponse&);
   BrowseResponse& operator=(const BrowseResponse&);

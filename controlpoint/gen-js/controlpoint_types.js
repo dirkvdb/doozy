@@ -5,6 +5,14 @@
 //
 
 
+ItemClass = {
+'Unknown' : 0,
+'Container' : 1,
+'Item' : 2,
+'AudioItem' : 3,
+'ImageItem' : 4,
+'VideoItem' : 5
+};
 Device = function(args) {
   this.name = null;
   this.udn = null;
@@ -74,12 +82,20 @@ Device.prototype.write = function(output) {
 Item = function(args) {
   this.id = null;
   this.title = null;
+  this.itemclass = null;
+  this.thumbnailurl = null;
   if (args) {
     if (args.id !== undefined) {
       this.id = args.id;
     }
     if (args.title !== undefined) {
       this.title = args.title;
+    }
+    if (args.itemclass !== undefined) {
+      this.itemclass = args.itemclass;
+    }
+    if (args.thumbnailurl !== undefined) {
+      this.thumbnailurl = args.thumbnailurl;
     }
   }
 };
@@ -111,6 +127,20 @@ Item.prototype.read = function(input) {
         input.skip(ftype);
       }
       break;
+      case 3:
+      if (ftype == Thrift.Type.I32) {
+        this.itemclass = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 4:
+      if (ftype == Thrift.Type.STRING) {
+        this.thumbnailurl = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
       default:
         input.skip(ftype);
     }
@@ -130,6 +160,16 @@ Item.prototype.write = function(output) {
   if (this.title !== null && this.title !== undefined) {
     output.writeFieldBegin('title', Thrift.Type.STRING, 2);
     output.writeString(this.title);
+    output.writeFieldEnd();
+  }
+  if (this.itemclass !== null && this.itemclass !== undefined) {
+    output.writeFieldBegin('itemclass', Thrift.Type.I32, 3);
+    output.writeI32(this.itemclass);
+    output.writeFieldEnd();
+  }
+  if (this.thumbnailurl !== null && this.thumbnailurl !== undefined) {
+    output.writeFieldBegin('thumbnailurl', Thrift.Type.STRING, 4);
+    output.writeString(this.thumbnailurl);
     output.writeFieldEnd();
   }
   output.writeFieldStop();

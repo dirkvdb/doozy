@@ -329,8 +329,8 @@ typedef struct _ControlPoint_Browse_result__isset {
 class ControlPoint_Browse_result {
  public:
 
-  static const char* ascii_fingerprint; // = "CBFF6EB1EDB1D2381B07A6FDC62945B3";
-  static const uint8_t binary_fingerprint[16]; // = {0xCB,0xFF,0x6E,0xB1,0xED,0xB1,0xD2,0x38,0x1B,0x07,0xA6,0xFD,0xC6,0x29,0x45,0xB3};
+  static const char* ascii_fingerprint; // = "733934A7BDD63BF20AFAE0DA4955CF3A";
+  static const uint8_t binary_fingerprint[16]; // = {0x73,0x39,0x34,0xA7,0xBD,0xD6,0x3B,0xF2,0x0A,0xFA,0xE0,0xDA,0x49,0x55,0xCF,0x3A};
 
   ControlPoint_Browse_result(const ControlPoint_Browse_result&);
   ControlPoint_Browse_result& operator=(const ControlPoint_Browse_result&);
@@ -369,8 +369,8 @@ typedef struct _ControlPoint_Browse_presult__isset {
 class ControlPoint_Browse_presult {
  public:
 
-  static const char* ascii_fingerprint; // = "CBFF6EB1EDB1D2381B07A6FDC62945B3";
-  static const uint8_t binary_fingerprint[16]; // = {0xCB,0xFF,0x6E,0xB1,0xED,0xB1,0xD2,0x38,0x1B,0x07,0xA6,0xFD,0xC6,0x29,0x45,0xB3};
+  static const char* ascii_fingerprint; // = "733934A7BDD63BF20AFAE0DA4955CF3A";
+  static const uint8_t binary_fingerprint[16]; // = {0x73,0x39,0x34,0xA7,0xBD,0xD6,0x3B,0xF2,0x0A,0xFA,0xE0,0xDA,0x49,0x55,0xCF,0x3A};
 
 
   virtual ~ControlPoint_Browse_presult() throw();

@@ -94,7 +94,29 @@ void ControlPoint::GetServers(rpc::DeviceResponse& response)
     
     response.__set_devices(rpcDevs);
 }
-    
+
+static rpc::ItemClass::type convertClass(upnp::Item::Class c)
+{
+    switch (c)
+    {
+        case upnp::Item::Class::Container:
+        case upnp::Item::Class::AudioContainer:
+        case upnp::Item::Class::VideoContainer:
+        case upnp::Item::Class::ImageContainer:
+            return rpc::ItemClass::Container;
+        case upnp::Item::Class::Video:
+            return rpc::ItemClass::VideoItem;
+        case upnp::Item::Class::Audio:
+            return rpc::ItemClass::AudioItem;
+        case upnp::Item::Class::Image:
+            return rpc::ItemClass::ImageItem;
+        case upnp::Item::Class::Generic:
+            return rpc::ItemClass::Item;
+        default:
+            return rpc::ItemClass::Unknown;
+    }
+}
+
 void ControlPoint::Browse(rpc::BrowseResponse& response, const rpc::BrowseRequest& request)
 {
     auto item = std::make_shared<upnp::Item>(request.containerid);
@@ -106,6 +128,13 @@ void ControlPoint::Browse(rpc::BrowseResponse& response, const rpc::BrowseReques
         rpc::Item i;
         i.id = item->getObjectId();
         i.title = item->getTitle();
+        i.itemclass = convertClass(item->getClass());
+        auto url = item->getAlbumArtUri(upnp::dlna::ProfileId::JpegThumbnail);
+        if (!url.empty())
+        {
+            i.__set_thumbnailurl(url);
+        }
+
         response.items.push_back(i);
     }
 }

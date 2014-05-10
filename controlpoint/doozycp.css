@@ -1,2 +1,17 @@
-html, body { height:100%; }
-.special, .special .jumbotron { height:fill; }
+body {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.navbar {
+  margin-bottom: 20px;
+}
+
+
+.thumbnail .caption {
+	outline: none;
+}
+
+.upnpitem {
+	text-align: center;
+}

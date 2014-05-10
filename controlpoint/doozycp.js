@@ -18,17 +18,26 @@ var Doozy = (function() {
         list.appendChild(entry);
     }
 
-    function additem(item) {
-        var list = document.getElementById("upnpitems");
-        var entry = document.createElement('li');
-        entry.className = "span3";
+    function clearitems() {
+        $("#upnpitems").empty();
+    }
 
-        var a = document.createElement("a");
-        a.appendChild(document.createTextNode(item.title));
-        a.href = "#";
-        a.className = "thumbnail";
-        entry.appendChild(a);
-        list.appendChild(entry);
+    function additem(item) {
+        var itemDiv = $("#upnpitemtemplate").clone();
+        itemDiv.attr("id", item.id)
+        itemDiv.appendTo("#upnpitems");
+        itemDiv.find(".caption").html('<h3>' + item.title + '</h3>');
+
+        var src = "";        
+        if (item.thumbnailurl) {
+            src = item.thumbnailurl;
+        }
+        else if (item.itemclass == ItemClass['Container']) {
+            src = "images/container.png";
+        }
+
+        itemDiv.find(".thumbnailimg").attr("src", src);
+        itemDiv.show();
     }
 
     Doozy.prototype.getservers = function() {
@@ -40,7 +49,7 @@ var Doozy = (function() {
                     adddevice("serverlist", resp.devices[i]);
                 }
             });
-        } catch(ouch){
+        } catch(ouch) {
             console.error("Failed to get servers: " + ouch);
         }
     };
@@ -54,7 +63,7 @@ var Doozy = (function() {
                     adddevice("rendererlist", resp.devices[i]);
                 }
             });
-        } catch(ouch){
+        } catch(ouch) {
             console.error("Failed to get renderers: " + ouch);
         }
     }
@@ -66,13 +75,14 @@ var Doozy = (function() {
             req.udn = serverudn;
             req.containerid = containerid;
             _client.Browse(req, function(resp) {
+                clearitems();
                 for (var i = 0; i < resp.items.length; ++i)
                 {
                     console.info("item: " + resp.items[i].title);
                     additem(resp.items[i]);
                 }
             });
-        } catch(ouch){
+        } catch(ouch) {
             console.error("Failed to get items: " + ouch);
         }
     }
