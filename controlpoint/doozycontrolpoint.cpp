@@ -38,10 +38,10 @@ void ControlPoint::run()
     try
     {
         m_Client.initialize();
-        m_RendererScanner.start();
-        m_RendererScanner.refresh();
         m_ServerScanner.start();
         m_ServerScanner.refresh();
+        m_RendererScanner.start();
+        m_RendererScanner.refresh();
         m_Cp.activate();
         m_Webserver.reset(new upnp::WebServer("/Users/dirk/Projects/doozy/controlpoint"));
         
@@ -93,6 +93,7 @@ void ControlPoint::GetServers(rpc::DeviceResponse& response)
     });
     
     response.__set_devices(rpcDevs);
+    log::info("Get servers returned %d servers", devs.size());
 }
 
 static rpc::ItemClass::type convertClass(upnp::Item::Class c)
@@ -129,7 +130,18 @@ void ControlPoint::Browse(rpc::BrowseResponse& response, const rpc::BrowseReques
         i.id = item->getObjectId();
         i.title = item->getTitle();
         i.itemclass = convertClass(item->getClass());
-        auto url = item->getAlbumArtUri(upnp::dlna::ProfileId::JpegThumbnail);
+        
+        std::string url;
+        if (item->getClass() == upnp::Item::Class::AudioContainer)
+        {
+            url = item->getMetaData(upnp::Property::AlbumArt);
+        }
+        
+        if (url.empty())
+        {
+            url = item->getAlbumArtUri(upnp::dlna::ProfileId::JpegThumbnail);
+        }
+
         if (!url.empty())
         {
             i.__set_thumbnailurl(url);

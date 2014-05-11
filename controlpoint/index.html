@@ -31,10 +31,10 @@
                 </div>
                 <div class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
-                        <li class="dropdown">
+                        <!-- <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Servers<b class="caret"></b></a>
                             <ul id="serverlist" class="dropdown-menu"></ul>
-                        </li>
+                        </li> -->
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Renderers<b class="caret"></b></a>
                             <ul id="rendererlist" class="dropdown-menu"></ul>
@@ -43,6 +43,16 @@
                 </div><!--/.nav-collapse -->
             </div><!--/.container-fluid -->
         </div>
+
+        <!-- Current path trace -->
+        <ol class="breadcrumb" id="serverpath">
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Servers<b class="caret"></b></a>
+                <ul id="serverlist" class="dropdown-menu"></ul>
+            </li>
+            <!-- <li><a href="#">Home</a></li>
+            <li><a href="#">Library</a></li> -->
+        </ol>
 
         <!-- Main component for a primary marketing message or call to action -->
         <div class="jumbotron">
@@ -54,10 +64,10 @@
 
     </div> <!-- /container -->
 
-    <div class="col-sm-6 col-md-3 upnpitem" id="upnpitemtemplate" style='display:none'>
+    <div class="col-sm-4 col-md-2 col-lg-1 upnpitem" id="upnpitemtemplate" style='display:none'>
         <a href="#">
             <div class="thumbnail">
-                <img class="thumbnailimg" src="" alt="Generic placeholder thumbnail">
+                <img class="thumbnailimg" src="" alt="Generic placeholder thumbnail"/>
             </div>
             <div class="caption"></div>
         </a>
@@ -83,14 +93,24 @@
             doozy.getrenderers();
         });
 
-        $('ul#serverlist').on('click', '.server', function() {
+        $('ul#serverlist').on('click', '.server', function () {
             serverUdn = $(this).data('udn');
-            doozy.browse($(this).data('udn'), '0');
+            doozy.resetCrumbs();
+            doozy.browse(serverUdn, doozy.rootId());
         });
 
-        $('#upnpitems').on('click', '.upnpitem', function() {
-            console.info('click: ' + $(this).attr("id"));
-            doozy.browse(serverUdn, $(this).attr("id"));
+        $('#serverpath').on('click', '.pathcrumb', function () {
+            doozy.cleanCrumbs($(this));
+            containerId = $(this).data('id');
+            doozy.browse(serverUdn, containerId);
+        });
+
+        $('#upnpitems').on('click', '.upnpitem', function () {
+            var id = $(this).attr("id");
+            var title = $(this).find(".itemtitle").contents().text();
+            console.info('click: ' + id);
+            doozy.addCrumb(title, id);
+            doozy.browse(serverUdn, id);
         });
     </script>
 </body>
