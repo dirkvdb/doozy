@@ -13,6 +13,9 @@ namespace doozy { namespace rpc {
 int _kItemClassValues[] = {
   ItemClass::Unknown,
   ItemClass::Container,
+  ItemClass::AudioContainer,
+  ItemClass::ImageContainer,
+  ItemClass::VideoContainer,
   ItemClass::Item,
   ItemClass::AudioItem,
   ItemClass::ImageItem,
@@ -21,12 +24,15 @@ int _kItemClassValues[] = {
 const char* _kItemClassNames[] = {
   "Unknown",
   "Container",
+  "AudioContainer",
+  "ImageContainer",
+  "VideoContainer",
   "Item",
   "AudioItem",
   "ImageItem",
   "VideoItem"
 };
-const std::map<int, const char*> _ItemClass_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(6, _kItemClassValues, _kItemClassNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+const std::map<int, const char*> _ItemClass_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(9, _kItemClassValues, _kItemClassNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
 
 Device::~Device() throw() {

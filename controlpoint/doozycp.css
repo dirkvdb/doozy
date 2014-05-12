@@ -1,5 +1,5 @@
 body {
-  padding-top: 20px;
+  padding-top: 140px;
   padding-bottom: 20px;
 }
 
@@ -12,9 +12,23 @@ body {
 	outline: none;
 }
 
+.center {
+	margin-left: auto;
+    margin-right: auto;
+}
+
 .upnpitem {
 	text-align: center;
 	text-overflow: ellipsis;
 	overflow: hidden;
 	white-space: nowrap;
+}
+
+.equalheight {
+    overflow: hidden; 
+}
+
+.square-thumb {
+    width: 128px;
+    height: 128px;
 }

@@ -101,10 +101,13 @@ static rpc::ItemClass::type convertClass(upnp::Item::Class c)
     switch (c)
     {
         case upnp::Item::Class::Container:
-        case upnp::Item::Class::AudioContainer:
-        case upnp::Item::Class::VideoContainer:
-        case upnp::Item::Class::ImageContainer:
             return rpc::ItemClass::Container;
+        case upnp::Item::Class::AudioContainer:
+            return rpc::ItemClass::AudioContainer;
+        case upnp::Item::Class::VideoContainer:
+            return rpc::ItemClass::VideoContainer;
+        case upnp::Item::Class::ImageContainer:
+            return rpc::ItemClass::ImageContainer;
         case upnp::Item::Class::Video:
             return rpc::ItemClass::VideoItem;
         case upnp::Item::Class::Audio:
@@ -120,6 +123,8 @@ static rpc::ItemClass::type convertClass(upnp::Item::Class c)
 
 void ControlPoint::Browse(rpc::BrowseResponse& response, const rpc::BrowseRequest& request)
 {
+    log::info("browse %s %s", request.udn, request.containerid);
+
     auto item = std::make_shared<upnp::Item>(request.containerid);
     m_MediaServer.setDevice(m_ServerScanner.getDevice(request.udn));
     auto items = m_MediaServer.getAllInContainer(item);

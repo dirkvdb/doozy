@@ -21,10 +21,13 @@ struct ItemClass {
   enum type {
     Unknown = 0,
     Container = 1,
-    Item = 2,
-    AudioItem = 3,
-    ImageItem = 4,
-    VideoItem = 5
+    AudioContainer = 2,
+    ImageContainer = 3,
+    VideoContainer = 4,
+    Item = 5,
+    AudioItem = 6,
+    ImageItem = 7,
+    VideoItem = 8
   };
 };
 

@@ -12,13 +12,14 @@
 
     <!-- Bootstrap core CSS -->
     <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="bower_components/nailthumb/css/jquery.nailthumb.1.1.min.js" rel="stylesheet">
     <link href="doozycp.css" rel="stylesheet">
 </head>
 
 <body>
-    <div class="container">
+    <div class="container-fluid">
         <!-- Static navbar -->
-        <div class="navbar navbar-default" role="navigation">
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="container-fluid">
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -31,10 +32,6 @@
                 </div>
                 <div class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
-                        <!-- <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Servers<b class="caret"></b></a>
-                            <ul id="serverlist" class="dropdown-menu"></ul>
-                        </li> -->
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Renderers<b class="caret"></b></a>
                             <ul id="rendererlist" class="dropdown-menu"></ul>
@@ -42,32 +39,30 @@
                     </ul>
                 </div><!--/.nav-collapse -->
             </div><!--/.container-fluid -->
+
+            <!-- Current path trace -->
+            <ol class="breadcrumb" id="serverpath">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Servers<b class="caret"></b></a>
+                    <ul id="serverlist" class="dropdown-menu"></ul>
+                </li>
+            </ol>
         </div>
 
-        <!-- Current path trace -->
-        <ol class="breadcrumb" id="serverpath">
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Servers<b class="caret"></b></a>
-                <ul id="serverlist" class="dropdown-menu"></ul>
-            </li>
-            <!-- <li><a href="#">Home</a></li>
-            <li><a href="#">Library</a></li> -->
-        </ol>
+        
 
         <!-- Main component for a primary marketing message or call to action -->
-        <div class="jumbotron">
-            <div class="container-fluid">
-                <div id="upnpitems" class="row">
-                </div>
+        <div class="container-fluid">
+            <div id="upnpitems" class="row equalheight">
             </div>
         </div>
 
     </div> <!-- /container -->
 
-    <div class="col-sm-4 col-md-2 col-lg-1 upnpitem" id="upnpitemtemplate" style='display:none'>
+    <div class="col-sm-4 col-md-2 col-lg-2 upnpitem" id="upnpitemtemplate" style='display:none'>
         <a href="#">
-            <div class="thumbnail">
-                <img class="thumbnailimg" src="" alt="Generic placeholder thumbnail"/>
+            <div class="thumbnail nailthumb-container square-thumb center">
+                <img class="thumbnailimg img-responsive" src=""/>
             </div>
             <div class="caption"></div>
         </a>
@@ -79,6 +74,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="bower_components/nailthumb/jquery.nailthumb.1.1.min.js"></script>
     <script src="thrift.js" type="text/javascript"></script>
     <script src="gen-js/controlpoint_types.js" type="text/javascript"></script>
     <script src="gen-js/ControlPoint.js" type="text/javascript"></script>
@@ -91,6 +87,7 @@
         $(document).ready(function() {
             doozy.getservers();
             doozy.getrenderers();
+            $('.nailthumb-container').nailthumb();
         });
 
         $('ul#serverlist').on('click', '.server', function () {
@@ -101,12 +98,12 @@
 
         $('#serverpath').on('click', '.pathcrumb', function () {
             doozy.cleanCrumbs($(this));
-            containerId = $(this).data('id');
+            containerId = $(this).data('id').toString();
             doozy.browse(serverUdn, containerId);
         });
 
         $('#upnpitems').on('click', '.upnpitem', function () {
-            var id = $(this).attr("id");
+            var id = $(this).data('id').toString();
             var title = $(this).find(".itemtitle").contents().text();
             console.info('click: ' + id);
             doozy.addCrumb(title, id);

@@ -1,5 +1,5 @@
 /*jslint browser: true*/
-/*global  $,Thrift,ControlPointClient*/
+/*global $,Thrift,ControlPointClient*/
 
 var Doozy = (function () {
     var _transport  = new Thrift.Transport("http://localhost:9090");
@@ -7,7 +7,7 @@ var Doozy = (function () {
     var _client     = new ControlPointClient(_protocol);
     var _rootid     = '0';
 
-    function Doozy(){};
+    function Doozy(){}
 
     function adddevice(combo, dev) {
         var list = document.getElementById(combo);
@@ -26,17 +26,33 @@ var Doozy = (function () {
         $("#upnpitems").empty();
     }
 
+    function imageForClass(itemclass) {
+        switch (itemclass)
+        {
+            case ItemClass.AudioItem:           return 'images/audio.png';
+            case ItemClass.ImageItem:           return 'images/image.png';
+            case ItemClass.VideoItem:           return 'images/video.png';
+            case ItemClass.AudioContainer:      return 'images/audiocontainer.png';
+            case ItemClass.VideoContainer:      return 'images/videocontainer.png';
+            case ItemClass.Container:
+            case ItemClass.ImageContainer:
+                                                return 'images/container.png';
+            default:
+                break;
+        }
+    }
+    
     function additem(item) {
         var itemDiv = $("#upnpitemtemplate").clone();
-        itemDiv.attr("id", item.id);
+        itemDiv.data('id', item.id);
         itemDiv.appendTo("#upnpitems");
         itemDiv.find(".caption").html('<div class="itemtitle">' + item.title + '</div>');
 
         var src = "";
         if (item.thumbnailurl) {
             src = item.thumbnailurl;
-        } else if (item.itemclass === ItemClass['Container']) {
-            src = "images/container.png";
+        } else {
+            src = imageForClass(item.itemclass);
         }
 
         itemDiv.find(".thumbnailimg").attr("src", src);
@@ -45,7 +61,7 @@ var Doozy = (function () {
 
     Doozy.prototype.rootId = function () {
         return _rootid;
-    }
+    };
 
     Doozy.prototype.getservers = function () {
         try {
@@ -59,7 +75,7 @@ var Doozy = (function () {
         } catch(ouch) {
             console.error("Failed to get servers: " + ouch);
         }
-    }
+    };
 
     Doozy.prototype.getrenderers = function () {
         try {
@@ -73,19 +89,24 @@ var Doozy = (function () {
         } catch(ouch) {
             console.error("Failed to get renderers: " + ouch);
         }
-    }
+    };
 
     Doozy.prototype.resetCrumbs = function () {
-        $("#serverpath").children().find("li:gt(0)").remove();
-    }
+        $("#serverpath .pathcrumb").remove();
+    };
 
     Doozy.prototype.cleanCrumbs = function (activeCrumb) {
         var index = $("#serverpath li").index(activeCrumb);
         $("#serverpath").children().slice(index).detach();
         activeCrumb.addClass('active');
+        activeCrumb.contents().contents()
+            .filter(function () {
+                return this.nodeType === 3;
+            })
+            .unwrap();
 
         //TODO: remove the lunk from the active crumb
-    }
+    };
 
     Doozy.prototype.addCrumb = function (containerTitle, containerId) {
         var activeItem = $("#serverpath li.active");
@@ -103,7 +124,7 @@ var Doozy = (function () {
         crumb.dataset.title = containerTitle;
         crumb.appendChild(document.createTextNode(containerTitle));
         $("#serverpath").append(crumb);
-    }
+    };
 
     Doozy.prototype.browse = function (serverudn, containerId) {
         try {
@@ -113,17 +134,18 @@ var Doozy = (function () {
             req.containerid = containerId;
             _client.Browse(req, function(resp) {
                 clearitems();
-
-                for (var i = 0; i < resp.items.length; ++i)
-                {
-                    console.info("item: " + resp.items[i].title);
-                    additem(resp.items[i]);
+                if (resp.items) {
+                    for (var i = 0; i < resp.items.length; ++i)
+                    {
+                        console.info("item: " + resp.items[i].title);
+                        additem(resp.items[i]);
+                    }
                 }
             });
         } catch(ouch) {
             console.error("Failed to get items: " + ouch);
         }
-    }
+    };
 
     return Doozy;
 

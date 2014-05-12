@@ -10,6 +10,9 @@ enum ItemClass
 {
     Unknown,
     Container,
+    AudioContainer,
+    ImageContainer,
+    VideoContainer,
     Item,
     AudioItem,
     ImageItem,
