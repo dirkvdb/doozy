@@ -22,6 +22,13 @@ var Doozy = (function () {
         list.appendChild(entry);
     }
 
+    function sameImageHeeight() {
+        /* set equal height thumbnail images*/
+        $('.thumbnail img').css({
+            'height': $('.thumbnail img').height()
+        });
+    }
+
     function clearitems() {
         $("#upnpitems").empty();
     }
@@ -140,6 +147,8 @@ var Doozy = (function () {
                         console.info("item: " + resp.items[i].title);
                         additem(resp.items[i]);
                     }
+
+                    sameImageHeeight();
                 }
             });
         } catch(ouch) {
