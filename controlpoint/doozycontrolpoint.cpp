@@ -16,8 +16,6 @@
 
 #include "doozycontrolpoint.h"
 
-#include "utils/log.h"
-
 using namespace utils;
 using namespace utils::stringops;
 
@@ -71,7 +69,7 @@ void ControlPoint::GetRenderers(rpc::DeviceResponse& response)
     
     auto devs = m_RendererScanner.getDevices();
     std::vector<rpc::Device> rpcDevs;
-    std::transform(devs.begin(), devs.end(), std::back_inserter(rpcDevs), [&] (const std::pair<std::string, const std::shared_ptr<upnp::Device>>& dev) {
+    std::transform(devs.begin(), devs.end(), std::back_inserter(rpcDevs), [&] (const std::pair<std::string, const std::shared_ptr<upnp::Device>>& dev) -> rpc::Device {
         rpc::Device rpcDev;
         rpcDev.__set_name(dev.second->m_FriendlyName);
         rpcDev.__set_udn(dev.second->m_UDN);
@@ -88,7 +86,7 @@ void ControlPoint::GetServers(rpc::DeviceResponse& response)
     
     auto devs = m_ServerScanner.getDevices();
     std::vector<rpc::Device> rpcDevs;
-    std::transform(devs.begin(), devs.end(), std::back_inserter(rpcDevs), [&] (const std::pair<std::string, const std::shared_ptr<upnp::Device>>& dev) {
+    std::transform(devs.begin(), devs.end(), std::back_inserter(rpcDevs), [&] (const std::pair<std::string, const std::shared_ptr<upnp::Device>>& dev) -> rpc::Device {
         rpc::Device rpcDev;
         rpcDev.__set_name(dev.second->m_FriendlyName);
         rpcDev.__set_udn(dev.second->m_UDN);
