@@ -42,8 +42,10 @@ void ControlPoint::run()
         m_ServerScanner.refresh();
         m_RendererScanner.start();
         m_RendererScanner.refresh();
-        m_Cp.activate();
         m_Webserver.reset(new upnp::WebServer("/Users/dirk/Projects/doozy/controlpoint"));
+
+        m_Cp.setWebserver(*m_Webserver);
+        m_Cp.activate();
         
         log::info("Webserver listening url: %s", m_Webserver->getWebRootUrl());
         
@@ -56,10 +58,10 @@ void ControlPoint::run()
     
 void ControlPoint::stop()
 {
+    m_Cp.deactivate();
     m_Webserver.reset();
     m_RendererScanner.stop();
     m_ServerScanner.stop();
-    m_Cp.deactivate();
     m_Client.destroy();
 }
     
@@ -77,6 +79,7 @@ void ControlPoint::GetRenderers(rpc::DeviceResponse& response)
     });
 
     response.__set_devices(rpcDevs);
+    log::info("Get renderers returned %d renderers", devs.size());
 }
     
 void ControlPoint::GetServers(rpc::DeviceResponse& response)
@@ -125,9 +128,8 @@ void ControlPoint::Browse(rpc::BrowseResponse& response, const rpc::BrowseReques
 {
     log::info("browse %s %s", request.udn, request.containerid);
 
-    auto item = std::make_shared<upnp::Item>(request.containerid);
     m_MediaServer.setDevice(m_ServerScanner.getDevice(request.udn));
-    auto items = m_MediaServer.getAllInContainer(item);
+    auto items = m_MediaServer.getAllInContainer(request.containerid);
     
     for (auto& item : items)
     {
@@ -154,6 +156,15 @@ void ControlPoint::Browse(rpc::BrowseResponse& response, const rpc::BrowseReques
 
         response.items.push_back(i);
     }
+}
+
+void ControlPoint::Play(const rpc::PlayRequest& request)
+{
+    log::info("play %s %s %s", request.rendererudn, request.serverudn, request.containerid);
+
+    m_Cp.setRendererDevice(m_RendererScanner.getDevice(request.rendererudn));
+    m_MediaServer.setDevice(m_ServerScanner.getDevice(request.serverudn));
+    m_Cp.playItems(m_MediaServer, m_MediaServer.getItemsInContainer(request.containerid));
 }
     
 }

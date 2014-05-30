@@ -43,6 +43,7 @@ public:
     void GetRenderers(rpc::DeviceResponse& response) override;
     void GetServers(rpc::DeviceResponse& response) override;
     void Browse(rpc::BrowseResponse& response, const rpc::BrowseRequest& request) override;
+    void Play(const rpc::PlayRequest& request) override;
     
 private:
     upnp::Client                        m_Client;

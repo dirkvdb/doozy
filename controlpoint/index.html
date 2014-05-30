@@ -12,7 +12,6 @@
 
     <!-- Bootstrap core CSS -->
     <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="bower_components/nailthumb/css/jquery.nailthumb.1.1.min.js" rel="stylesheet">
     <link href="doozycp.css" rel="stylesheet">
 </head>
 
@@ -38,6 +37,9 @@
                         </li>
                     </ul>
                 </div><!--/.nav-collapse -->
+                <div>
+                    <button type="button" id="play-btn" class="btn btn-primary">Play</button>
+                </div>
             </div><!--/.container-fluid -->
 
             <!-- Current path trace -->
@@ -87,17 +89,26 @@
     <script type="text/javascript">
         var doozy = new Doozy();
         var serverUdn = "";
+        var rendererUdn = "";
 
         $(document).ready(function() {
             doozy.getservers();
             doozy.getrenderers();
-            $('.nailthumb-container').nailthumb();
         });
 
-        $('ul#serverlist').on('click', '.server', function () {
+        $('ul#serverlist').on('click', '.device', function () {
             serverUdn = $(this).data('udn');
             doozy.resetCrumbs();
             doozy.browse(serverUdn, doozy.rootId());
+        });
+
+        $('ul#rendererlist').on('click', '.device', function () {
+            rendererUdn = $(this).data('udn');
+        });
+
+        $('#play-btn').click(function () {
+            crumb = $('#serverpath').find('li.active');
+            doozy.play(rendererUdn, serverUdn, crumb.data('id'));            
         });
 
         $('#serverpath').on('click', '.pathcrumb', function () {

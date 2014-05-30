@@ -398,3 +398,85 @@ BrowseResponse.prototype.write = function(output) {
   return;
 };
 
+PlayRequest = function(args) {
+  this.rendererudn = null;
+  this.serverudn = null;
+  this.containerid = null;
+  if (args) {
+    if (args.rendererudn !== undefined) {
+      this.rendererudn = args.rendererudn;
+    }
+    if (args.serverudn !== undefined) {
+      this.serverudn = args.serverudn;
+    }
+    if (args.containerid !== undefined) {
+      this.containerid = args.containerid;
+    }
+  }
+};
+PlayRequest.prototype = {};
+PlayRequest.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true)
+  {
+    var ret = input.readFieldBegin();
+    var fname = ret.fname;
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+      if (ftype == Thrift.Type.STRING) {
+        this.rendererudn = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 2:
+      if (ftype == Thrift.Type.STRING) {
+        this.serverudn = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 3:
+      if (ftype == Thrift.Type.STRING) {
+        this.containerid = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+PlayRequest.prototype.write = function(output) {
+  output.writeStructBegin('PlayRequest');
+  if (this.rendererudn !== null && this.rendererudn !== undefined) {
+    output.writeFieldBegin('rendererudn', Thrift.Type.STRING, 1);
+    output.writeString(this.rendererudn);
+    output.writeFieldEnd();
+  }
+  if (this.serverudn !== null && this.serverudn !== undefined) {
+    output.writeFieldBegin('serverudn', Thrift.Type.STRING, 2);
+    output.writeString(this.serverudn);
+    output.writeFieldEnd();
+  }
+  if (this.containerid !== null && this.containerid !== undefined) {
+    output.writeFieldBegin('containerid', Thrift.Type.STRING, 3);
+    output.writeString(this.containerid);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+

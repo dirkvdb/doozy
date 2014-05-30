@@ -16,7 +16,7 @@ var Doozy = (function () {
         var a = document.createElement("a");
         a.appendChild(document.createTextNode(dev.name));
         a.href = "#";
-        a.className = "server";
+        a.className = "device";
         a.dataset.udn= dev.udn;
         entry.appendChild(a);
         list.appendChild(entry);
@@ -153,6 +153,19 @@ var Doozy = (function () {
             });
         } catch(ouch) {
             console.error("Failed to get items: " + ouch);
+        }
+    };
+
+    Doozy.prototype.play = function (rendererudn, serverudn, containerId) {
+        try {
+            console.info("Play:" + rendererudn + ' - ' + serverudn + ' (' + containerId + ')');
+            var req = new PlayRequest();
+            req.rendererudn = rendererudn;
+            req.serverudn = serverudn;
+            req.containerid = containerId;
+            _client.Play(req);
+        } catch(ouch) {
+            console.error("Failed to play items: " + ouch);
         }
     };
 

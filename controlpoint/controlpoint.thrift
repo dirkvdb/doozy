@@ -43,9 +43,17 @@ struct BrowseResponse
     1: required list<Item> items;
 }
 
+struct PlayRequest
+{
+    1: required string rendererudn;
+    2: required string serverudn;
+    3: required string containerid;
+}
+
 service ControlPoint
 {
     DeviceResponse GetRenderers();
     DeviceResponse GetServers();
     BrowseResponse Browse(1:BrowseRequest req);
+    void Play(1:PlayRequest req);
 }
