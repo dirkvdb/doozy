@@ -47,7 +47,10 @@ ADD_EXECUTABLE(doozycp
     gen-cpp/ControlPoint.h gen-cpp/ControlPoint.cpp
     doozycontrolpoint.h doozycontrolpoint.cpp
     main.cpp
+    controlpoint.thrift
 )
+
+SOURCE_GROUP(generated REGULAR_EXPRESSION gen-cpp/)
 
 TARGET_LINK_LIBRARIES(doozycp ${LINK_LIBS})
 INSTALL(TARGETS doozycp RUNTIME DESTINATION bin)

@@ -37,6 +37,11 @@ class ControlPointHandler : virtual public ControlPointIf {
     printf("Browse\n");
   }
 
+  void Play(const PlayRequest& req) {
+    // Your implementation goes here
+    printf("Play\n");
+  }
+
 };
 
 int main(int argc, char **argv) {

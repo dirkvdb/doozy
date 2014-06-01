@@ -1,13 +1,13 @@
 /*jslint browser: true*/
 /*global $,Thrift,ControlPointClient*/
 
-var Doozy = (function() {
-    var _transport = new Thrift.Transport("http://localhost:9090");
-    var _protocol = new Thrift.Protocol(_transport);
-    var _client = new ControlPointClient(_protocol);
-    var _rootid = '0';
+var Doozy = (function () {
+    var _transport  = new Thrift.Transport("http://localhost:9090");
+    var _protocol   = new Thrift.Protocol(_transport);
+    var _client     = new ControlPointClient(_protocol);
+    var _rootid     = '0';
 
-    function Doozy() {}
+    function Doozy(){}
 
     function adddevice(combo, dev) {
         var list = document.getElementById(combo);
@@ -16,10 +16,17 @@ var Doozy = (function() {
         var a = document.createElement("a");
         a.appendChild(document.createTextNode(dev.name));
         a.href = "#";
-        a.className = "server";
-        a.dataset.udn = dev.udn;
+        a.className = "device";
+        a.dataset.udn= dev.udn;
         entry.appendChild(a);
         list.appendChild(entry);
+    }
+
+    function sameImageHeeight() {
+        /* set equal height thumbnail images*/
+        $('.thumbnail img').css({
+            'height': $('.thumbnail img').height()
+        });
     }
 
     function clearitems() {
@@ -27,25 +34,21 @@ var Doozy = (function() {
     }
 
     function imageForClass(itemclass) {
-        switch (itemclass) {
-            case ItemClass.AudioItem:
-                return 'images/audio.png';
-            case ItemClass.ImageItem:
-                return 'images/image.png';
-            case ItemClass.VideoItem:
-                return 'images/video.png';
-            case ItemClass.AudioContainer:
-                return 'images/audiocontainer.png';
-            case ItemClass.VideoContainer:
-                return 'images/videocontainer.png';
+        switch (itemclass)
+        {
+            case ItemClass.AudioItem:           return 'images/audio.png';
+            case ItemClass.ImageItem:           return 'images/image.png';
+            case ItemClass.VideoItem:           return 'images/video.png';
+            case ItemClass.AudioContainer:      return 'images/audiocontainer.png';
+            case ItemClass.VideoContainer:      return 'images/videocontainer.png';
             case ItemClass.Container:
             case ItemClass.ImageContainer:
-                return 'images/container.png';
+                                                return 'images/container.png';
             default:
                 break;
         }
     }
-
+    
     function additem(item) {
         var itemDiv = $("#upnpitemtemplate").clone();
         itemDiv.data('id', item.id);
@@ -63,46 +66,48 @@ var Doozy = (function() {
         itemDiv.show();
     }
 
-    Doozy.prototype.rootId = function() {
+    Doozy.prototype.rootId = function () {
         return _rootid;
     };
 
-    Doozy.prototype.getservers = function() {
+    Doozy.prototype.getservers = function () {
         try {
             console.info("Get Servers");
             _client.GetServers(function(resp) {
-                for (var i = 0; i < resp.devices.length; ++i) {
+                for (var i = 0; i < resp.devices.length; ++i)
+                {
                     adddevice("serverlist", resp.devices[i]);
                 }
             });
-        } catch (ouch) {
+        } catch(ouch) {
             console.error("Failed to get servers: " + ouch);
         }
     };
 
-    Doozy.prototype.getrenderers = function() {
+    Doozy.prototype.getrenderers = function () {
         try {
             console.info("Get Renderers");
             _client.GetRenderers(function(resp) {
-                for (var i = 0; i < resp.devices.length; ++i) {
+                for (var i = 0; i < resp.devices.length; ++i)
+                {
                     adddevice("rendererlist", resp.devices[i]);
                 }
             });
-        } catch (ouch) {
+        } catch(ouch) {
             console.error("Failed to get renderers: " + ouch);
         }
     };
 
-    Doozy.prototype.resetCrumbs = function() {
+    Doozy.prototype.resetCrumbs = function () {
         $("#serverpath .pathcrumb").remove();
     };
 
-    Doozy.prototype.cleanCrumbs = function(activeCrumb) {
+    Doozy.prototype.cleanCrumbs = function (activeCrumb) {
         var index = $("#serverpath li").index(activeCrumb);
         $("#serverpath").children().slice(index).detach();
         activeCrumb.addClass('active');
         activeCrumb.contents().contents()
-            .filter(function() {
+            .filter(function () {
                 return this.nodeType === 3;
             })
             .unwrap();
@@ -110,11 +115,11 @@ var Doozy = (function() {
         //TODO: remove the lunk from the active crumb
     };
 
-    Doozy.prototype.addCrumb = function(containerTitle, containerId) {
+    Doozy.prototype.addCrumb = function (containerTitle, containerId) {
         var activeItem = $("#serverpath li.active");
         if (activeItem.length) {
             activeItem.contents()
-                .filter(function() {
+                .filter(function () {
                     return this.nodeType === 3;
                 })
                 .wrap('<a href="#"></a>');
@@ -128,7 +133,7 @@ var Doozy = (function() {
         $("#serverpath").append(crumb);
     };
 
-    Doozy.prototype.browse = function(serverudn, containerId) {
+    Doozy.prototype.browse = function (serverudn, containerId) {
         try {
             console.info("Browse:" + serverudn + ' (' + containerId + ')');
             var req = new BrowseRequest();
@@ -137,14 +142,30 @@ var Doozy = (function() {
             _client.Browse(req, function(resp) {
                 clearitems();
                 if (resp.items) {
-                    for (var i = 0; i < resp.items.length; ++i) {
+                    for (var i = 0; i < resp.items.length; ++i)
+                    {
                         console.info("item: " + resp.items[i].title);
                         additem(resp.items[i]);
                     }
+
+                    sameImageHeeight();
                 }
             });
-        } catch (ouch) {
+        } catch(ouch) {
             console.error("Failed to get items: " + ouch);
+        }
+    };
+
+    Doozy.prototype.play = function (rendererudn, serverudn, containerId) {
+        try {
+            console.info("Play:" + rendererudn + ' - ' + serverudn + ' (' + containerId + ')');
+            var req = new PlayRequest();
+            req.rendererudn = rendererudn;
+            req.serverudn = serverudn;
+            req.containerid = containerId;
+            _client.Play(req);
+        } catch(ouch) {
+            console.error("Failed to play items: " + ouch);
         }
     };
 

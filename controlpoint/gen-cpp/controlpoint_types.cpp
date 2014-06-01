@@ -598,4 +598,130 @@ BrowseResponse& BrowseResponse::operator=(const BrowseResponse& other22) {
   items = other22.items;
   return *this;
 }
+
+PlayRequest::~PlayRequest() throw() {
+}
+
+
+void PlayRequest::__set_rendererudn(const std::string& val) {
+  rendererudn = val;
+}
+
+void PlayRequest::__set_serverudn(const std::string& val) {
+  serverudn = val;
+}
+
+void PlayRequest::__set_containerid(const std::string& val) {
+  containerid = val;
+}
+
+const char* PlayRequest::ascii_fingerprint = "AB879940BD15B6B25691265F7384B271";
+const uint8_t PlayRequest::binary_fingerprint[16] = {0xAB,0x87,0x99,0x40,0xBD,0x15,0xB6,0xB2,0x56,0x91,0x26,0x5F,0x73,0x84,0xB2,0x71};
+
+uint32_t PlayRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_rendererudn = false;
+  bool isset_serverudn = false;
+  bool isset_containerid = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->rendererudn);
+          isset_rendererudn = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->serverudn);
+          isset_serverudn = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->containerid);
+          isset_containerid = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_rendererudn)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_serverudn)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_containerid)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t PlayRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  oprot->incrementRecursionDepth();
+  xfer += oprot->writeStructBegin("PlayRequest");
+
+  xfer += oprot->writeFieldBegin("rendererudn", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->rendererudn);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("serverudn", ::apache::thrift::protocol::T_STRING, 2);
+  xfer += oprot->writeString(this->serverudn);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("containerid", ::apache::thrift::protocol::T_STRING, 3);
+  xfer += oprot->writeString(this->containerid);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  oprot->decrementRecursionDepth();
+  return xfer;
+}
+
+void swap(PlayRequest &a, PlayRequest &b) {
+  using ::std::swap;
+  swap(a.rendererudn, b.rendererudn);
+  swap(a.serverudn, b.serverudn);
+  swap(a.containerid, b.containerid);
+}
+
+PlayRequest::PlayRequest(const PlayRequest& other23) {
+  rendererudn = other23.rendererudn;
+  serverudn = other23.serverudn;
+  containerid = other23.containerid;
+}
+PlayRequest& PlayRequest::operator=(const PlayRequest& other24) {
+  rendererudn = other24.rendererudn;
+  serverudn = other24.serverudn;
+  containerid = other24.containerid;
+  return *this;
+}
 }} // namespace

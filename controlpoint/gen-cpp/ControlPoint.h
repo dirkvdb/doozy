@@ -18,6 +18,7 @@ class ControlPointIf {
   virtual void GetRenderers(DeviceResponse& _return) = 0;
   virtual void GetServers(DeviceResponse& _return) = 0;
   virtual void Browse(BrowseResponse& _return, const BrowseRequest& req) = 0;
+  virtual void Play(const PlayRequest& req) = 0;
 };
 
 class ControlPointIfFactory {
@@ -54,6 +55,9 @@ class ControlPointNull : virtual public ControlPointIf {
     return;
   }
   void Browse(BrowseResponse& /* _return */, const BrowseRequest& /* req */) {
+    return;
+  }
+  void Play(const PlayRequest& /* req */) {
     return;
   }
 };
@@ -382,6 +386,104 @@ class ControlPoint_Browse_presult {
 
 };
 
+typedef struct _ControlPoint_Play_args__isset {
+  _ControlPoint_Play_args__isset() : req(false) {}
+  bool req;
+} _ControlPoint_Play_args__isset;
+
+class ControlPoint_Play_args {
+ public:
+
+  static const char* ascii_fingerprint; // = "636807D016867BC3A79FD54005E0677E";
+  static const uint8_t binary_fingerprint[16]; // = {0x63,0x68,0x07,0xD0,0x16,0x86,0x7B,0xC3,0xA7,0x9F,0xD5,0x40,0x05,0xE0,0x67,0x7E};
+
+  ControlPoint_Play_args(const ControlPoint_Play_args&);
+  ControlPoint_Play_args& operator=(const ControlPoint_Play_args&);
+  ControlPoint_Play_args() {
+  }
+
+  virtual ~ControlPoint_Play_args() throw();
+  PlayRequest req;
+
+  _ControlPoint_Play_args__isset __isset;
+
+  void __set_req(const PlayRequest& val);
+
+  bool operator == (const ControlPoint_Play_args & rhs) const
+  {
+    if (!(req == rhs.req))
+      return false;
+    return true;
+  }
+  bool operator != (const ControlPoint_Play_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const ControlPoint_Play_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class ControlPoint_Play_pargs {
+ public:
+
+  static const char* ascii_fingerprint; // = "636807D016867BC3A79FD54005E0677E";
+  static const uint8_t binary_fingerprint[16]; // = {0x63,0x68,0x07,0xD0,0x16,0x86,0x7B,0xC3,0xA7,0x9F,0xD5,0x40,0x05,0xE0,0x67,0x7E};
+
+
+  virtual ~ControlPoint_Play_pargs() throw();
+  const PlayRequest* req;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class ControlPoint_Play_result {
+ public:
+
+  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
+  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+
+  ControlPoint_Play_result(const ControlPoint_Play_result&);
+  ControlPoint_Play_result& operator=(const ControlPoint_Play_result&);
+  ControlPoint_Play_result() {
+  }
+
+  virtual ~ControlPoint_Play_result() throw();
+
+  bool operator == (const ControlPoint_Play_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const ControlPoint_Play_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const ControlPoint_Play_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class ControlPoint_Play_presult {
+ public:
+
+  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
+  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+
+
+  virtual ~ControlPoint_Play_presult() throw();
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 class ControlPointClient : virtual public ControlPointIf {
  public:
   ControlPointClient(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
@@ -416,6 +518,9 @@ class ControlPointClient : virtual public ControlPointIf {
   void Browse(BrowseResponse& _return, const BrowseRequest& req);
   void send_Browse(const BrowseRequest& req);
   void recv_Browse(BrowseResponse& _return);
+  void Play(const PlayRequest& req);
+  void send_Play(const PlayRequest& req);
+  void recv_Play();
  protected:
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
@@ -434,12 +539,14 @@ class ControlPointProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_GetRenderers(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_GetServers(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_Browse(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_Play(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   ControlPointProcessor(boost::shared_ptr<ControlPointIf> iface) :
     iface_(iface) {
     processMap_["GetRenderers"] = &ControlPointProcessor::process_GetRenderers;
     processMap_["GetServers"] = &ControlPointProcessor::process_GetServers;
     processMap_["Browse"] = &ControlPointProcessor::process_Browse;
+    processMap_["Play"] = &ControlPointProcessor::process_Play;
   }
 
   virtual ~ControlPointProcessor() {}
@@ -496,6 +603,15 @@ class ControlPointMultiface : virtual public ControlPointIf {
     }
     ifaces_[i]->Browse(_return, req);
     return;
+  }
+
+  void Play(const PlayRequest& req) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->Play(req);
+    }
+    ifaces_[i]->Play(req);
   }
 
 };

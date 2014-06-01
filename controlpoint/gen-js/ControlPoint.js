@@ -279,6 +279,88 @@ ControlPoint_Browse_result.prototype.write = function(output) {
   return;
 };
 
+ControlPoint_Play_args = function(args) {
+  this.req = null;
+  if (args) {
+    if (args.req !== undefined) {
+      this.req = args.req;
+    }
+  }
+};
+ControlPoint_Play_args.prototype = {};
+ControlPoint_Play_args.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true)
+  {
+    var ret = input.readFieldBegin();
+    var fname = ret.fname;
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+      if (ftype == Thrift.Type.STRUCT) {
+        this.req = new PlayRequest();
+        this.req.read(input);
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+ControlPoint_Play_args.prototype.write = function(output) {
+  output.writeStructBegin('ControlPoint_Play_args');
+  if (this.req !== null && this.req !== undefined) {
+    output.writeFieldBegin('req', Thrift.Type.STRUCT, 1);
+    this.req.write(output);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+ControlPoint_Play_result = function(args) {
+};
+ControlPoint_Play_result.prototype = {};
+ControlPoint_Play_result.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true)
+  {
+    var ret = input.readFieldBegin();
+    var fname = ret.fname;
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    input.skip(ftype);
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+ControlPoint_Play_result.prototype.write = function(output) {
+  output.writeStructBegin('ControlPoint_Play_result');
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
 ControlPointClient = function(input, output) {
     this.input = input;
     this.output = (!output) ? input : output;
@@ -429,4 +511,50 @@ ControlPointClient.prototype.recv_Browse = function() {
     return result.success;
   }
   throw 'Browse failed: unknown result';
+};
+ControlPointClient.prototype.Play = function(req, callback) {
+  this.send_Play(req, callback); 
+  if (!callback) {
+  this.recv_Play();
+  }
+};
+
+ControlPointClient.prototype.send_Play = function(req, callback) {
+  this.output.writeMessageBegin('Play', Thrift.MessageType.CALL, this.seqid);
+  var args = new ControlPoint_Play_args();
+  args.req = req;
+  args.write(this.output);
+  this.output.writeMessageEnd();
+  if (callback) {
+    var self = this;
+    this.output.getTransport().flush(true, function() {
+      var result = null;
+      try {
+        result = self.recv_Play();
+      } catch (e) {
+        result = e;
+      }
+      callback(result);
+    });
+  } else {
+    return this.output.getTransport().flush();
+  }
+};
+
+ControlPointClient.prototype.recv_Play = function() {
+  var ret = this.input.readMessageBegin();
+  var fname = ret.fname;
+  var mtype = ret.mtype;
+  var rseqid = ret.rseqid;
+  if (mtype == Thrift.MessageType.EXCEPTION) {
+    var x = new Thrift.TApplicationException();
+    x.read(this.input);
+    this.input.readMessageEnd();
+    throw x;
+  }
+  var result = new ControlPoint_Play_result();
+  result.read(this.input);
+  this.input.readMessageEnd();
+
+  return;
 };

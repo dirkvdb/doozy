@@ -43,6 +43,8 @@ class BrowseRequest;
 
 class BrowseResponse;
 
+class PlayRequest;
+
 
 class Device {
  public:
@@ -255,6 +257,52 @@ class BrowseResponse {
 };
 
 void swap(BrowseResponse &a, BrowseResponse &b);
+
+
+class PlayRequest {
+ public:
+
+  static const char* ascii_fingerprint; // = "AB879940BD15B6B25691265F7384B271";
+  static const uint8_t binary_fingerprint[16]; // = {0xAB,0x87,0x99,0x40,0xBD,0x15,0xB6,0xB2,0x56,0x91,0x26,0x5F,0x73,0x84,0xB2,0x71};
+
+  PlayRequest(const PlayRequest&);
+  PlayRequest& operator=(const PlayRequest&);
+  PlayRequest() : rendererudn(), serverudn(), containerid() {
+  }
+
+  virtual ~PlayRequest() throw();
+  std::string rendererudn;
+  std::string serverudn;
+  std::string containerid;
+
+  void __set_rendererudn(const std::string& val);
+
+  void __set_serverudn(const std::string& val);
+
+  void __set_containerid(const std::string& val);
+
+  bool operator == (const PlayRequest & rhs) const
+  {
+    if (!(rendererudn == rhs.rendererudn))
+      return false;
+    if (!(serverudn == rhs.serverudn))
+      return false;
+    if (!(containerid == rhs.containerid))
+      return false;
+    return true;
+  }
+  bool operator != (const PlayRequest &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const PlayRequest & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(PlayRequest &a, PlayRequest &b);
 
 }} // namespace
 
