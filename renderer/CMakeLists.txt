@@ -5,7 +5,7 @@ IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Gcc")
     SET(CMAKE_CXX_FLAGS "-stdlib=libstdc++")
 ENDIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Gcc")
 
-SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -Wall -Wfatal-errors")
+SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Wall -Wfatal-errors")
 
 INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -30,7 +30,7 @@ SET(LINK_LIBS
     ${UPNPFRAMEWORK_LIBRARIES}
 )
 
-ADD_EXECUTABLE(doozy
+ADD_EXECUTABLE(doozyrenderer
     main.cpp
     crashhandler.h
     devicedescriptions.h
@@ -41,6 +41,6 @@ ADD_EXECUTABLE(doozy
     typeconversions.h
 )
 
-TARGET_LINK_LIBRARIES(doozy ${LINK_LIBS})
-INSTALL(TARGETS doozy RUNTIME DESTINATION bin)
+TARGET_LINK_LIBRARIES(doozyrenderer ${LINK_LIBS})
+INSTALL(TARGETS doozyrenderer RUNTIME DESTINATION bin)
 

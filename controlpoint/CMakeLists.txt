@@ -5,7 +5,7 @@ IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Gcc")
     SET(CMAKE_CXX_FLAGS "-stdlib=libstdc++")
 ENDIF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Gcc")
 
-SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -Wall -Wfatal-errors")
+SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Wall -Wfatal-errors")
 
 FIND_PACKAGE(PkgConfig)
 PKG_CHECK_MODULES(THRIFT_PKG thrift)
@@ -41,7 +41,7 @@ SET(LINK_LIBS
     ${THRIFT_LIBRARIES}
 )
 
-ADD_EXECUTABLE(doozycp
+ADD_EXECUTABLE(doozycontrolpoint
     gen-cpp/controlpoint_constants.h gen-cpp/controlpoint_constants.cpp
     gen-cpp/controlpoint_types.h gen-cpp/controlpoint_types.cpp
     gen-cpp/ControlPoint.h gen-cpp/ControlPoint.cpp
@@ -52,6 +52,6 @@ ADD_EXECUTABLE(doozycp
 
 SOURCE_GROUP(generated REGULAR_EXPRESSION gen-cpp/)
 
-TARGET_LINK_LIBRARIES(doozycp ${LINK_LIBS})
-INSTALL(TARGETS doozycp RUNTIME DESTINATION bin)
+TARGET_LINK_LIBRARIES(doozycontrolpoint ${LINK_LIBS})
+INSTALL(TARGETS doozycontrolpoint RUNTIME DESTINATION bin)
 
