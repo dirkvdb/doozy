@@ -9,6 +9,7 @@ SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Wall -Wfatal-errors")
 
 INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${AUDIO_INCLUDE_DIRS}
     ${IMAGE_INCLUDE_DIRS}
     ${UTILS_INCLUDE_DIRS}
@@ -37,7 +38,7 @@ ADD_EXECUTABLE(doozyrenderer
     doozy.h                     doozy.cpp
     mediarendererdevice.h       mediarendererdevice.cpp
     playqueue.h                 playqueue.cpp
-    settings.h                  settings.cpp
+    ../common/settings.h        ../common/settings.cpp
     typeconversions.h
 )
 
