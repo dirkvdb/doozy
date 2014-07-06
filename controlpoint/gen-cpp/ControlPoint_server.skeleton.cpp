@@ -42,6 +42,11 @@ class ControlPointHandler : virtual public ControlPointIf {
     printf("Play\n");
   }
 
+  void GetRendererStatus(RendererStatus& _return, const Device& dev) {
+    // Your implementation goes here
+    printf("GetRendererStatus\n");
+  }
+
 };
 
 int main(int argc, char **argv) {

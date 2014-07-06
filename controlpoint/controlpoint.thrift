@@ -50,10 +50,37 @@ struct PlayRequest
     3: required string containerid;
 }
 
+enum PlaybackState
+{
+    Stopped,
+    Playing,
+    Paused
+}
+
+enum Action
+{
+    Play,
+    Stop,
+    Pause,
+    Seek,
+    Next,
+    Previous
+}
+
+struct RendererStatus
+{
+    1: required string artist;
+    2: required string title;
+    3: optional string thumbnailurl;
+    4: required PlaybackState state;
+    5: required list<Action> availableActions;
+}
+
 service ControlPoint
 {
     DeviceResponse GetRenderers();
     DeviceResponse GetServers();
     BrowseResponse Browse(1:BrowseRequest req);
     void Play(1:PlayRequest req);
+    RendererStatus GetRendererStatus(1:Device dev);
 }

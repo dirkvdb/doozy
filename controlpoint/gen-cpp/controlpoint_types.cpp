@@ -34,6 +34,36 @@ const char* _kItemClassNames[] = {
 };
 const std::map<int, const char*> _ItemClass_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(9, _kItemClassValues, _kItemClassNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
+int _kPlaybackStateValues[] = {
+  PlaybackState::Stopped,
+  PlaybackState::Playing,
+  PlaybackState::Paused
+};
+const char* _kPlaybackStateNames[] = {
+  "Stopped",
+  "Playing",
+  "Paused"
+};
+const std::map<int, const char*> _PlaybackState_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(3, _kPlaybackStateValues, _kPlaybackStateNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+
+int _kActionValues[] = {
+  Action::Play,
+  Action::Stop,
+  Action::Pause,
+  Action::Seek,
+  Action::Next,
+  Action::Previous
+};
+const char* _kActionNames[] = {
+  "Play",
+  "Stop",
+  "Pause",
+  "Seek",
+  "Next",
+  "Previous"
+};
+const std::map<int, const char*> _Action_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(6, _kActionValues, _kActionNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+
 
 Device::~Device() throw() {
 }
@@ -722,6 +752,202 @@ PlayRequest& PlayRequest::operator=(const PlayRequest& other24) {
   rendererudn = other24.rendererudn;
   serverudn = other24.serverudn;
   containerid = other24.containerid;
+  return *this;
+}
+
+RendererStatus::~RendererStatus() throw() {
+}
+
+
+void RendererStatus::__set_artist(const std::string& val) {
+  artist = val;
+}
+
+void RendererStatus::__set_title(const std::string& val) {
+  title = val;
+}
+
+void RendererStatus::__set_thumbnailurl(const std::string& val) {
+  thumbnailurl = val;
+__isset.thumbnailurl = true;
+}
+
+void RendererStatus::__set_state(const PlaybackState::type val) {
+  state = val;
+}
+
+void RendererStatus::__set_availableActions(const std::vector<Action::type> & val) {
+  availableActions = val;
+}
+
+const char* RendererStatus::ascii_fingerprint = "17819C1B7F423C24ACFB6322C5FB82B2";
+const uint8_t RendererStatus::binary_fingerprint[16] = {0x17,0x81,0x9C,0x1B,0x7F,0x42,0x3C,0x24,0xAC,0xFB,0x63,0x22,0xC5,0xFB,0x82,0xB2};
+
+uint32_t RendererStatus::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_artist = false;
+  bool isset_title = false;
+  bool isset_state = false;
+  bool isset_availableActions = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->artist);
+          isset_artist = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->title);
+          isset_title = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->thumbnailurl);
+          this->__isset.thumbnailurl = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          int32_t ecast25;
+          xfer += iprot->readI32(ecast25);
+          this->state = (PlaybackState::type)ecast25;
+          isset_state = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 5:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->availableActions.clear();
+            uint32_t _size26;
+            ::apache::thrift::protocol::TType _etype29;
+            xfer += iprot->readListBegin(_etype29, _size26);
+            this->availableActions.resize(_size26);
+            uint32_t _i30;
+            for (_i30 = 0; _i30 < _size26; ++_i30)
+            {
+              int32_t ecast31;
+              xfer += iprot->readI32(ecast31);
+              this->availableActions[_i30] = (Action::type)ecast31;
+            }
+            xfer += iprot->readListEnd();
+          }
+          isset_availableActions = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_artist)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_title)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_state)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_availableActions)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t RendererStatus::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  oprot->incrementRecursionDepth();
+  xfer += oprot->writeStructBegin("RendererStatus");
+
+  xfer += oprot->writeFieldBegin("artist", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->artist);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("title", ::apache::thrift::protocol::T_STRING, 2);
+  xfer += oprot->writeString(this->title);
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.thumbnailurl) {
+    xfer += oprot->writeFieldBegin("thumbnailurl", ::apache::thrift::protocol::T_STRING, 3);
+    xfer += oprot->writeString(this->thumbnailurl);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldBegin("state", ::apache::thrift::protocol::T_I32, 4);
+  xfer += oprot->writeI32((int32_t)this->state);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("availableActions", ::apache::thrift::protocol::T_LIST, 5);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->availableActions.size()));
+    std::vector<Action::type> ::const_iterator _iter32;
+    for (_iter32 = this->availableActions.begin(); _iter32 != this->availableActions.end(); ++_iter32)
+    {
+      xfer += oprot->writeI32((int32_t)(*_iter32));
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  oprot->decrementRecursionDepth();
+  return xfer;
+}
+
+void swap(RendererStatus &a, RendererStatus &b) {
+  using ::std::swap;
+  swap(a.artist, b.artist);
+  swap(a.title, b.title);
+  swap(a.thumbnailurl, b.thumbnailurl);
+  swap(a.state, b.state);
+  swap(a.availableActions, b.availableActions);
+  swap(a.__isset, b.__isset);
+}
+
+RendererStatus::RendererStatus(const RendererStatus& other33) {
+  artist = other33.artist;
+  title = other33.title;
+  thumbnailurl = other33.thumbnailurl;
+  state = other33.state;
+  availableActions = other33.availableActions;
+  __isset = other33.__isset;
+}
+RendererStatus& RendererStatus::operator=(const RendererStatus& other34) {
+  artist = other34.artist;
+  title = other34.title;
+  thumbnailurl = other34.thumbnailurl;
+  state = other34.state;
+  availableActions = other34.availableActions;
+  __isset = other34.__isset;
   return *this;
 }
 }} // namespace

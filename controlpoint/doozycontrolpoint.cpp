@@ -122,6 +122,20 @@ static rpc::ItemClass::type convertClass(upnp::Item::Class c)
     }
 }
 
+static rpc::Action::type convertAction(upnp::MediaRenderer::Action action)
+{
+    switch (action)
+    {
+        case upnp::MediaRenderer::Action::Play:     return rpc::Action::Play;
+        case upnp::MediaRenderer::Action::Next:     return rpc::Action::Next;
+        case upnp::MediaRenderer::Action::Previous: return rpc::Action::Previous;
+        case upnp::MediaRenderer::Action::Seek:     return rpc::Action::Seek;
+        case upnp::MediaRenderer::Action::Stop:     return rpc::Action::Stop;
+        case upnp::MediaRenderer::Action::Pause:    return rpc::Action::Pause;
+        default: return rpc::Action::Stop; // huh? :-)
+    }
+}
+
 void ControlPoint::Browse(rpc::BrowseResponse& response, const rpc::BrowseRequest& request)
 {
     log::info("browse %s %s", request.udn, request.containerid);
@@ -163,6 +177,21 @@ void ControlPoint::Play(const rpc::PlayRequest& request)
     m_Cp.setRendererDevice(m_RendererScanner.getDevice(request.rendererudn));
     m_MediaServer.setDevice(m_ServerScanner.getDevice(request.serverudn));
     m_Cp.playItems(m_MediaServer, m_MediaServer.getItemsInContainer(request.containerid));
+}
+    
+void ControlPoint::GetRendererStatus(doozy::rpc::RendererStatus& status, const doozy::rpc::Device& dev)
+{
+    upnp::MediaRenderer renderer(m_Client);
+    renderer.setDevice(m_RendererScanner.getDevice(dev.udn));
+    
+    auto item = renderer.getCurrentTrackInfo();
+    auto actions = renderer.getAvailableActions();
+    std::transform(actions.begin(), actions.end(), status.availableActions.begin(), [] (upnp::MediaRenderer::Action a) {
+        return convertAction(a);
+    });
+    
+    status.title = item->getTitle();
+    status.artist = item->getMetaData(upnp::Property::Artist);
 }
     
 }

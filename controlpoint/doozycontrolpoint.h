@@ -44,6 +44,7 @@ public:
     void GetServers(rpc::DeviceResponse& response) override;
     void Browse(rpc::BrowseResponse& response, const rpc::BrowseRequest& request) override;
     void Play(const rpc::PlayRequest& request) override;
+    void GetRendererStatus(doozy::rpc::RendererStatus& status, const doozy::rpc::Device& dev) override;
     
 private:
     upnp::Client                        m_Client;

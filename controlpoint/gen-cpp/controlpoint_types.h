@@ -33,6 +33,29 @@ struct ItemClass {
 
 extern const std::map<int, const char*> _ItemClass_VALUES_TO_NAMES;
 
+struct PlaybackState {
+  enum type {
+    Stopped = 0,
+    Playing = 1,
+    Paused = 2
+  };
+};
+
+extern const std::map<int, const char*> _PlaybackState_VALUES_TO_NAMES;
+
+struct Action {
+  enum type {
+    Play = 0,
+    Stop = 1,
+    Pause = 2,
+    Seek = 3,
+    Next = 4,
+    Previous = 5
+  };
+};
+
+extern const std::map<int, const char*> _Action_VALUES_TO_NAMES;
+
 class Device;
 
 class Item;
@@ -44,6 +67,8 @@ class BrowseRequest;
 class BrowseResponse;
 
 class PlayRequest;
+
+class RendererStatus;
 
 
 class Device {
@@ -303,6 +328,70 @@ class PlayRequest {
 };
 
 void swap(PlayRequest &a, PlayRequest &b);
+
+typedef struct _RendererStatus__isset {
+  _RendererStatus__isset() : thumbnailurl(false) {}
+  bool thumbnailurl;
+} _RendererStatus__isset;
+
+class RendererStatus {
+ public:
+
+  static const char* ascii_fingerprint; // = "17819C1B7F423C24ACFB6322C5FB82B2";
+  static const uint8_t binary_fingerprint[16]; // = {0x17,0x81,0x9C,0x1B,0x7F,0x42,0x3C,0x24,0xAC,0xFB,0x63,0x22,0xC5,0xFB,0x82,0xB2};
+
+  RendererStatus(const RendererStatus&);
+  RendererStatus& operator=(const RendererStatus&);
+  RendererStatus() : artist(), title(), thumbnailurl(), state((PlaybackState::type)0) {
+  }
+
+  virtual ~RendererStatus() throw();
+  std::string artist;
+  std::string title;
+  std::string thumbnailurl;
+  PlaybackState::type state;
+  std::vector<Action::type>  availableActions;
+
+  _RendererStatus__isset __isset;
+
+  void __set_artist(const std::string& val);
+
+  void __set_title(const std::string& val);
+
+  void __set_thumbnailurl(const std::string& val);
+
+  void __set_state(const PlaybackState::type val);
+
+  void __set_availableActions(const std::vector<Action::type> & val);
+
+  bool operator == (const RendererStatus & rhs) const
+  {
+    if (!(artist == rhs.artist))
+      return false;
+    if (!(title == rhs.title))
+      return false;
+    if (__isset.thumbnailurl != rhs.__isset.thumbnailurl)
+      return false;
+    else if (__isset.thumbnailurl && !(thumbnailurl == rhs.thumbnailurl))
+      return false;
+    if (!(state == rhs.state))
+      return false;
+    if (!(availableActions == rhs.availableActions))
+      return false;
+    return true;
+  }
+  bool operator != (const RendererStatus &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const RendererStatus & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(RendererStatus &a, RendererStatus &b);
 
 }} // namespace
 

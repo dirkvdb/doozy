@@ -19,6 +19,7 @@ class ControlPointIf {
   virtual void GetServers(DeviceResponse& _return) = 0;
   virtual void Browse(BrowseResponse& _return, const BrowseRequest& req) = 0;
   virtual void Play(const PlayRequest& req) = 0;
+  virtual void GetRendererStatus(RendererStatus& _return, const Device& dev) = 0;
 };
 
 class ControlPointIfFactory {
@@ -58,6 +59,9 @@ class ControlPointNull : virtual public ControlPointIf {
     return;
   }
   void Play(const PlayRequest& /* req */) {
+    return;
+  }
+  void GetRendererStatus(RendererStatus& /* _return */, const Device& /* dev */) {
     return;
   }
 };
@@ -484,6 +488,122 @@ class ControlPoint_Play_presult {
 
 };
 
+typedef struct _ControlPoint_GetRendererStatus_args__isset {
+  _ControlPoint_GetRendererStatus_args__isset() : dev(false) {}
+  bool dev;
+} _ControlPoint_GetRendererStatus_args__isset;
+
+class ControlPoint_GetRendererStatus_args {
+ public:
+
+  static const char* ascii_fingerprint; // = "A756D3DBE614FB13F70BF7F7B6EB3D73";
+  static const uint8_t binary_fingerprint[16]; // = {0xA7,0x56,0xD3,0xDB,0xE6,0x14,0xFB,0x13,0xF7,0x0B,0xF7,0xF7,0xB6,0xEB,0x3D,0x73};
+
+  ControlPoint_GetRendererStatus_args(const ControlPoint_GetRendererStatus_args&);
+  ControlPoint_GetRendererStatus_args& operator=(const ControlPoint_GetRendererStatus_args&);
+  ControlPoint_GetRendererStatus_args() {
+  }
+
+  virtual ~ControlPoint_GetRendererStatus_args() throw();
+  Device dev;
+
+  _ControlPoint_GetRendererStatus_args__isset __isset;
+
+  void __set_dev(const Device& val);
+
+  bool operator == (const ControlPoint_GetRendererStatus_args & rhs) const
+  {
+    if (!(dev == rhs.dev))
+      return false;
+    return true;
+  }
+  bool operator != (const ControlPoint_GetRendererStatus_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const ControlPoint_GetRendererStatus_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class ControlPoint_GetRendererStatus_pargs {
+ public:
+
+  static const char* ascii_fingerprint; // = "A756D3DBE614FB13F70BF7F7B6EB3D73";
+  static const uint8_t binary_fingerprint[16]; // = {0xA7,0x56,0xD3,0xDB,0xE6,0x14,0xFB,0x13,0xF7,0x0B,0xF7,0xF7,0xB6,0xEB,0x3D,0x73};
+
+
+  virtual ~ControlPoint_GetRendererStatus_pargs() throw();
+  const Device* dev;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _ControlPoint_GetRendererStatus_result__isset {
+  _ControlPoint_GetRendererStatus_result__isset() : success(false) {}
+  bool success;
+} _ControlPoint_GetRendererStatus_result__isset;
+
+class ControlPoint_GetRendererStatus_result {
+ public:
+
+  static const char* ascii_fingerprint; // = "36AE55350FB304C7B21306686C1DAE88";
+  static const uint8_t binary_fingerprint[16]; // = {0x36,0xAE,0x55,0x35,0x0F,0xB3,0x04,0xC7,0xB2,0x13,0x06,0x68,0x6C,0x1D,0xAE,0x88};
+
+  ControlPoint_GetRendererStatus_result(const ControlPoint_GetRendererStatus_result&);
+  ControlPoint_GetRendererStatus_result& operator=(const ControlPoint_GetRendererStatus_result&);
+  ControlPoint_GetRendererStatus_result() {
+  }
+
+  virtual ~ControlPoint_GetRendererStatus_result() throw();
+  RendererStatus success;
+
+  _ControlPoint_GetRendererStatus_result__isset __isset;
+
+  void __set_success(const RendererStatus& val);
+
+  bool operator == (const ControlPoint_GetRendererStatus_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const ControlPoint_GetRendererStatus_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const ControlPoint_GetRendererStatus_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _ControlPoint_GetRendererStatus_presult__isset {
+  _ControlPoint_GetRendererStatus_presult__isset() : success(false) {}
+  bool success;
+} _ControlPoint_GetRendererStatus_presult__isset;
+
+class ControlPoint_GetRendererStatus_presult {
+ public:
+
+  static const char* ascii_fingerprint; // = "36AE55350FB304C7B21306686C1DAE88";
+  static const uint8_t binary_fingerprint[16]; // = {0x36,0xAE,0x55,0x35,0x0F,0xB3,0x04,0xC7,0xB2,0x13,0x06,0x68,0x6C,0x1D,0xAE,0x88};
+
+
+  virtual ~ControlPoint_GetRendererStatus_presult() throw();
+  RendererStatus* success;
+
+  _ControlPoint_GetRendererStatus_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 class ControlPointClient : virtual public ControlPointIf {
  public:
   ControlPointClient(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
@@ -521,6 +641,9 @@ class ControlPointClient : virtual public ControlPointIf {
   void Play(const PlayRequest& req);
   void send_Play(const PlayRequest& req);
   void recv_Play();
+  void GetRendererStatus(RendererStatus& _return, const Device& dev);
+  void send_GetRendererStatus(const Device& dev);
+  void recv_GetRendererStatus(RendererStatus& _return);
  protected:
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
@@ -540,6 +663,7 @@ class ControlPointProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_GetServers(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_Browse(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_Play(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_GetRendererStatus(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   ControlPointProcessor(boost::shared_ptr<ControlPointIf> iface) :
     iface_(iface) {
@@ -547,6 +671,7 @@ class ControlPointProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["GetServers"] = &ControlPointProcessor::process_GetServers;
     processMap_["Browse"] = &ControlPointProcessor::process_Browse;
     processMap_["Play"] = &ControlPointProcessor::process_Play;
+    processMap_["GetRendererStatus"] = &ControlPointProcessor::process_GetRendererStatus;
   }
 
   virtual ~ControlPointProcessor() {}
@@ -612,6 +737,16 @@ class ControlPointMultiface : virtual public ControlPointIf {
       ifaces_[i]->Play(req);
     }
     ifaces_[i]->Play(req);
+  }
+
+  void GetRendererStatus(RendererStatus& _return, const Device& dev) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->GetRendererStatus(_return, dev);
+    }
+    ifaces_[i]->GetRendererStatus(_return, dev);
+    return;
   }
 
 };
