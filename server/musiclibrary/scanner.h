@@ -19,6 +19,7 @@
 
 #include <string>
 #include <vector>
+#include "utils/threadpool.h"
 
 namespace doozy
 {
@@ -45,6 +46,8 @@ private:
     MusicDb&                        m_LibraryDb;
     int32_t                         m_ScannedFiles;
     std::vector<std::string>        m_AlbumArtFilenames;
+    utils::ThreadPool               m_ThreadPool;
+
     bool                            m_InitialScan;
     bool							m_Stop;
 };

@@ -30,6 +30,7 @@ class AlbumArt
 {
 public:
 	AlbumArt();
+    AlbumArt(AlbumArt&&) = default;
 	AlbumArt(const std::string& albumId);
 
     void setAlbumArt(audio::Metadata::AlbumArt&& art);

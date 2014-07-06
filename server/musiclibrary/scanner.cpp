@@ -62,23 +62,27 @@ void Scanner::performScan(const std::string& libraryPath)
 {
 	m_Stop = false;
 	
-#ifndef NDEBUG
     time_t startTime = time(nullptr);
-    log::debug("Starting library scan in: %s", libraryPath);
-#endif
+    log::info("Starting library scan in: %s", libraryPath);
 
     m_InitialScan = m_LibraryDb.getTrackCount() == 0;
     m_ScannedFiles = 0;
 
+    m_ThreadPool.start();
     scan(libraryPath);
-
-#ifndef NDEBUG
-	if (m_Stop)
-	{
-		log::debug("Scan aborted");
+    if (m_Stop)
+    {
+        m_ThreadPool.stop();
+		log::warn("Scan aborted");
 	}
-    log::debug("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_ScannedFiles);
-#endif
+    else
+    {
+        log::info("Wait for completion");
+        m_ThreadPool.stopFinishJobs();
+        log::info("Done");
+    }
+
+    log::info("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_ScannedFiles);
 }
 
 void Scanner::scan(const std::string& dir)
@@ -96,14 +100,18 @@ void Scanner::scan(const std::string& dir)
         }
         else if (entry.type() == FileSystemEntryType::File)
         {
-            try
-            {
-                onFile(entry.path());
-            }
-            catch (std::exception& e)
-            {
-                log::debug("Ignored file: %s", e.what());
-            }
+            auto path = entry.path();
+            log::debug("Add job: %s", path);
+            m_ThreadPool.addJob([this, path] () {
+                try
+                {
+                    onFile(path);
+                }
+                catch (std::exception& e)
+                {
+                    log::warn("Ignored file: %s", e.what());
+                }
+            });
         }
     }
 }
@@ -266,7 +274,7 @@ void Scanner::processAlbumArt(const std::string& filepath, AlbumArt& art)
         }
         catch (std::exception& e)
         {
-            log::error("Failed to scale image: %s", e.what());
+            log::warn("Failed to scale image: %s", e.what());
         }
     }
 }

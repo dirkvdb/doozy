@@ -34,6 +34,8 @@ public:
     , bitrate(0), sampleRate(0), channels(0), fileSize(0), modifiedTime(0)
     {}
 
+    Track(Track&&) = default;
+
     bool operator==(const Track& otherItem) const;
     friend std::ostream& operator<<(std::ostream &os, const Track& item);
 

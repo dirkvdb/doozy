@@ -34,6 +34,8 @@ static bool set_signal_handlers();
 
 using namespace utils;
 
+doozy::IMusicLibrary* pLib = nullptr;
+
 int main(int argc, char **argv)
 {
 #ifndef WIN32
@@ -69,8 +71,9 @@ int main(int argc, char **argv)
 
     doozy::Settings settings;
     settings.loadDefaultSettings();
-    auto pLib = std::unique_ptr<doozy::IMusicLibrary>(doozy::MusicLibraryFactory::create(doozy::MusicLibraryType::FileSystem, settings));
-    pLib->scan(true);
+    auto lib = std::unique_ptr<doozy::IMusicLibrary>(doozy::MusicLibraryFactory::create(doozy::MusicLibraryType::FileSystem, settings));
+    pLib = lib.get();
+    lib->scan(true);
 
     log::info("Bye");
     
@@ -82,10 +85,7 @@ static void sigterm(int signo)
     try
     {
         log::info("Sigterm %d", signo);
-//        if (doozyInstance)
-//        {
-//            doozyInstance->stop();
-//        }
+        delete pLib;
     }
     catch (std::exception& e)
     {

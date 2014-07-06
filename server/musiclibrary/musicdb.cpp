@@ -420,7 +420,7 @@ Track MusicDb::getFirstTrackFromAlbum(const std::string& albumId)
         throw std::runtime_error("Failed to obtain first track from album with id: " + albumId);
     }
 
-    return tracks.front();
+    return std::move(tracks.front());
 }
 
 std::vector<Track> MusicDb::getTracksFromAlbum(const std::string& albumId)
@@ -891,7 +891,7 @@ void MusicDb::getTracksCb(sqlite3_stmt* pStmt, void* pData)
 
     Track track;
     getTrackInfoCb(pStmt, &track);
-    pTracks->push_back(track);
+    pTracks->push_back(std::move(track));
 }
 
 void MusicDb::searchTracksCb(sqlite3_stmt* pStmt, void* pData)
@@ -952,7 +952,7 @@ void MusicDb::getAlbumsCb(sqlite3_stmt* pStmt, void* pData)
 
     Album album;
     getAlbumCb(pStmt, &album);
-    pAlbums->push_back(album);
+    pAlbums->push_back(std::move(album));
 }
 
 void MusicDb::getAlbumListCb(sqlite3_stmt* pStmt, void* pData)
@@ -961,8 +961,7 @@ void MusicDb::getAlbumListCb(sqlite3_stmt* pStmt, void* pData)
 
     auto pAlbums = reinterpret_cast<vector<Album>*>(pData);
 
-    Album album;
-    pAlbums->push_back(album);
+    pAlbums->emplace_back();
     getAlbumCb(pStmt, &pAlbums->back());
 }
 

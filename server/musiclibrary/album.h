@@ -35,7 +35,10 @@ public:
     : LibraryItem(id)
     , year(0), trackCount(0), discCount(0), durationInSec(0), fileSize(0), dateAdded(0)
     {}
-    
+
+    Album(Album&&) = default;
+    Album& operator=(Album&& otherItem) = default;
+
     bool operator==(const Album& otherItem) const;
     friend std::ostream& operator<<(std::ostream &os, const Album& item);
 
