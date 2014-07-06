@@ -16,7 +16,7 @@
 
 #include "doozy.h"
 
-#include "settings.h"
+#include "common/settings.h"
 #include "devicedescriptions.h"
 #include "mediarendererdevice.h"
 

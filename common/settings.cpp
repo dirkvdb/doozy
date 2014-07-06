@@ -75,19 +75,20 @@ bool Settings::getAsBool(const std::string& setting, bool defaultValue) const
     return result;
 }
 
-void Settings::getAsVector(const std::string& setting, std::vector<std::string>& array) const
+std::vector<std::string> Settings::getAsVector(const std::string& setting) const
 {
-	array.clear();
+	std::vector<std::string> settings;
 	std::string value = get(setting);
 
 	if (!value.empty())
 	{
-		array = stringops::tokenize(value, ";");
-		for (size_t i = 0; i < array.size(); ++i)
-		{
-			stringops::trim(array[i]);
-		}
+		settings = stringops::tokenize(value, ";");
+        std::for_each(settings.begin(), settings.end(), [] (std::string& s) {
+            stringops::trim(s);
+        });
 	}
+
+    return settings;
 }
 
 
@@ -140,18 +141,21 @@ void Settings::loadFromFile(const std::string& filepath)
 void Settings::loadDefaultSettings()
 {
 #ifdef HAVE_OPENAL
-    m_Settings["AudioOutput"]   = "OpenAL";
+    m_Settings["AudioOutput"]       = "OpenAL";
 #endif
 #ifdef HAVE_ALSA
-    m_Settings["AudioOutput"]   = "Alsa";
+    m_Settings["AudioOutput"]       = "Alsa";
 #endif
 #ifdef HAVE_PULSE
-    m_Settings["AudioOutput"]   = "PulseAudio";
+    m_Settings["AudioOutput"]       = "PulseAudio";
 #endif
 
-    m_Settings["AudioDevice"]   = "default";
-    m_Settings["FriendlyName"]  = "Doozy";
-    m_Settings["UDN"]           = "356a6e90-8e58-11e2-9e96-0800200c9a66";
+    m_Settings["AudioDevice"]       = "default";
+    m_Settings["FriendlyName"]      = "Doozy";
+    m_Settings["UDN"]               = "356a6e90-8e58-11e2-9e96-0800200c9a66";
+    m_Settings["DBFile"]            = "./doozyserver.db";
+    m_Settings["MusicLibrary"]      = "/Volumes/Data/Music";
+    m_Settings["AlbumArtFilenames"] = "cover.jpg";
 }
 
 }

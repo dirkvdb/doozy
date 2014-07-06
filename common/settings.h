@@ -35,7 +35,7 @@ public:
     std::string get(const std::string& setting, const std::string& defaultValue = "") const;
     int32_t getAsInt(const std::string& setting, int32_t defaultValue = 0) const;
     bool getAsBool(const std::string& setting, bool defaultValue) const;
-    void getAsVector(const std::string& setting, std::vector<std::string>& array) const;
+    std::vector<std::string> getAsVector(const std::string& setting) const;
     
     void set(const std::string& setting, const std::string& value);
     void set(const std::string& setting, int32_t value);

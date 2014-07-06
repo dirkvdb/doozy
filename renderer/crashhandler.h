@@ -19,7 +19,6 @@
 #define CRASH_HANDLER_H
 
 #include "utils/log.h"
-#include "audio/audioplaybackinterface.h"
 
 namespace doozy
 {
