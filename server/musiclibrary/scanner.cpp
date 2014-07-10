@@ -119,6 +119,7 @@ void Scanner::scan(const std::string& dir)
 void Scanner::cancel()
 {
 	m_Stop = true;
+    m_ThreadPool.stop();
 }
 
 void Scanner::onFile(const std::string& filepath)

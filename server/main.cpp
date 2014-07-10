@@ -25,16 +25,15 @@
 #include <ucontext.h>
 
 #include "utils/log.h"
+#include "server.h"
 #include "crashhandler.h"
 #include "common/settings.h"
-#include "musiclibrary/musiclibraryfactory.h"
-#include "musiclibrary/musiclibraryinterface.h"
 
 static bool set_signal_handlers();
 
 using namespace utils;
 
-doozy::IMusicLibrary* pLib = nullptr;
+static std::unique_ptr<doozy::Server> serverInstance;
 
 int main(int argc, char **argv)
 {
@@ -69,14 +68,9 @@ int main(int argc, char **argv)
         }
     }
 
-    doozy::Settings settings;
-    settings.loadDefaultSettings();
-    auto lib = std::unique_ptr<doozy::IMusicLibrary>(doozy::MusicLibraryFactory::create(doozy::MusicLibraryType::FileSystem, settings));
-    pLib = lib.get();
-    lib->scan(true);
-
+    serverInstance.reset(new doozy::Server());
+    serverInstance->run("");
     log::info("Bye");
-    
     return 0;
 }
 
@@ -85,7 +79,7 @@ static void sigterm(int signo)
     try
     {
         log::info("Sigterm %d", signo);
-        delete pLib;
+        serverInstance->stop();
     }
     catch (std::exception& e)
     {

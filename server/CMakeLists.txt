@@ -39,6 +39,7 @@ SET(LINK_LIBS
 ADD_EXECUTABLE(doozyserver
     main.cpp
     crashhandler.h
+    server.h                                server.cpp
     musiclibrary/album.h                    musiclibrary/album.cpp
     musiclibrary/albumart.h                 musiclibrary/albumart.cpp
     musiclibrary/filesystemmusiclibrary.h   musiclibrary/filesystemmusiclibrary.cpp
