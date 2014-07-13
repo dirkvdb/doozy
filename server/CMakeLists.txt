@@ -39,18 +39,20 @@ SET(LINK_LIBS
 ADD_EXECUTABLE(doozyserver
     main.cpp
     crashhandler.h
-    server.h                                server.cpp
-    musiclibrary/album.h                    musiclibrary/album.cpp
-    musiclibrary/albumart.h                 musiclibrary/albumart.cpp
-    musiclibrary/filesystemmusiclibrary.h   musiclibrary/filesystemmusiclibrary.cpp
-    musiclibrary/libraryitem.h              musiclibrary/libraryitem.cpp
-    musiclibrary/musicdb.h                  musiclibrary/musicdb.cpp
-    musiclibrary/musiclibraryinterface.h
-    musiclibrary/musiclibraryfactory.h      musiclibrary/musiclibraryfactory.cpp
-    musiclibrary/scanner.h                  musiclibrary/scanner.cpp
-    musiclibrary/track.h                    musiclibrary/track.cpp
-    ../common/settings.h                    ../common/settings.cpp
+    server.h                           server.cpp
+    library/album.h                    library/album.cpp
+    library/albumart.h                 library/albumart.cpp
+    library/filesystemmusiclibrary.h   library/filesystemmusiclibrary.cpp
+    library/libraryitem.h              library/libraryitem.cpp
+    library/musicdb.h                  library/musicdb.cpp
+    library/musiclibraryinterface.h
+    library/musiclibraryfactory.h      library/musiclibraryfactory.cpp
+    library/scanner.h                  library/scanner.cpp
+    library/track.h                    library/track.cpp
+    ../common/settings.h               ../common/settings.cpp
 )
+
+SOURCE_GROUP(library REGULAR_EXPRESSION library/)
 
 TARGET_LINK_LIBRARIES(doozyserver ${LINK_LIBS})
 INSTALL(TARGETS doozyserver RUNTIME DESTINATION bin)

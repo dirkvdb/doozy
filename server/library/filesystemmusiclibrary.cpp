@@ -41,39 +41,34 @@ FilesystemMusicLibrary::FilesystemMusicLibrary(const Settings& settings)
 
 FilesystemMusicLibrary::~FilesystemMusicLibrary()
 {
-	m_Destroy = true;
-	cancelScanThread();
+    m_Destroy = true;
+    cancelScanThread();
 }
 
 void FilesystemMusicLibrary::cancelScanThread()
 {
     if (m_ScannerThread.joinable())
-	{
-		{
-			std::lock_guard<std::mutex> lock(m_ScanMutex);
-			if (m_Scanner.get())
-			{
-				m_Scanner->cancel();
-			}
-		}
-		
-		m_ScannerThread.join();
-	}
+    {
+        {
+            std::lock_guard<std::mutex> lock(m_ScanMutex);
+            if (m_Scanner.get())
+            {
+                m_Scanner->cancel();
+            }
+        }
+
+        m_ScannerThread.join();
+    }
 }
 
-uint32_t FilesystemMusicLibrary::getTrackCount()
+uint32_t FilesystemMusicLibrary::getObjectCount()
 {
-    return m_Db.getTrackCount();
+    return m_Db.getObjectCount();
 }
 
-uint32_t FilesystemMusicLibrary::getAlbumCount()
+upnp::ItemPtr FilesystemMusicLibrary::getItem(const std::string& id) override;
 {
-    return m_Db.getAlbumCount();
-}
-
-Track FilesystemMusicLibrary::getTrack(const std::string& id)
-{
-    return m_Db.getTrack(id);
+    return m_Db.getItem(id);
 }
 
 std::vector<Track> FilesystemMusicLibrary::getTracksFromAlbum(const std::string& albumId)
@@ -111,7 +106,7 @@ void FilesystemMusicLibrary::scan(bool startFresh)
     }
 
     m_LibraryPath = libraryPath;
-    
+
     cancelScanThread();
     m_ScannerThread = std::thread(&FilesystemMusicLibrary::scannerThread, this);
 }
@@ -125,27 +120,32 @@ void FilesystemMusicLibrary::scannerThread()
 {
     try
     {
-		auto filenames = m_Settings.getAsVector("AlbumArtFilenames");
-        
+        auto filenames = m_Settings.getAsVector("AlbumArtFilenames");
+
         {
-			std::lock_guard<std::mutex> lock(m_ScanMutex);
-			m_Scanner.reset(new Scanner(m_Db, filenames));
-		}
+            std::lock_guard<std::mutex> lock(m_ScanMutex);
+            m_Scanner.reset(new Scanner(m_Db, filenames));
+        }
         m_Scanner->performScan(m_LibraryPath);
-        
+
         if (!m_Destroy)
         {
-			m_Db.removeNonExistingFiles();
-		}
-		
-		if (!m_Destroy)
+            m_Db.removeNonExistingFiles();
+        }
+
+        if (!m_Destroy)
         {
-			m_Db.removeNonExistingAlbums();
-		}
+            m_Db.removeNonExistingAlbums();
+        }
     }
     catch (std::exception& e)
     {
         log::error("Failed to scan library: %s", e.what());
+    }
+
+    if (OnScanComplete)
+    {
+        OnScanComplete();
     }
 }
 

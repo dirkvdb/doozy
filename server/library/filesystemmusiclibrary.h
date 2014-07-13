@@ -37,11 +37,10 @@ class FilesystemMusicLibrary : public IMusicLibrary
 public:
     FilesystemMusicLibrary(const Settings& settings);
     ~FilesystemMusicLibrary();
-    
-    uint32_t getTrackCount() override;
-    uint32_t getAlbumCount() override;
 
-    Track getTrack(const std::string& id) override;
+    uint32_t getObjectCount() override;
+
+    upnp::ItemPtr getItem(const std::string& id) override;
     std::vector<Track> getTracksFromAlbum(const std::string& albumId) override;
     Track getFirstTrackFromAlbum(const std::string& albumId) override;
 
@@ -60,9 +59,9 @@ private:
     MusicDb                         m_Db;
     std::string                     m_LibraryPath;
     std::thread                     m_ScannerThread;
-    std::mutex						m_ScanMutex;
-    std::unique_ptr<Scanner>	    m_Scanner;
-    bool							m_Destroy;
+    std::mutex                      m_ScanMutex;
+    std::unique_ptr<Scanner>        m_Scanner;
+    bool                            m_Destroy;
     const Settings&                 m_Settings;
 };
 

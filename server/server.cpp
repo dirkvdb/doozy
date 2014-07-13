@@ -27,8 +27,8 @@
 #include "upnp/upnpwebserver.h"
 #include "upnp/upnphttpreader.h"
 
-#include "musiclibrary/musiclibraryfactory.h"
-#include "musiclibrary/musiclibraryinterface.h"
+#include "library/musiclibraryfactory.h"
+#include "library/musiclibraryinterface.h"
 
 using namespace utils;
 using namespace utils::stringops;
@@ -54,7 +54,7 @@ void Server::run(const std::string& configFile)
     {
         m_Stop = false;
         m_Client.initialize();
-        
+
         // load settings
         Settings settings;
         settings.loadDefaultSettings();
@@ -63,34 +63,34 @@ void Server::run(const std::string& configFile)
             log::info("Loading settings from: %s", configFile);
             settings.loadFromFile(configFile);
         }
-        
+
         m_Lib.reset(MusicLibraryFactory::create(doozy::MusicLibraryType::FileSystem, settings));
         m_Lib->scan(true);
-    
+
 //        auto udn                = "uuid:" + settings.get("UDN");
 //        auto friendlyName       = settings.get("FriendlyName");
 //        auto audioOutput        = settings.get("AudioOutput");
 //        auto audioDevice        = settings.get("AudioDevice");
 //        auto description        = format(g_mediaRendererDevice.c_str(), m_Client.getIpAddress(), m_Client.getPort(), friendlyName, udn);
 //        auto advertiseInterval  = 180;
-//        
+//
 //        log::info("FriendlyName = %s", friendlyName);
 //        log::info("AudioOutput = %s", audioOutput);
 //        log::info("AudioDevice = %s", audioDevice);
-//        
+//
 //        upnp::WebServer webserver("/opt/");
-//        
+//
 //        webserver.addVirtualDirectory("Doozy");
 //        addServiceFileToWebserver(webserver, "RenderingControlDesc.xml", g_rendererControlService);
 //        addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
 //        addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
-//        
+//
 //        MediaRendererDevice dev(udn, description, advertiseInterval, audioOutput, audioDevice, webserver);
 //        dev.start();
-        
+
         std::unique_lock<std::mutex> lock(m_Mutex);
         m_Condition.wait(lock, [this] () { return m_Stop == true; });
-        
+
 //        dev.stop();
 //        webserver.removeVirtualDirectory("Doozy");
     }
@@ -99,20 +99,20 @@ void Server::run(const std::string& configFile)
         log::error(e.what());
         m_Lib.reset();
     }
-    
+
     m_Client.destroy();
 }
-    
+
 void Server::stop()
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_Stop = true;
     m_Condition.notify_all();
 }
-    
+
 void Server::addServiceFileToWebserver(upnp::WebServer& webserver, const std::string& filename, const std::string& fileContents)
 {
     webserver.addFile("Doozy", filename, "text/xml", fileContents);
 }
-    
+
 }

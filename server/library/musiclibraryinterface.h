@@ -23,9 +23,11 @@
 
 #include "utils/types.h"
 
-#include "musiclibrary/track.h"
-#include "musiclibrary/album.h"
-#include "musiclibrary/albumart.h"
+#include "library/track.h"
+#include "library/album.h"
+#include "library/albumart.h"
+#include "upnp/upnpitem.h"
+
 
 namespace doozy
 {
@@ -38,10 +40,9 @@ class IMusicLibrary
 public:
     virtual ~IMusicLibrary() {}
 
-    virtual uint32_t getTrackCount() = 0;
-    virtual uint32_t getAlbumCount() = 0;
+    virtual uint32_t getObjectCount() = 0;
 
-    virtual Track getTrack(const std::string& id) = 0;
+    virtual upnp::ItemPtr getItem(const std::string& id) = 0;
     virtual std::vector<Track> getTracksFromAlbum(const std::string& albumId) = 0;
     virtual Track getFirstTrackFromAlbum(const std::string& albumId) = 0;
 
@@ -52,6 +53,9 @@ public:
 
     virtual void scan(bool startFresh) = 0;
     //virtual void search(const std::string& search, utils::ISubscriber<const Track&>& trackSubscriber, utils::ISubscriber<const Album&>& albumSubscriber) = 0;
+
+
+    std::function<void()> OnScanComplete;
 };
 
 }

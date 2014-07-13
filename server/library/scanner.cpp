@@ -37,7 +37,7 @@ using namespace fileops;
 
 namespace doozy
 {
-    
+
 static constexpr int32_t ALBUM_ART_DB_SIZE = 96;
 static const std::string g_unknownAlbum = "Unknown Album";
 static const std::string g_unknownArtist = "Unknown Artist";
@@ -55,17 +55,17 @@ Scanner::Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames)
 
 Scanner::~Scanner()
 {
-	cancel();
+    cancel();
 }
 
 void Scanner::performScan(const std::string& libraryPath)
 {
-	m_Stop = false;
-	
+    m_Stop = false;
+
     time_t startTime = time(nullptr);
     log::info("Starting library scan in: %s", libraryPath);
 
-    m_InitialScan = m_LibraryDb.getTrackCount() == 0;
+    m_InitialScan = m_LibraryDb.getObjectCount() == 0;
     m_ScannedFiles = 0;
 
     m_ThreadPool.start();
@@ -73,8 +73,8 @@ void Scanner::performScan(const std::string& libraryPath)
     if (m_Stop)
     {
         m_ThreadPool.stop();
-		log::warn("Scan aborted");
-	}
+        log::warn("Scan aborted");
+    }
     else
     {
         log::info("Wait for completion");
@@ -93,7 +93,7 @@ void Scanner::scan(const std::string& dir)
         {
             break;
         }
-        
+
         if (entry.type() == FileSystemEntryType::Directory)
         {
             scan(entry.path());
@@ -118,14 +118,14 @@ void Scanner::scan(const std::string& dir)
 
 void Scanner::cancel()
 {
-	m_Stop = true;
+    m_Stop = true;
     m_ThreadPool.stop();
 }
 
 void Scanner::onFile(const std::string& filepath)
 {
     auto info = getFileInfo(filepath);
-    
+
     Track track;
     track.filepath      = filepath;
     track.fileSize      = info.sizeInBytes;
@@ -151,7 +151,7 @@ void Scanner::onFile(const std::string& filepath)
     track.sampleRate    = md.getSampleRate();
     track.channels      = md.getChannels();
     track.durationInSec = md.getDuration();
-    
+
     if (track.album.empty())    track.album = g_unknownAlbum;
     if (track.artist.empty())   track.artist = g_unknownArtist;
     if (track.title.empty())    track.title = g_unknownTitle;
@@ -254,14 +254,14 @@ void Scanner::processAlbumArt(const std::string& filepath, AlbumArt& art)
                 audio::Metadata::AlbumArt artData;
                 artData.data = fileops::readFile(possibleAlbumArt);
                 log::debug("Art found in: %s", possibleAlbumArt);
-                
+
                 art.setAlbumArt(std::move(artData));
             }
             catch (std::exception&) {}
         }
     }
-    
-    
+
+
     // resize the album art if it is present
     if (!art.getData().empty())
     {

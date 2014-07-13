@@ -23,11 +23,11 @@
 
 #include "utils/types.h"
 #include "utils/subscriber.h"
+#include "upnp/upnpitem.h"
 
 
 struct sqlite3;
 struct sqlite3_stmt;
-
 
 namespace doozy
 {
@@ -48,9 +48,8 @@ public:
 
     MusicDb(const std::string& dbFilepath);
     ~MusicDb();
-    
-    uint32_t getTrackCount();
-    uint32_t getAlbumCount();
+
+    uint32_t getObjectCount();
 
     void addTrack(const Track& track);
     void updateTrack(const Track& track);
@@ -61,7 +60,7 @@ public:
     TrackStatus getTrackStatus(const std::string& filepath, uint64_t modifiedTime);
     void albumExists(const std::string& name, std::string& id);
 
-    Track getTrack(const std::string& id);
+    upnp::ItemPtr getItem(const std::string& id);
     Track getTrackWithPath(const std::string& filepath);
     Album getAlbum(const std::string& id);
     AlbumArt getAlbumArt(const std::string& albumId);
@@ -87,7 +86,7 @@ private:
     typedef void (*QueryCallback)(sqlite3_stmt*, void*);
     static void getIdCb(sqlite3_stmt* pStmt, void* pData);
     static void getIdIntCb(sqlite3_stmt* pStmt, void* pData);
-    static void getTrackInfoCb(sqlite3_stmt* pStmt, void* pData);
+    static void getItemCb(sqlite3_stmt *pStmt, void *pData);
     static void getTrackModificationTimeCb(sqlite3_stmt* pStmt, void* pData);
     static void getTracksCb(sqlite3_stmt* pStmt, void* pData);
     static void getAlbumCb(sqlite3_stmt* pStmt, void* pData);

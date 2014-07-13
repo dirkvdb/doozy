@@ -34,6 +34,7 @@
 #include "utils/log.h"
 #include "utils/trace.h"
 
+
 using namespace std;
 using namespace utils;
 
@@ -70,20 +71,11 @@ MusicDb::~MusicDb()
     }
 }
 
-uint32_t MusicDb::getTrackCount()
+uint32_t MusicDb::getObjectCount()
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     uint32_t count;
-    performQuery(createStatement("SELECT COUNT(Id) FROM tracks;"), countCb, &count);
-
-    return count;
-}
-
-uint32_t MusicDb::getAlbumCount()
-{
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-    uint32_t count;
-    performQuery(createStatement("SELECT COUNT(Id) FROM albums;"), countCb, &count);
+    performQuery(createStatement("SELECT COUNT(Id) FROM objects;"), countCb, &count);
 
     return count;
 }
@@ -298,27 +290,24 @@ void MusicDb::albumExists(const string& name, std::string& id)
     getIdFromTable("albums", name, id);
 }
 
-Track MusicDb::getTrack(const std::string& id)
+upnp::ItemPtr MusicDb::getItem(const std::string& id)
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     sqlite3_stmt* pStmt = createStatement(
-        "SELECT tracks.Id, tracks.albumId, tracks.Title, tracks.Composer, tracks.Filepath, tracks.Year, tracks.TrackNr, tracks.DiscNr, tracks.Duration, tracks.BitRate, tracks.SampleRate, tracks.Channels, tracks.FileSize, tracks.ModifiedTime, artists.Name, albums.Name, albums.AlbumArtist, genres.Name "
-        "FROM tracks "
-        "LEFT OUTER JOIN albums ON tracks.AlbumId = albums.Id "
-        "LEFT OUTER JOIN artists ON tracks.ArtistId = artists.Id "
-        "LEFT OUTER JOIN genres ON tracks.GenreId = genres.Id "
-        "WHERE tracks.Id = ? ;");
+        "SELECT objects.ObjectId, objects.Title, objects.ParentId, objects.RefId, obkects.Class "
+        "FROM objects "
+        "WHERE objects.ObjectId = ?;");
 
-    Track track;
+    auto item = std::make_shared<upnp::Item>();
     bindValue(pStmt, id, 1);
-    performQuery(pStmt, getTrackInfoCb, &track);
+    performQuery(pStmt, getItemCb, &item);
 
-    if (track.id.empty())
+    if (item->getObjectId().empty())
     {
         throw std::runtime_error("No track found in db with id: " + id);
     }
 
-    return track;
+    return item;
 }
 
 Track MusicDb::getTrackWithPath(const string& filepath)
@@ -334,7 +323,7 @@ Track MusicDb::getTrackWithPath(const string& filepath)
 
     Track track;
     bindValue(pStmt, filepath, 1);
-    performQuery(pStmt, getTrackInfoCb, &track);
+    performQuery(pStmt, getItemCb, &track);
 
     if (track.id.empty())
     {
@@ -387,15 +376,15 @@ std::vector<Track> MusicDb::getRandomTracks(uint32_t trackCount)
 std::vector<Track> MusicDb::getTracksFromRandomAlbum()
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-    
+
     sqlite3_stmt* pStmt = createStatement(
                                           "SELECT Id "
                                           "FROM albums "
                                           "ORDER BY RANDOM() LIMIT 1;");
-    
+
     std::string id;
     performQuery(pStmt, getIdCb, &id);
-    
+
     return getTracksFromAlbum(id);
 }
 
@@ -680,29 +669,49 @@ void MusicDb::searchLibrary(const std::string& search, utils::ISubscriber<const 
 
 void MusicDb::clearDatabase()
 {
-    {
-        std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-        performQuery(createStatement("DROP INDEX IF EXISTS tracks.pathIndex;"));
-        performQuery(createStatement("DROP TABLE IF EXISTS albums;"));
-        performQuery(createStatement("DROP TABLE IF EXISTS artists;"));
-        performQuery(createStatement("DROP TABLE IF EXISTS genres;"));
-        performQuery(createStatement("DROP TABLE IF EXISTS tracks;"));
+    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    performQuery(createStatement("DROP INDEX IF EXISTS tracks.pathIndex;"));
+    performQuery(createStatement("DROP TABLE IF EXISTS objects;"));
+    performQuery(createStatement("DROP TABLE IF EXISTS metadata;"));
 
-        createInitialDatabase();
-    }
+    createInitialDatabase();
 }
 
 void MusicDb::createInitialDatabase()
 {
-	log::debug("Create initial database");
+    log::debug("Create initial database");
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-    log::debug("Lock acquired");
-    performQuery(createStatement("CREATE TABLE IF NOT EXISTS albums(Id INTEGER PRIMARY KEY, GenreId INTEGER, Name TEXT, AlbumArtist TEXT, Year INTEGER, Duration INTEGER, DiscCount INTEGER, DateAdded INTEGER, CoverImage BLOB, FOREIGN KEY (GenreId) REFERENCES genres(Id));"));
-    performQuery(createStatement("CREATE TABLE IF NOT EXISTS artists(Id INTEGER PRIMARY KEY, Name TEXT UNIQUE);"));
-    performQuery(createStatement("CREATE TABLE IF NOT EXISTS genres(Id INTEGER PRIMARY KEY, Name TEXT UNIQUE);"));
-    performQuery(createStatement("CREATE TABLE IF NOT EXISTS tracks(Id INTEGER PRIMARY KEY, AlbumId INTEGER, ArtistId INTEGER, GenreId INTEGER, Title TEXT, Filepath TEXT UNIQUE, Composer TEXT, Year INTEGER, TrackNr INTEGER, DiscNr INTEGER, AlbumOrder INTEGER, Duration INTEGER, BitRate INTEGER, SampleRate INTEGER, Channels INTEGER, FileSize INTEGER, ModifiedTime INTEGER, FOREIGN KEY (AlbumId) REFERENCES albums(Id), FOREIGN KEY (ArtistId) REFERENCES artists(Id), FOREIGN KEY (GenreId) REFERENCES genres(Id));"));
+    performQuery(createStatement("CREATE TABLE IF NOT EXISTS objects("
+        "Id INTEGER PRIMARY KEY,"
+        "ObjectId TEXT UNIQUE,"
+        "ParentId TEXT,"
+        "RefId TEXT,"
+        "Title TEXT,"
+        "Class TEXT,"
+        "FOREIGN KEY (MetaData) REFERENCES metadata(id));"));
 
-    performQuery(createStatement("CREATE INDEX IF NOT EXISTS pathIndex ON tracks (Filepath);"));
+    performQuery(createStatement("CREATE TABLE IF NOT EXISTS metadata("
+        "Id INTEGER PRIMARY KEY,"
+        "Album TEXT,"
+        "Artist TEXT,"
+        "AlbumArtist TEXT"
+        "Title TEXT,"
+        "Genre TEXT,"
+        "Filepath TEXT UNIQUE,"
+        "Composer TEXT,"
+        "Year INTEGER,"
+        "TrackNr INTEGER,"
+        "DiscNr INTEGER,"
+        "AlbumOrder INTEGER,"
+        "Duration TEXT,"
+        "MimeType TEXT,"
+        "BitRate INTEGER,"
+        "SampleRate INTEGER,"
+        "Channels INTEGER,"
+        "FileSize INTEGER,"
+        "DateAdded INTEGER,"
+        "CoverImage BLOB,"
+        "ModifiedTime INTEGER);"));
 
     log::debug("database created");
 }
@@ -840,41 +849,28 @@ void MusicDb::getIdIntCb(sqlite3_stmt* pStmt, void* pData)
     *pId = sqlite3_column_int(pStmt, 0);
 }
 
-static void getStringFromColumn(sqlite3_stmt* pStmt, int column, string& aString)
+static std::string getStringFromColumn(sqlite3_stmt* pStmt, int column)
 {
     const char* pString = reinterpret_cast<const char*>(sqlite3_column_text(pStmt, column));
     if (pString != nullptr)
     {
-        aString = pString;
+        return pString;
     }
+    
+    return std::string();
 }
 
-void MusicDb::getTrackInfoCb(sqlite3_stmt* pStmt, void* pData)
+void MusicDb::getItemCb(sqlite3_stmt *pStmt, void *pData)
 {
-    assert(sqlite3_column_count(pStmt) == 18);
+    assert(sqlite3_column_count(pStmt) == 5);
 
-    Track* pTrack = reinterpret_cast<Track*>(pData);
+    upnp::ItemPtr& item = *reinterpret_cast<upnp::ItemPtr*>(pData);
 
-    getStringFromColumn(pStmt, 0, pTrack->id);
-    getStringFromColumn(pStmt, 1, pTrack->albumId);
-    getStringFromColumn(pStmt, 2, pTrack->title);
-    getStringFromColumn(pStmt, 3, pTrack->composer);
-    getStringFromColumn(pStmt, 4, pTrack->filepath);
-
-    pTrack->year             = sqlite3_column_int(pStmt, 5);
-    pTrack->trackNr          = sqlite3_column_int(pStmt, 6);
-    pTrack->discNr           = sqlite3_column_int(pStmt, 7);
-    pTrack->durationInSec    = sqlite3_column_int(pStmt, 8);
-    pTrack->bitrate          = sqlite3_column_int(pStmt, 9);
-    pTrack->sampleRate       = sqlite3_column_int(pStmt, 10);
-    pTrack->channels         = sqlite3_column_int(pStmt, 11);
-    pTrack->fileSize         = sqlite3_column_int(pStmt, 12);
-    pTrack->modifiedTime     = sqlite3_column_int(pStmt, 13);
-
-    getStringFromColumn(pStmt, 14, pTrack->artist);
-    getStringFromColumn(pStmt, 15, pTrack->album);
-    getStringFromColumn(pStmt, 16, pTrack->albumArtist);
-    getStringFromColumn(pStmt, 17, pTrack->genre);
+    item->setObjectId(getStringFromColumn(pStmt, 0));
+    item->setTitle(getStringFromColumn(pStmt, 1));
+    item->setParentId(getStringFromColumn(pStmt, 2));
+    item->setRefId(getStringFromColumn(pStmt, 3));
+    item->setClass(getStringFromColumn(pStmt, 4));
 }
 
 void MusicDb::getTrackModificationTimeCb(sqlite3_stmt* pStmt, void* pData)
@@ -890,7 +886,7 @@ void MusicDb::getTracksCb(sqlite3_stmt* pStmt, void* pData)
 	auto pTracks = reinterpret_cast<std::vector<Track>*>(pData);
 
     Track track;
-    getTrackInfoCb(pStmt, &track);
+    getItemCb(pStmt, &track);
     pTracks->push_back(std::move(track));
 }
 
@@ -899,7 +895,7 @@ void MusicDb::searchTracksCb(sqlite3_stmt* pStmt, void* pData)
     SearchTrackData* pSearchData = reinterpret_cast<SearchTrackData*>(pData);
 
     Track track;
-    getTrackInfoCb(pStmt, &track);
+    getItemCb(pStmt, &track);
     pSearchData->subscriber.onItem(track);
     pSearchData->ids.insert(stringops::toNumeric<uint32_t>(track.albumId));
 }

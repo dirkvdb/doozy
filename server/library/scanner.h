@@ -49,7 +49,7 @@ private:
     utils::ThreadPool               m_ThreadPool;
 
     bool                            m_InitialScan;
-    bool							m_Stop;
+    bool                            m_Stop;
 };
 
 }
