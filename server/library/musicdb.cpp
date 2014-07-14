@@ -47,12 +47,12 @@ MusicDb::MusicDb(const string& dbFilepath)
 
     if (sqlite3_open(dbFilepath.c_str(), &m_pDb) != SQLITE_OK)
     {
-        throw logic_error("Failed to open database: " + dbFilepath);
+        throw runtime_error("Failed to open database: " + dbFilepath);
     }
 
     if (sqlite3_busy_handler(m_pDb, MusicDb::busyCb, nullptr) != SQLITE_OK)
     {
-        throw logic_error("Failed to set busy handler");
+        throw runtime_error("Failed to set busy handler");
     }
 
     createInitialDatabase();
@@ -79,6 +79,8 @@ uint32_t MusicDb::getObjectCount()
 
 void MusicDb::addItem(const LibraryItem& item)
 {
+    assert(item.upnpItem);
+
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     sqlite3_stmt* pStmt = createStatement(
         "INSERT INTO objects "
@@ -165,13 +167,13 @@ void MusicDb::updateItem(const LibraryItem& item)
 //    performQuery(pStmt);
 //}
 
-bool MusicDb::trackExists(const string& filepath)
+bool MusicDb::itemExists(const string& filepath)
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-    sqlite3_stmt* pStmt = createStatement("SELECT Id FROM tracks WHERE tracks.Filepath = ?;");
+    sqlite3_stmt* pStmt = createStatement("SELECT Id FROM objects WHERE objects.Filepath = ?;");
     if (sqlite3_bind_text(pStmt, 1, filepath.c_str(), static_cast<int>(filepath.size()), SQLITE_STATIC) != SQLITE_OK )
     {
-        throw logic_error(string("Failed to bind value: ") + sqlite3_errmsg(m_pDb));
+        throw runtime_error(string("Failed to bind value: ") + sqlite3_errmsg(m_pDb));
     }
 
     return performQuery(pStmt) == 1;
@@ -183,7 +185,7 @@ MusicDb::TrackStatus MusicDb::getTrackStatus(const std::string& filepath, uint64
     sqlite3_stmt* pStmt = createStatement("SELECT ModifiedTime FROM tracks WHERE tracks.Filepath = ?;");
     if (sqlite3_bind_text(pStmt, 1, filepath.c_str(), static_cast<int>(filepath.size()), SQLITE_STATIC) != SQLITE_OK )
     {
-        throw logic_error(string("Failed to bind value: ") + sqlite3_errmsg(m_pDb));
+        throw runtime_error(string("Failed to bind value: ") + sqlite3_errmsg(m_pDb));
     }
 
     uint32_t dbModifiedTime;
@@ -214,9 +216,8 @@ LibraryItem MusicDb::getItem(const std::string& id)
 
     LibraryItem item;
     bindValue(pStmt, id, 1);
-    performQuery(pStmt, getItemCb, &item);
 
-    if (item.upnpItem->getObjectId().empty())
+    if (performQuery(pStmt, getItemCb, &item) == 0 || item.upnpItem->getObjectId().empty())
     {
         throw std::runtime_error("No track found in db with id: " + id);
     }
@@ -247,21 +248,11 @@ LibraryItem MusicDb::getItem(const std::string& id)
 //    return track;
 //}
 
-void MusicDb::removeTrack(const std::string& id)
+void MusicDb::removeItem(const std::string& id)
 {
     {
         std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-        sqlite3_stmt* pStmt = createStatement("DELETE from tracks WHERE Id = ?");
-        bindValue(pStmt, id, 1);
-        performQuery(pStmt);
-    }
-}
-
-void MusicDb::removeAlbum(const std::string& id)
-{
-    {
-        std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-        sqlite3_stmt* pStmt = createStatement("DELETE from albums WHERE Id = ?");
+        sqlite3_stmt* pStmt = createStatement("DELETE from objects WHERE Id = ?");
         bindValue(pStmt, id, 1);
         performQuery(pStmt);
     }
@@ -271,12 +262,12 @@ void MusicDb::removeNonExistingFiles()
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     vector<uint32_t> files;
-    performQuery(createStatement("SELECT Id, Filepath from tracks;"), removeNonExistingFilesCb, &files);
+    performQuery(createStatement("SELECT Id, FilePath from objects;"), removeNonExistingFilesCb, &files);
 
     for (size_t i = 0; i < files.size(); ++i)
     {
-        log::debug("Removed deleted file from database: %s", files[i]);
-        removeTrack(numericops::toString(files[i]));
+        log::debug("Removed deleted file from database: %d", files[i]);
+        removeItem(numericops::toString(files[i]));
     }
 }
 
@@ -335,12 +326,12 @@ void MusicDb::removeNonExistingFiles()
 //        if (sqlite3_reset(pStmt) != SQLITE_OK)
 //        {
 //            sqlite3_finalize(pStmt);
-//            throw logic_error(string("Failed to reset statement: ") + sqlite3_errmsg(m_pDb));
+//            throw runtime_error(string("Failed to reset statement: ") + sqlite3_errmsg(m_pDb));
 //        }
 //        if (sqlite3_clear_bindings(pStmt) != SQLITE_OK)
 //        {
 //            sqlite3_finalize(pStmt);
-//            throw logic_error(string("Failed to clear bindings: ") + sqlite3_errmsg(m_pDb));
+//            throw runtime_error(string("Failed to clear bindings: ") + sqlite3_errmsg(m_pDb));
 //        }
 //    }
 //    sqlite3_finalize(pStmt);
@@ -412,19 +403,20 @@ uint32_t MusicDb::performQuery(sqlite3_stmt* pStmt, QueryCallback cb, void* pDat
         {
         case SQLITE_BUSY:
             sqlite3_finalize(pStmt);
-            throw logic_error("Failed to execute statement: SQL is busy");
-            break;
+            throw runtime_error("Failed to execute statement: SQL is busy");
         case SQLITE_ERROR:
             sqlite3_finalize(pStmt);
-            throw logic_error(string("Failed to execute statement: ") + sqlite3_errmsg(m_pDb));
-            break;
+            throw runtime_error(string("Failed to execute statement: ") + sqlite3_errmsg(m_pDb));
+        case SQLITE_CONSTRAINT:
+            sqlite3_finalize(pStmt);
+            throw runtime_error(string("Sqlite constraint violated: ") + sqlite3_errmsg(m_pDb));
         case SQLITE_ROW:
             if (cb != nullptr) cb(pStmt, pData);
             ++rowCount;
             break;
         default:
             sqlite3_finalize(pStmt);
-            throw logic_error("FIXME: unhandled return value of sql statement: " + numericops::toString(rc));
+            throw runtime_error("FIXME: unhandled return value of sql statement: " + numericops::toString(rc));
         }
     }
 
@@ -441,7 +433,7 @@ sqlite3_stmt* MusicDb::createStatement(const char* query)
 
     if (sqlite3_prepare_v2(m_pDb, query, -1, &pStmt, 0) != SQLITE_OK)
     {
-        throw logic_error(string("Failed to prepare sql statement (") + sqlite3_errmsg(m_pDb) + "): " + query);
+        throw runtime_error(string("Failed to prepare sql statement (") + sqlite3_errmsg(m_pDb) + "): " + query);
     }
 
     return pStmt;
@@ -453,12 +445,12 @@ void MusicDb::bindValue(sqlite3_stmt* pStmt, const string& value, int32_t index)
     {
         if (sqlite3_bind_null(pStmt, index) != SQLITE_OK)
         {
-            throw logic_error(string("Failed to bind string value as NULL: ") + sqlite3_errmsg(m_pDb));
+            throw runtime_error(string("Failed to bind string value as NULL: ") + sqlite3_errmsg(m_pDb));
         }
     }
     else if (sqlite3_bind_text(pStmt, index, value.c_str(), static_cast<int>(value.size()), SQLITE_STATIC) != SQLITE_OK)
     {
-        throw logic_error(string("Failed to bind string value: ") + sqlite3_errmsg(m_pDb));
+        throw runtime_error(string("Failed to bind string value: ") + sqlite3_errmsg(m_pDb));
     }
 }
 
@@ -466,7 +458,7 @@ void MusicDb::bindValue(sqlite3_stmt* pStmt, uint32_t value, int32_t index)
 {
     if (sqlite3_bind_int(pStmt, index, value) != SQLITE_OK)
     {
-        throw logic_error(string("Failed to bind int value: ") + sqlite3_errmsg(m_pDb));
+        throw runtime_error(string("Failed to bind int value: ") + sqlite3_errmsg(m_pDb));
     }
 }
 
@@ -474,7 +466,7 @@ void MusicDb::bindValue(sqlite3_stmt* pStmt, uint64_t value, int32_t index)
 {
     if (sqlite3_bind_int64(pStmt, index, value) != SQLITE_OK)
     {
-        throw logic_error(string("Failed to bind int64 value: ") + sqlite3_errmsg(m_pDb));
+        throw runtime_error(string("Failed to bind int64 value: ") + sqlite3_errmsg(m_pDb));
     }
 }
 
@@ -484,12 +476,12 @@ void MusicDb::bindValue(sqlite3_stmt* pStmt, const void* pData, size_t dataSize,
     {
         if (sqlite3_bind_null(pStmt, index) != SQLITE_OK)
         {
-            throw logic_error(string("Failed to bind blob value as NULL: ") + sqlite3_errmsg(m_pDb));
+            throw runtime_error(string("Failed to bind blob value as NULL: ") + sqlite3_errmsg(m_pDb));
         }
     }
     else if (sqlite3_bind_blob(pStmt, index, pData, static_cast<int>(dataSize), SQLITE_TRANSIENT) != SQLITE_OK)
     {
-        throw logic_error(string("Failed to bind int value: ") + sqlite3_errmsg(m_pDb));
+        throw runtime_error(string("Failed to bind int value: ") + sqlite3_errmsg(m_pDb));
     }
 }
 
@@ -612,7 +604,7 @@ void MusicDb::removeNonExistingFilesCb(sqlite3_stmt* pStmt, void* pData)
     vector<uint32_t>* pFiles = reinterpret_cast<vector<uint32_t>*>(pData);
 
     string path = getStringFromColumn(pStmt, 1);
-    if (!fileops::pathExists(path))
+    if (!path.empty() && !fileops::pathExists(path))
     {
         pFiles->push_back(sqlite3_column_int(pStmt, 0));
     }

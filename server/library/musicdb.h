@@ -48,15 +48,13 @@ public:
     void addItem(const LibraryItem& item);
     void updateItem(const LibraryItem& item);
 
-    bool trackExists(const std::string& filepath);
+    bool itemExists(const std::string& filepath);
     TrackStatus getTrackStatus(const std::string& filepath, uint64_t modifiedTime);
 
     LibraryItem getItem(const std::string& id);
     //Track getTrackWithPath(const std::string& filepath);
 
-    void removeTrack(const std::string& id);
-    void removeAlbum(const std::string& id);
-
+    void removeItem(const std::string& id);
     void removeNonExistingFiles();
 
     //void searchLibrary(const std::string& search, utils::ISubscriber<const Track&>& trackSubscriber, utils::ISubscriber<const Album&>& albumSubscriber);

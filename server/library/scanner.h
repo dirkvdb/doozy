@@ -39,8 +39,9 @@ public:
     void cancel();
 
 private:
-    void scan(const std::string& dir);
-    void onFile(const std::string& filepath);
+    void createInitialLayout();
+    void scan(const std::string& dir, const std::string& parentId);
+    void onFile(const std::string& filepath, uint32_t index, const std::string& parentId);
     void processAlbumArt(const std::string& filepath, AlbumArt& art);
 
     MusicDb&                        m_LibraryDb;

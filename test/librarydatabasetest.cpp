@@ -48,6 +48,13 @@ TEST_F(LibraryDatabaseTest, GetObjectCount)
     EXPECT_EQ(1, m_db->getObjectCount());
 }
 
+TEST_F(LibraryDatabaseTest, ItemExists)
+{
+    EXPECT_FALSE(m_db->itemExists(m_item.path));
+    m_db->addItem(m_item);
+    EXPECT_TRUE(m_db->itemExists(m_item.path));
+}
+
 TEST_F(LibraryDatabaseTest, AddGetItem)
 {
     m_db->addItem(m_item);

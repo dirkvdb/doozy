@@ -24,6 +24,7 @@
 #include "utils/fileoperations.h"
 #include "utils/log.h"
 #include "subscribers.h"
+#include "doozyconfig.h"
 
 #include "audio/audiometadata.h"
 #include "image/imagefactory.h"
@@ -40,6 +41,9 @@ static const std::string g_unknownAlbum = "Unknown Album";
 static const std::string g_unknownArtist = "Unknown Artist";
 static const std::string g_unknownTitle = "Unknown Title";
 static const std::string g_variousArtists = "Various Artists";
+
+static const std::string g_rootId = "0";
+static const std::string g_browseFileSystemId = "#1";
 
 Scanner::Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames)
 : m_LibraryDb(db)
@@ -64,9 +68,15 @@ void Scanner::performScan(const std::string& libraryPath)
 
     m_InitialScan = m_LibraryDb.getObjectCount() == 0;
     m_ScannedFiles = 0;
+    
+    if (m_InitialScan)
+    {
+        createInitialLayout();
+    }
 
     m_ThreadPool.start();
-    scan(libraryPath);
+    scan(libraryPath, g_browseFileSystemId);
+
     if (m_Stop)
     {
         m_ThreadPool.stop();
@@ -82,33 +92,68 @@ void Scanner::performScan(const std::string& libraryPath)
     log::info("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_ScannedFiles);
 }
 
-void Scanner::scan(const std::string& dir)
+void Scanner::createInitialLayout()
 {
+    // Root Item
+    LibraryItem root;
+    root.upnpItem = std::make_shared<upnp::Item>(g_rootId, PACKAGE_NAME);
+    root.upnpItem->setChildCount(1);
+    root.upnpItem->setParentId("-1");
+    root.upnpItem->setClass(upnp::Item::Class::Container);
+    m_LibraryDb.addItem(root);
+    
+    // Browse folders
+    LibraryItem browse;
+    browse.upnpItem = std::make_shared<upnp::Item>(g_browseFileSystemId, "Browse filesystem");
+    browse.upnpItem->setParentId(g_rootId);
+    browse.upnpItem->setClass(upnp::Item::Class::Container);
+    m_LibraryDb.addItem(browse);
+}
+
+void Scanner::scan(const std::string& dir, const std::string& parentId)
+{
+    uint32_t index = 0;
     for (auto& entry : Directory(dir))
     {
         if (m_Stop)
         {
             break;
         }
-
-        if (entry.type() == FileSystemEntryType::Directory)
+        
+        auto type = entry.type();
+        if (type == FileSystemEntryType::Directory)
         {
-            scan(entry.path());
+            if (!m_LibraryDb.itemExists(entry.path()))
+            {
+                auto id = stringops::format("%s#%d", parentId, index++);
+            
+                LibraryItem item;
+                item.path = entry.path();
+                item.upnpItem = std::make_shared<upnp::Item>(id, fileops::getFileName(entry.path()));
+                item.upnpItem->setParentId(parentId);
+                item.upnpItem->setClass(upnp::Item::Class::Container);
+                
+                m_LibraryDb.addItem(item);
+            }
+            
+            scan(entry.path(), stringops::format("%s#%d", parentId, index));
         }
-        else if (entry.type() == FileSystemEntryType::File)
+        else if (type == FileSystemEntryType::File)
         {
             auto path = entry.path();
-            log::debug("Add job: %s", path);
-            m_ThreadPool.addJob([this, path] () {
+            log::debug("Add Item: %s parent: %s (%d)", path, parentId, index);
+            m_ThreadPool.addJob([this, path, index, parentId] () {
                 try
                 {
-                    onFile(path);
+                    onFile(path, index, parentId);
                 }
                 catch (std::exception& e)
                 {
-                    log::warn("Ignored file: %s", e.what());
+                    log::warn("Ignored file %s: %s", path, e.what());
                 }
             });
+            
+            ++index;
         }
     }
 }
@@ -119,9 +164,22 @@ void Scanner::cancel()
     m_ThreadPool.stop();
 }
 
-void Scanner::onFile(const std::string& filepath)
+void Scanner::onFile(const std::string& filepath, uint32_t index, const std::string& parentId)
 {
     auto info = getFileInfo(filepath);
+
+    if (!m_LibraryDb.itemExists(filepath))
+    {
+        auto id = stringops::format("%s#%d", parentId, index);
+    
+        LibraryItem item;
+        item.path = filepath;
+        item.modifiedTime = info.modifyTime;
+        item.upnpItem = std::make_shared<upnp::Item>(id, getFileName(filepath));
+        item.upnpItem->setClass(upnp::Item::Class::Generic);
+        
+        m_LibraryDb.addItem(item);
+    }
 
 //    Track track;
 //    track.filepath      = filepath;

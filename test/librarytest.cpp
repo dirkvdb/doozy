@@ -9,6 +9,7 @@
 #include "server/library/musiclibraryinterface.h"
 #include "server/library/musiclibraryfactory.h"
 
+#include "Utils/fileoperations.h"
 #include "Utils/stringoperations.h"
 #include "Utils/numericoperations.h"
 
@@ -27,17 +28,26 @@ class LibraryTest : public testing::Test
     virtual void SetUp()
     {
         m_settings.set("MusicLibrary", std::string(TEST_DATA_DIR));
-        m_settings.set("DBFile", TEST_DB);
+        m_settings.set("DBFile", std::string(TEST_DB));
 
         m_library.reset(MusicLibraryFactory::create(MusicLibraryType::FileSystem, m_settings));
         m_library->OnScanComplete = [this] {
             m_notification.triggerEvent();
         };
+        
+        FullScan();
     }
 
     virtual void TearDown()
     {
         m_library.reset();
+        utils::fileops::deleteFile(TEST_DB);
+    }
+    
+    void FullScan()
+    {
+        m_library->scan(true);
+        EXPECT_TRUE(m_notification.waitForEvent());
     }
 
     Settings                        m_settings;
@@ -45,10 +55,12 @@ class LibraryTest : public testing::Test
     EventNotification               m_notification;
 };
 
-TEST_F(LibraryTest, ScanDirectory)
+TEST_F(LibraryTest, GetRootContainer)
 {
-    m_library->scan(true);
-    EXPECT_TRUE(m_notification.waitForEvent());
+    auto item = m_library->getItem("0");
+    EXPECT_EQ("0", item->getObjectId());
+    EXPECT_EQ("-1", item->getParentId());
+    EXPECT_EQ(upnp::Item::Class::Container, item->getClass());
 }
 
 //TEST_F(LibraryTest, TrackExists)
