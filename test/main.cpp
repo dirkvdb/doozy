@@ -1,4 +1,4 @@
-//    Copyright (C) 2011 Dirk Vanden Boer <dirk.vdb@gmail.com>
+//    Copyright (C) 2012 Dirk Vanden Boer <dirk.vdb@gmail.com>
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -14,52 +14,17 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "albumart.h"
+#include <gtest/gtest.h>
+#include <clocale>
 
-#include <cstring>
-
-using namespace audio;
-
-namespace doozy
+int main(int argc, char **argv)
 {
+	if (!setlocale(LC_CTYPE, "en_US.UTF-8"))
+    {
+        std::cerr << "Locale not specified. Check LANG, LC_CTYPE, LC_ALL" << std::endl;
+        return 1;
+    }
 
-AlbumArt::AlbumArt()
-{
-}
-
-AlbumArt::AlbumArt(const std::string& albumId)
-: m_AlbumId(albumId)
-{
-}
-
-void AlbumArt::setAlbumArt(Metadata::AlbumArt&& art)
-{
-    m_Art = std::move(art);
-}
-
-void AlbumArt::setAlbumArt(const Metadata::AlbumArt& art)
-{
-    m_Art = art;
-}
-
-std::vector<uint8_t>& AlbumArt::getData()
-{
-	return m_Art.data;
-}
-
-const std::vector<uint8_t>& AlbumArt::getData() const
-{
-	return m_Art.data;
-}
-
-size_t AlbumArt::getDataSize() const
-{
-	return m_Art.data.size();
-}
-
-std::string AlbumArt::getAlbumId() const
-{
-	return m_AlbumId;
-}
-
+  	testing::InitGoogleTest(&argc, argv);
+  	return RUN_ALL_TESTS();
 }

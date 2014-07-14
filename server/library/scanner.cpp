@@ -19,9 +19,6 @@
 #include <cassert>
 #include <ctime>
 
-#include "track.h"
-#include "album.h"
-#include "albumart.h"
 #include "musicdb.h"
 #include "utils/stringoperations.h"
 #include "utils/fileoperations.h"
@@ -126,158 +123,158 @@ void Scanner::onFile(const std::string& filepath)
 {
     auto info = getFileInfo(filepath);
 
-    Track track;
-    track.filepath      = filepath;
-    track.fileSize      = info.sizeInBytes;
-    track.modifiedTime  = info.modifyTime;
-
-    MusicDb::TrackStatus status = m_LibraryDb.getTrackStatus(filepath, track.modifiedTime);
-    if (status == MusicDb::UpToDate)
-    {
-        return;
-    }
-
-    audio::Metadata md(track.filepath, audio::Metadata::ReadAudioProperties::Yes);
-    track.artist        = md.getArtist();
-    track.albumArtist   = md.getAlbumArtist();
-    track.title         = md.getTitle();
-    track.album         = md.getAlbum();
-    track.genre         = md.getGenre();
-    track.composer      = md.getComposer();
-    track.year          = md.getYear();
-    track.trackNr       = md.getTrackNr();
-    track.discNr        = md.getDiscNr();
-    track.bitrate       = md.getBitRate();
-    track.sampleRate    = md.getSampleRate();
-    track.channels      = md.getChannels();
-    track.durationInSec = md.getDuration();
-
-    if (track.album.empty())    track.album = g_unknownAlbum;
-    if (track.artist.empty())   track.artist = g_unknownArtist;
-    if (track.title.empty())    track.title = g_unknownTitle;
-
-    Album album;
-    std::string albumId;
-    m_LibraryDb.albumExists(track.album, albumId);
-    if (!albumId.empty())
-    {
-        album = m_LibraryDb.getAlbum(albumId);
-    }
-
-    if (albumId.empty() || ((!track.albumArtist.empty()) && track.albumArtist != album.artist))
-    {
-        album.title         = track.album;
-        album.artist        = track.albumArtist.empty() ? track.artist : track.albumArtist;
-        album.year          = track.year;
-        album.genre         = track.genre;
-        album.durationInSec = track.durationInSec;
-        album.dateAdded     = m_InitialScan ? track.modifiedTime : time(nullptr);
-
-        AlbumArt art(albumId);
-        art.setAlbumArt(md.getAlbumArt());
-        processAlbumArt(filepath, art);
-
-        m_LibraryDb.addAlbum(album, art);
-    }
-    else
-    {
-        if (!track.albumArtist.empty())
-        {
-            //if a track has an album artist set, we trust it is the right one
-            if (track.albumArtist != album.artist)
-            {
-                album.artist = track.albumArtist;
-            }
-        }
-        else
-        {
-            //if no album artist set and we detect different artists for an
-            //album, we set the album artist to VARIOUS_ARTISTS
-            if (album.artist != g_variousArtists && album.artist != track.artist)
-            {
-                album.artist = g_variousArtists;
-            }
-        }
-
-        assert(album.id == albumId);
-
-        AlbumArt art = m_LibraryDb.getAlbumArt(albumId);
-        if (art.getData().empty() || status == MusicDb::NeedsUpdate)
-        {
-            art.setAlbumArt(md.getAlbumArt());
-            processAlbumArt(filepath, art);
-
-            if (art.getDataSize() > 0)
-            {
-                m_LibraryDb.setAlbumArt(albumId, art.getData());
-            }
-        }
-
-        if (status == MusicDb::DoesntExist)
-        {
-            album.durationInSec += track.durationInSec;
-        }
-
-        if (album.genre.empty())
-        {
-            album.genre = track.genre;
-        }
-
-        m_LibraryDb.updateAlbum(album);
-    }
-
-    track.albumId = album.id;
-    if (status == MusicDb::DoesntExist)
-    {
-        log::debug("New track: %s %s", filepath, track.albumId);
-        m_LibraryDb.addTrack(track);
-    }
-    else if (status == MusicDb::NeedsUpdate)
-    {
-        log::debug("Needs update: %s", filepath);
-        m_LibraryDb.updateTrack(track);
-    }
+//    Track track;
+//    track.filepath      = filepath;
+//    track.fileSize      = info.sizeInBytes;
+//    track.modifiedTime  = info.modifyTime;
+//
+//    MusicDb::TrackStatus status = m_LibraryDb.getTrackStatus(filepath, track.modifiedTime);
+//    if (status == MusicDb::UpToDate)
+//    {
+//        return;
+//    }
+//
+//    audio::Metadata md(track.filepath, audio::Metadata::ReadAudioProperties::Yes);
+//    track.artist        = md.getArtist();
+//    track.albumArtist   = md.getAlbumArtist();
+//    track.title         = md.getTitle();
+//    track.album         = md.getAlbum();
+//    track.genre         = md.getGenre();
+//    track.composer      = md.getComposer();
+//    track.year          = md.getYear();
+//    track.trackNr       = md.getTrackNr();
+//    track.discNr        = md.getDiscNr();
+//    track.bitrate       = md.getBitRate();
+//    track.sampleRate    = md.getSampleRate();
+//    track.channels      = md.getChannels();
+//    track.durationInSec = md.getDuration();
+//
+//    if (track.album.empty())    track.album = g_unknownAlbum;
+//    if (track.artist.empty())   track.artist = g_unknownArtist;
+//    if (track.title.empty())    track.title = g_unknownTitle;
+//
+//    Album album;
+//    std::string albumId;
+//    m_LibraryDb.albumExists(track.album, albumId);
+//    if (!albumId.empty())
+//    {
+//        album = m_LibraryDb.getAlbum(albumId);
+//    }
+//
+//    if (albumId.empty() || ((!track.albumArtist.empty()) && track.albumArtist != album.artist))
+//    {
+//        album.title         = track.album;
+//        album.artist        = track.albumArtist.empty() ? track.artist : track.albumArtist;
+//        album.year          = track.year;
+//        album.genre         = track.genre;
+//        album.durationInSec = track.durationInSec;
+//        album.dateAdded     = m_InitialScan ? track.modifiedTime : time(nullptr);
+//
+//        AlbumArt art(albumId);
+//        art.setAlbumArt(md.getAlbumArt());
+//        processAlbumArt(filepath, art);
+//
+//        m_LibraryDb.addAlbum(album, art);
+//    }
+//    else
+//    {
+//        if (!track.albumArtist.empty())
+//        {
+//            //if a track has an album artist set, we trust it is the right one
+//            if (track.albumArtist != album.artist)
+//            {
+//                album.artist = track.albumArtist;
+//            }
+//        }
+//        else
+//        {
+//            //if no album artist set and we detect different artists for an
+//            //album, we set the album artist to VARIOUS_ARTISTS
+//            if (album.artist != g_variousArtists && album.artist != track.artist)
+//            {
+//                album.artist = g_variousArtists;
+//            }
+//        }
+//
+//        assert(album.id == albumId);
+//
+//        AlbumArt art = m_LibraryDb.getAlbumArt(albumId);
+//        if (art.getData().empty() || status == MusicDb::NeedsUpdate)
+//        {
+//            art.setAlbumArt(md.getAlbumArt());
+//            processAlbumArt(filepath, art);
+//
+//            if (art.getDataSize() > 0)
+//            {
+//                m_LibraryDb.setAlbumArt(albumId, art.getData());
+//            }
+//        }
+//
+//        if (status == MusicDb::DoesntExist)
+//        {
+//            album.durationInSec += track.durationInSec;
+//        }
+//
+//        if (album.genre.empty())
+//        {
+//            album.genre = track.genre;
+//        }
+//
+//        m_LibraryDb.updateAlbum(album);
+//    }
+//
+//    track.albumId = album.id;
+//    if (status == MusicDb::DoesntExist)
+//    {
+//        log::debug("New track: %s %s", filepath, track.albumId);
+//        //m_LibraryDb.addTrack(track);
+//    }
+//    else if (status == MusicDb::NeedsUpdate)
+//    {
+//        log::debug("Needs update: %s", filepath);
+//        //m_LibraryDb.updateTrack(track);
+//    }
 }
 
 void Scanner::processAlbumArt(const std::string& filepath, AlbumArt& art)
 {
-    if (art.getData().empty())
-    {
-        //no embedded album art found, see if we can find a cover.jpg, ... file
-        auto dir = fileops::getPathFromFilepath(filepath);
-
-        for (auto& filename : m_AlbumArtFilenames)
-        {
-            try
-            {
-                auto possibleAlbumArt = fileops::combinePath(dir, filename);
-                audio::Metadata::AlbumArt artData;
-                artData.data = fileops::readFile(possibleAlbumArt);
-                log::debug("Art found in: %s", possibleAlbumArt);
-
-                art.setAlbumArt(std::move(artData));
-            }
-            catch (std::exception&) {}
-        }
-    }
-
-
-    // resize the album art if it is present
-    if (!art.getData().empty())
-    {
-        try
-        {
-            auto image = image::Factory::createFromData(art.getData());
-            image->resize(ALBUM_ART_DB_SIZE, ALBUM_ART_DB_SIZE, image::ResizeAlgorithm::Bilinear);
-
-            auto pngStore = image::Factory::createLoadStore(image::Type::Png);
-            art.getData() = pngStore->storeToMemory(*image);
-        }
-        catch (std::exception& e)
-        {
-            log::warn("Failed to scale image: %s", e.what());
-        }
-    }
+//    if (art.getData().empty())
+//    {
+//        //no embedded album art found, see if we can find a cover.jpg, ... file
+//        auto dir = fileops::getPathFromFilepath(filepath);
+//
+//        for (auto& filename : m_AlbumArtFilenames)
+//        {
+//            try
+//            {
+//                auto possibleAlbumArt = fileops::combinePath(dir, filename);
+//                audio::Metadata::AlbumArt artData;
+//                artData.data = fileops::readFile(possibleAlbumArt);
+//                log::debug("Art found in: %s", possibleAlbumArt);
+//
+//                art.setAlbumArt(std::move(artData));
+//            }
+//            catch (std::exception&) {}
+//        }
+//    }
+//
+//
+//    // resize the album art if it is present
+//    if (!art.getData().empty())
+//    {
+//        try
+//        {
+//            auto image = image::Factory::createFromData(art.getData());
+//            image->resize(ALBUM_ART_DB_SIZE, ALBUM_ART_DB_SIZE, image::ResizeAlgorithm::Bilinear);
+//
+//            auto pngStore = image::Factory::createLoadStore(image::Type::Png);
+//            art.getData() = pngStore->storeToMemory(*image);
+//        }
+//        catch (std::exception& e)
+//        {
+//            log::warn("Failed to scale image: %s", e.what());
+//        }
+//    }
 }
 
 }

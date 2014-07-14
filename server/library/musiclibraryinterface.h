@@ -21,13 +21,7 @@
 #include <vector>
 #include <mutex>
 
-#include "utils/types.h"
-
-#include "library/track.h"
-#include "library/album.h"
-#include "library/albumart.h"
-#include "upnp/upnpitem.h"
-
+#include "library/libraryitem.h"
 
 namespace doozy
 {
@@ -43,13 +37,6 @@ public:
     virtual uint32_t getObjectCount() = 0;
 
     virtual upnp::ItemPtr getItem(const std::string& id) = 0;
-    virtual std::vector<Track> getTracksFromAlbum(const std::string& albumId) = 0;
-    virtual Track getFirstTrackFromAlbum(const std::string& albumId) = 0;
-
-    virtual Album getAlbum(const std::string& albumId) = 0;
-    virtual std::vector<Album> getAlbums() = 0;
-
-    virtual AlbumArt getAlbumArt(const Album& album) = 0;
 
     virtual void scan(bool startFresh) = 0;
     //virtual void search(const std::string& search, utils::ISubscriber<const Track&>& trackSubscriber, utils::ISubscriber<const Album&>& albumSubscriber) = 0;

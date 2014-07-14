@@ -18,20 +18,16 @@
 #define LIBRARY_ITEM_H
 
 #include <string>
+#include "upnp/upnpitem.h"
 
 namespace doozy
 {
 
-class LibraryItem
+struct LibraryItem
 {
-public:
-	LibraryItem(const std::string& id = "")
-    : id(id)
-    {}
-
-	virtual ~LibraryItem() {}
-
-    std::string	id;
+    upnp::ItemPtr   upnpItem;
+    uint64_t        modifiedTime = 0;
+    std::string     path;
 };
 
 }

@@ -21,9 +21,7 @@
 #include <vector>
 #include <mutex>
 
-#include "utils/types.h"
-#include "utils/subscriber.h"
-#include "upnp/upnpitem.h"
+#include "library/libraryitem.h"
 
 
 struct sqlite3;
@@ -31,10 +29,6 @@ struct sqlite3_stmt;
 
 namespace doozy
 {
-
-class Track;
-class Album;
-class AlbumArt;
 
 class MusicDb
 {
@@ -51,35 +45,21 @@ public:
 
     uint32_t getObjectCount();
 
-    void addTrack(const Track& track);
-    void updateTrack(const Track& track);
-    void addAlbum(Album& album, AlbumArt& art);
-    void updateAlbum(const Album& album);
+    void addItem(const LibraryItem& item);
+    void updateItem(const LibraryItem& item);
 
     bool trackExists(const std::string& filepath);
     TrackStatus getTrackStatus(const std::string& filepath, uint64_t modifiedTime);
-    void albumExists(const std::string& name, std::string& id);
 
-    upnp::ItemPtr getItem(const std::string& id);
-    Track getTrackWithPath(const std::string& filepath);
-    Album getAlbum(const std::string& id);
-    AlbumArt getAlbumArt(const std::string& albumId);
-    void setAlbumArt(const std::string& albumId, const std::vector<uint8_t>& data);
+    LibraryItem getItem(const std::string& id);
+    //Track getTrackWithPath(const std::string& filepath);
 
-    std::vector<Track> getRandomTracks(uint32_t trackCount);
-    std::vector<Track> getTracksFromRandomAlbum();
-
-    Track getFirstTrackFromAlbum(const std::string& albumId);
-    std::vector<Track> getTracksFromAlbum(const std::string& albumId);
-    std::vector<Album> getAlbums();
     void removeTrack(const std::string& id);
     void removeAlbum(const std::string& id);
 
     void removeNonExistingFiles();
-    void removeNonExistingAlbums();
-    void updateAlbumMetaData();
 
-    void searchLibrary(const std::string& search, utils::ISubscriber<const Track&>& trackSubscriber, utils::ISubscriber<const Album&>& albumSubscriber);
+    //void searchLibrary(const std::string& search, utils::ISubscriber<const Track&>& trackSubscriber, utils::ISubscriber<const Album&>& albumSubscriber);
     void clearDatabase();
 
 private:
@@ -88,21 +68,13 @@ private:
     static void getIdIntCb(sqlite3_stmt* pStmt, void* pData);
     static void getItemCb(sqlite3_stmt *pStmt, void *pData);
     static void getTrackModificationTimeCb(sqlite3_stmt* pStmt, void* pData);
-    static void getTracksCb(sqlite3_stmt* pStmt, void* pData);
-    static void getAlbumCb(sqlite3_stmt* pStmt, void* pData);
-    static void getAlbumArtCb(sqlite3_stmt* pStmt, void* pData);
-    static void getAlbumsCb(sqlite3_stmt* pStmt, void* pData);
-    static void getAlbumListCb(sqlite3_stmt* pStmt, void* pData);
-    static void getAllAlbumIdsCb(sqlite3_stmt* pStmt, void* pData);
+    //static void getTracksCb(sqlite3_stmt* pStmt, void* pData);
     static void removeNonExistingFilesCb(sqlite3_stmt* pStmt, void* pData);
     static void countCb(sqlite3_stmt* pStmt, void* pData);
     static void addResultCb(sqlite3_stmt* pStmt, void* pData);
-    static void searchTracksCb(sqlite3_stmt* pStmt, void* pData);
+    //static void searchTracksCb(sqlite3_stmt* pStmt, void* pData);
 
     static int32_t busyCb(void* pData, int32_t retries);
-
-    void addArtistIfNotExists(const std::string& name, std::string& id);
-    void addGenreIfNotExists(const std::string& name, std::string& id);
 
     void getIdFromTable(const std::string& table, const std::string& name, std::string& id);
     uint32_t getIdFromTable(const std::string& table, const std::string& name);

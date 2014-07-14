@@ -20,8 +20,6 @@
 #include <cassert>
 
 #include "common/settings.h"
-#include "track.h"
-#include "album.h"
 #include "scanner.h"
 #include "utils/log.h"
 #include "utils/trace.h"
@@ -66,34 +64,9 @@ uint32_t FilesystemMusicLibrary::getObjectCount()
     return m_Db.getObjectCount();
 }
 
-upnp::ItemPtr FilesystemMusicLibrary::getItem(const std::string& id) override;
+upnp::ItemPtr FilesystemMusicLibrary::getItem(const std::string& id)
 {
-    return m_Db.getItem(id);
-}
-
-std::vector<Track> FilesystemMusicLibrary::getTracksFromAlbum(const std::string& albumId)
-{
-    return m_Db.getTracksFromAlbum(albumId);
-}
-
-Track FilesystemMusicLibrary::getFirstTrackFromAlbum(const std::string& albumId)
-{
-    return m_Db.getFirstTrackFromAlbum(albumId);
-}
-
-Album FilesystemMusicLibrary::getAlbum(const std::string& albumId)
-{
-    return m_Db.getAlbum(albumId);
-}
-
-std::vector<Album> FilesystemMusicLibrary::getAlbums()
-{
-    return m_Db.getAlbums();
-}
-
-AlbumArt FilesystemMusicLibrary::getAlbumArt(const Album& album)
-{
-    return m_Db.getAlbumArt(album.id);
+    return m_Db.getItem(id).upnpItem;
 }
 
 void FilesystemMusicLibrary::scan(bool startFresh)
@@ -131,11 +104,6 @@ void FilesystemMusicLibrary::scannerThread()
         if (!m_Destroy)
         {
             m_Db.removeNonExistingFiles();
-        }
-
-        if (!m_Destroy)
-        {
-            m_Db.removeNonExistingAlbums();
         }
     }
     catch (std::exception& e)

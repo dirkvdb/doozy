@@ -39,15 +39,7 @@ public:
     ~FilesystemMusicLibrary();
 
     uint32_t getObjectCount() override;
-
     upnp::ItemPtr getItem(const std::string& id) override;
-    std::vector<Track> getTracksFromAlbum(const std::string& albumId) override;
-    Track getFirstTrackFromAlbum(const std::string& albumId) override;
-
-    Album getAlbum(const std::string& albumId) override;
-    std::vector<Album> getAlbums() override;
-
-    AlbumArt getAlbumArt(const Album& album) override;
 
     void scan(bool startFresh) override;
     //void search(const std::string& search, utils::ISubscriber<const Track&>& trackSubscriber, utils::ISubscriber<const Album&>& albumSubscriber);
