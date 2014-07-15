@@ -52,6 +52,7 @@ public:
     TrackStatus getTrackStatus(const std::string& filepath, uint64_t modifiedTime);
 
     LibraryItem getItem(const std::string& id);
+    std::vector<LibraryItem> getItems(const std::string& parentId, uint32_t offset, uint32_t count);
     //Track getTrackWithPath(const std::string& filepath);
 
     void removeItem(const std::string& id);
@@ -65,8 +66,8 @@ private:
     static void getIdCb(sqlite3_stmt* pStmt, void* pData);
     static void getIdIntCb(sqlite3_stmt* pStmt, void* pData);
     static void getItemCb(sqlite3_stmt *pStmt, void *pData);
+    static void getItemsCb(sqlite3_stmt* pStmt, void* pData);
     static void getTrackModificationTimeCb(sqlite3_stmt* pStmt, void* pData);
-    //static void getTracksCb(sqlite3_stmt* pStmt, void* pData);
     static void removeNonExistingFilesCb(sqlite3_stmt* pStmt, void* pData);
     static void countCb(sqlite3_stmt* pStmt, void* pData);
     static void addResultCb(sqlite3_stmt* pStmt, void* pData);

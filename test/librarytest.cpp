@@ -27,8 +27,8 @@ class LibraryTest : public testing::Test
 
     virtual void SetUp()
     {
-        m_settings.set("MusicLibrary", std::string(TEST_DATA_DIR));
-        m_settings.set("DBFile", std::string(TEST_DB));
+        m_settings.set("MusicLibrary", TEST_DATA_DIR);
+        m_settings.set("DBFile", TEST_DB);
 
         m_library.reset(MusicLibraryFactory::create(MusicLibraryType::FileSystem, m_settings));
         m_library->OnScanComplete = [this] {

@@ -212,7 +212,7 @@ LibraryItem MusicDb::getItem(const std::string& id)
     sqlite3_stmt* pStmt = createStatement(
         "SELECT objects.ObjectId, objects.Title, objects.ParentId, objects.RefId, objects.Class, objects.ModifiedTime, objects.FilePath "
         "FROM objects "
-        "WHERE objects.ObjectId = ?;");
+        "WHERE objects.ObjectId = ?");
 
     LibraryItem item;
     bindValue(pStmt, id, 1);
@@ -223,6 +223,23 @@ LibraryItem MusicDb::getItem(const std::string& id)
     }
 
     return item;
+}
+
+std::vector<LibraryItem> MusicDb::getItems(const std::string& parentId, uint32_t offset, uint32_t count)
+{
+    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    sqlite3_stmt* pStmt = createStatement(
+        "SELECT objects.ObjectId, objects.Title, objects.ParentId, objects.RefId, objects.Class, objects.ModifiedTime, objects.FilePath "
+        "FROM objects "
+        "WHERE objects.ParentId = ? LIMIT ? OFFSET ?");
+
+    std::vector<LibraryItem> items;
+    bindValue(pStmt, parentId, 1);
+    bindValue(pStmt, count == 0 ? -1 : count, 2);
+    bindValue(pStmt, offset, 3);
+
+    performQuery(pStmt, getItemsCb, &items);
+    return items;
 }
 
 //Track MusicDb::getTrackWithPath(const string& filepath)
@@ -541,7 +558,7 @@ void MusicDb::getItemCb(sqlite3_stmt *pStmt, void *pData)
 {
     assert(sqlite3_column_count(pStmt) == 7);
 
-    LibraryItem& item = *reinterpret_cast<LibraryItem*>(pData);
+    auto& item = *reinterpret_cast<LibraryItem*>(pData);
 
     item.upnpItem = std::make_shared<upnp::Item>();
     item.upnpItem->setObjectId(getStringFromColumn(pStmt, 0));
@@ -551,6 +568,17 @@ void MusicDb::getItemCb(sqlite3_stmt *pStmt, void *pData)
     item.upnpItem->setClass(getStringFromColumn(pStmt, 4));
     item.modifiedTime = sqlite3_column_int64(pStmt, 5);
     item.path = getStringFromColumn(pStmt, 6);
+}
+
+void MusicDb::getItemsCb(sqlite3_stmt *pStmt, void *pData)
+{
+    assert(sqlite3_column_count(pStmt) == 7);
+
+    auto& items = *reinterpret_cast<std::vector<LibraryItem>*>(pData);
+    
+    LibraryItem item;
+    getItemCb(pStmt, &item);
+    items.push_back(item);
 }
 
 void MusicDb::getTrackModificationTimeCb(sqlite3_stmt* pStmt, void* pData)

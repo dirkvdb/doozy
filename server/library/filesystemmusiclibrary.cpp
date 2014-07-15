@@ -69,6 +69,18 @@ upnp::ItemPtr FilesystemMusicLibrary::getItem(const std::string& id)
     return m_Db.getItem(id).upnpItem;
 }
 
+std::vector<upnp::ItemPtr> FilesystemMusicLibrary::getItems(const std::string& parentId, uint32_t count, uint32_t offset)
+{
+    auto items = m_Db.getItems(parentId, count, offset);
+
+    std::vector<upnp::ItemPtr> upnpItems;
+    std::transform(items.begin(), items.end(), std::back_inserter(upnpItems), [] (const LibraryItem& item) {
+        return item.upnpItem;
+    });
+    
+    return upnpItems;
+}
+
 void FilesystemMusicLibrary::scan(bool startFresh)
 {
     auto libraryPath = m_Settings.get("MusicLibrary");

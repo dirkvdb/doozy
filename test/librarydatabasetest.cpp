@@ -21,6 +21,7 @@ class LibraryDatabaseTest : public testing::Test
 protected:
     virtual void SetUp()
     {
+        try { utils::fileops::deleteFile(TEST_DB); } catch (...) {}
         m_db.reset(new MusicDb(TEST_DB));
 
         m_item.upnpItem = std::make_shared<upnp::Item>("#1", "TestItem");
@@ -35,6 +36,16 @@ protected:
     {
         m_db.reset();
         utils::fileops::deleteFile(TEST_DB);
+    }
+    
+    void addItem(const std::string& id, const std::string& parent, const std::string& title)
+    {
+        LibraryItem item;
+        item.path = "/path";
+        item.upnpItem = std::make_shared<upnp::Item>(id, "TestItem");
+        item.upnpItem->setParentId(parent);
+        item.upnpItem->setTitle(title);
+        m_db->addItem(item);
     }
 
     std::unique_ptr<MusicDb>    m_db;
@@ -88,6 +99,45 @@ TEST_F(LibraryDatabaseTest, UpdateItem)
     EXPECT_EQ(m_item.upnpItem->getClass(),      item.upnpItem->getClass());
     EXPECT_EQ(m_item.modifiedTime,              item.modifiedTime);
     EXPECT_EQ(m_item.path,                      item.path);
+}
+
+TEST_F(LibraryDatabaseTest, GetItems)
+{
+    addItem("0", "-1", "root");
+    addItem("0#1", "0", "item1");
+    addItem("0#2", "0", "item2");
+    addItem("0#3", "0", "item3");
+    
+    auto items = m_db->getItems("0", 0, 0);
+    EXPECT_EQ(3, items.size());
+}
+
+TEST_F(LibraryDatabaseTest, GetItemsOffsetCount)
+{
+    addItem("0", "-1", "root");
+    addItem("0#1", "0", "item1");
+    addItem("0#2", "0", "item2");
+    addItem("0#3", "0", "item3");
+    
+    // 1 item beginning at offset 1
+    auto items = m_db->getItems("0", 1, 1);
+    EXPECT_EQ(1, items.size());
+    
+    // 2 item beginning at offset 1
+    items = m_db->getItems("0", 1, 2);
+    EXPECT_EQ(2, items.size());
+    
+    // 3 item beginning at offset 1 -> results in 2 items
+    items = m_db->getItems("0", 1, 3);
+    EXPECT_EQ(2, items.size());
+    
+    // all items beginning at offset 1 -> results in 2 items
+    items = m_db->getItems("0", 1, 0);
+    EXPECT_EQ(2, items.size());
+    
+    // all items beginning at offset 3 -> results in 0 items
+    items = m_db->getItems("0", 3, 0);
+    EXPECT_EQ(0, items.size());
 }
 
 //TEST_F(LibraryDatabaseTest, TrackExists)

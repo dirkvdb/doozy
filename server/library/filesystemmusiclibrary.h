@@ -40,6 +40,7 @@ public:
 
     uint32_t getObjectCount() override;
     upnp::ItemPtr getItem(const std::string& id) override;
+    std::vector<upnp::ItemPtr> getItems(const std::string& parentId, uint32_t count, uint32_t offset);
 
     void scan(bool startFresh) override;
     //void search(const std::string& search, utils::ISubscriber<const Track&>& trackSubscriber, utils::ISubscriber<const Album&>& albumSubscriber);

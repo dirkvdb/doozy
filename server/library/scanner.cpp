@@ -64,7 +64,7 @@ void Scanner::performScan(const std::string& libraryPath)
     m_Stop = false;
 
     time_t startTime = time(nullptr);
-    log::info("Starting library scan in: %s", libraryPath);
+    log::debug("Starting library scan in: %s", libraryPath);
 
     m_InitialScan = m_LibraryDb.getObjectCount() == 0;
     m_ScannedFiles = 0;
@@ -84,12 +84,10 @@ void Scanner::performScan(const std::string& libraryPath)
     }
     else
     {
-        log::info("Wait for completion");
         m_ThreadPool.stopFinishJobs();
-        log::info("Done");
     }
 
-    log::info("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_ScannedFiles);
+    log::debug("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_ScannedFiles);
 }
 
 void Scanner::createInitialLayout()
