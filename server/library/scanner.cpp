@@ -29,6 +29,7 @@
 #include "audio/audiometadata.h"
 #include "image/imagefactory.h"
 #include "image/imageloadstoreinterface.h"
+#include "mimetypes.h"
 
 using namespace utils;
 using namespace fileops;
@@ -164,32 +165,31 @@ void Scanner::cancel()
 
 void Scanner::onFile(const std::string& filepath, uint32_t index, const std::string& parentId)
 {
-    auto info = getFileInfo(filepath);
-
-    if (!m_LibraryDb.itemExists(filepath))
+    auto type = mime::typeFromFile(filepath);
+    if (type == mime::Type::Other)
     {
-        auto id = stringops::format("%s#%d", parentId, index);
-    
-        LibraryItem item;
-        item.path = filepath;
-        item.modifiedTime = info.modifyTime;
-        item.upnpItem = std::make_shared<upnp::Item>(id, getFileName(filepath));
-        item.upnpItem->setClass(upnp::Item::Class::Generic);
-        
-        m_LibraryDb.addItem(item);
+        return;
     }
 
-//    Track track;
-//    track.filepath      = filepath;
-//    track.fileSize      = info.sizeInBytes;
-//    track.modifiedTime  = info.modifyTime;
-//
-//    MusicDb::TrackStatus status = m_LibraryDb.getTrackStatus(filepath, track.modifiedTime);
-//    if (status == MusicDb::UpToDate)
-//    {
-//        return;
-//    }
-//
+    auto info = getFileInfo(filepath);
+    auto status = m_LibraryDb.getItemStatus(filepath, info.modifyTime);
+
+    if (status == ItemStatus::UpToDate)
+    {
+        return;
+    }
+
+    auto id = stringops::format("%s#%d", parentId, index);
+
+    LibraryItem item;
+    item.path = filepath;
+    item.modifiedTime = info.modifyTime;
+    item.upnpItem = std::make_shared<upnp::Item>(id, getFileName(filepath));
+    item.upnpItem->setParentId(parentId);
+    item.upnpItem->setClass(upnp::Item::Class::Generic);
+    
+    m_LibraryDb.addItem(item);
+
 //    audio::Metadata md(track.filepath, audio::Metadata::ReadAudioProperties::Yes);
 //    track.artist        = md.getArtist();
 //    track.albumArtist   = md.getAlbumArtist();

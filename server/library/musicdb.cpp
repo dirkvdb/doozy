@@ -179,10 +179,10 @@ bool MusicDb::itemExists(const string& filepath)
     return performQuery(pStmt) == 1;
 }
 
-MusicDb::TrackStatus MusicDb::getTrackStatus(const std::string& filepath, uint64_t modifiedTime)
+ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modifiedTime)
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-    sqlite3_stmt* pStmt = createStatement("SELECT ModifiedTime FROM tracks WHERE tracks.Filepath = ?;");
+    sqlite3_stmt* pStmt = createStatement("SELECT ModifiedTime FROM objects WHERE objects.Filepath = ?");
     if (sqlite3_bind_text(pStmt, 1, filepath.c_str(), static_cast<int>(filepath.size()), SQLITE_STATIC) != SQLITE_OK )
     {
         throw runtime_error(string("Failed to bind value: ") + sqlite3_errmsg(m_pDb));
@@ -194,15 +194,15 @@ MusicDb::TrackStatus MusicDb::getTrackStatus(const std::string& filepath, uint64
 
     if (numTracks == 0)
     {
-        return DoesntExist;
+        return ItemStatus::DoesntExist;
     }
     else if (dbModifiedTime < modifiedTime)
     {
-        return NeedsUpdate;
+        return ItemStatus::NeedsUpdate;
     }
     else
     {
-        return UpToDate;
+        return ItemStatus::UpToDate;
     }
 }
 

@@ -30,16 +30,16 @@ struct sqlite3_stmt;
 namespace doozy
 {
 
+enum class ItemStatus
+{
+    DoesntExist,
+    NeedsUpdate,
+    UpToDate
+};
+
 class MusicDb
 {
 public:
-    enum TrackStatus
-    {
-        DoesntExist,
-        NeedsUpdate,
-        UpToDate
-    };
-
     MusicDb(const std::string& dbFilepath);
     ~MusicDb();
 
@@ -49,7 +49,7 @@ public:
     void updateItem(const LibraryItem& item);
 
     bool itemExists(const std::string& filepath);
-    TrackStatus getTrackStatus(const std::string& filepath, uint64_t modifiedTime);
+    ItemStatus getItemStatus(const std::string& filepath, uint64_t modifiedTime);
 
     LibraryItem getItem(const std::string& id);
     std::vector<LibraryItem> getItems(const std::string& parentId, uint32_t offset, uint32_t count);

@@ -1,4 +1,4 @@
-//    Copyright (C) 2009 Dirk Vanden Boer <dirk.vdb@gmail.com>
+//    Copyright (C) 2013 Dirk Vanden Boer <dirk.vdb@gmail.com>
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -14,38 +14,49 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef MUSIC_LIBRARY_H
-#define MUSIC_LIBRARY_H
+
+#ifndef DOOZY_MIME_TYPES_H
+#define DOOZY_MIME_TYPES_H
 
 #include <string>
-#include <vector>
-#include <mutex>
-
-#include "library/libraryitem.h"
 
 namespace doozy
 {
-
-class Track;
-class Album;
-
-class IMusicLibrary
+namespace mime
 {
-public:
-    virtual ~IMusicLibrary() {}
 
-    virtual uint32_t getObjectCount() = 0;
-
-    virtual upnp::ItemPtr getItem(const std::string& id) = 0;
-    virtual std::vector<upnp::ItemPtr> getItems(const std::string& id, uint32_t offset, uint32_t count) = 0;
-
-    virtual void scan(bool startFresh) = 0;
-    //virtual void search(const std::string& search, utils::ISubscriber<const Track&>& trackSubscriber, utils::ISubscriber<const Album&>& albumSubscriber) = 0;
-
-
-    std::function<void()> OnScanComplete;
+enum class Type
+{
+    AudioMp3,
+    AudioM4a,
+    AudioWma,
+    AudioFlac,
+    AudioWave,
+    AudioPcm,
+    Audio3gp,
+    AudioOgg,
+    
+    VideoAvi,
+    VideoMpeg,
+    VideoMp4,
+    VideoWmv,
+    VideoMkv,
+    VideoFlv,
+    VideoMov,
+    Video3gp,
+    VideoTivo,
+    
+    ImageJpeg,
+    ImagePng,
+    ImageTiff,
+    ImageBmp,
+    
+    Other
 };
 
+Type typeFromFile(const std::string filePath);
+
+}
 }
 
 #endif

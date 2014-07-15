@@ -19,14 +19,15 @@ INCLUDE_DIRECTORIES(
 )
 
 ADD_LIBRARY(doozyserver
-    server.h                           server.cpp
-    library/filesystemmusiclibrary.h   library/filesystemmusiclibrary.cpp
-    library/libraryitem.h              library/libraryitem.cpp
-    library/musicdb.h                  library/musicdb.cpp
+    mimetypes.h                         mimetypes.cpp
+    server.h                            server.cpp
+    library/filesystemmusiclibrary.h    library/filesystemmusiclibrary.cpp
+    library/libraryitem.h               library/libraryitem.cpp
+    library/musicdb.h                   library/musicdb.cpp
     library/musiclibraryinterface.h
-    library/musiclibraryfactory.h      library/musiclibraryfactory.cpp
-    library/scanner.h                  library/scanner.cpp
-    ../common/settings.h               ../common/settings.cpp
+    library/musiclibraryfactory.h       library/musiclibraryfactory.cpp
+    library/scanner.h                   library/scanner.cpp
+    ../common/settings.h                ../common/settings.cpp
 )
 
 SOURCE_GROUP(library REGULAR_EXPRESSION library/)
