@@ -91,6 +91,10 @@ std::vector<std::string> Settings::getAsVector(const std::string& setting) const
     return settings;
 }
 
+void Settings::set(const std::string& setting, const char* value)
+{
+    set(setting, std::string(value));
+}
 
 void Settings::set(const std::string& setting, const std::string& value)
 {
