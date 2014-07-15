@@ -37,6 +37,7 @@ public:
     bool getAsBool(const std::string& setting, bool defaultValue) const;
     std::vector<std::string> getAsVector(const std::string& setting) const;
     
+    void set(const std::string& setting, const char* value);
     void set(const std::string& setting, const std::string& value);
     void set(const std::string& setting, int32_t value);
     void set(const std::string& setting, bool value);
