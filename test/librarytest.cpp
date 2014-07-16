@@ -74,8 +74,6 @@ TEST_F(LibraryTest, GetRootContainer)
 TEST_F(LibraryTest, GetItems)
 {
     auto items = m_library->getItems("#1", 0, 0);
-    for (auto& item : items)
-        std::cout << item->getTitle() << std::endl;
     EXPECT_EQ(3, items.size());
 }
 

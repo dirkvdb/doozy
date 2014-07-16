@@ -87,7 +87,6 @@ TEST_F(LibraryDatabaseTest, UpdateItem)
     m_item.upnpItem->setTitle("NewTitle");
     m_item.upnpItem->setClass("object.audiocontainer");
     m_item.modifiedTime = 200;
-    m_item.path = "/a/new/path";
 
     m_db->updateItem(m_item);
     auto item = m_db->getItem(m_item.upnpItem->getObjectId());

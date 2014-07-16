@@ -75,6 +75,9 @@ private:
 
     static int32_t busyCb(void* pData, int32_t retries);
 
+    int64_t addMetadata(const LibraryItem& item);
+    void removeMetaData(const std::string& id);
+    
     void getIdFromTable(const std::string& table, const std::string& name, std::string& id);
     uint32_t getIdFromTable(const std::string& table, const std::string& name);
     void createInitialDatabase();
@@ -82,6 +85,7 @@ private:
     sqlite3_stmt* createStatement(const char* query);
     void bindValue(sqlite3_stmt* pStmt, const std::string& value, int32_t index);
     void bindValue(sqlite3_stmt* pStmt, uint32_t value, int32_t index);
+    void bindValue(sqlite3_stmt* pStmt, int64_t value, int32_t index);
     void bindValue(sqlite3_stmt* pStmt, uint64_t value, int32_t index);
     void bindValue(sqlite3_stmt* pStmt, const void* pData, size_t dataSize, int32_t index);
 
