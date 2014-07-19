@@ -105,11 +105,15 @@ void MusicDb::addItem(const LibraryItem& item)
     log::debug(item.upnpItem->getTitle());
     assert(item.upnpItem->getTitle().front() >= ' ');
 
+    // create copies of temporary values, the query keeps a pointer to it
+    auto title = item.upnpItem->getTitle();
+    auto classStr = item.upnpItem->getClassString();
+
     bindValue(pStmt, item.upnpItem->getObjectId(), 1);
     bindValue(pStmt, item.upnpItem->getParentId(), 2);
     bindValue(pStmt, item.upnpItem->getRefId(), 3);
-    bindValue(pStmt, item.upnpItem->getTitle(), 4);
-    bindValue(pStmt, item.upnpItem->getClassString(), 5);
+    bindValue(pStmt, title, 4);
+    bindValue(pStmt, classStr, 5);
     bindValue(pStmt, metaId, 6);
     performQuery(pStmt);
 }
@@ -291,29 +295,6 @@ std::vector<LibraryItem> MusicDb::getItems(const std::string& parentId, uint32_t
     performQuery(pStmt, getItemsCb, &items);
     return items;
 }
-
-//Track MusicDb::getTrackWithPath(const string& filepath)
-//{
-//    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-//    sqlite3_stmt* pStmt = createStatement(
-//        "SELECT tracks.Id, tracks.albumId, tracks.Title, tracks.Composer, tracks.Filepath, tracks.Year, tracks.TrackNr, tracks.DiscNr, tracks.Duration, tracks.BitRate, tracks.SampleRate, tracks.Channels, tracks.FileSize, tracks.ModifiedTime, artists.Name, albums.Name, albums.AlbumArtist, genres.Name "
-//        "FROM tracks "
-//        "LEFT OUTER JOIN albums ON tracks.AlbumId = albums.Id "
-//        "LEFT OUTER JOIN artists ON tracks.ArtistId = artists.Id "
-//        "LEFT OUTER JOIN genres ON tracks.GenreId = genres.Id "
-//        "WHERE tracks.Filepath = ? ;");
-//
-//    Track track;
-//    bindValue(pStmt, filepath, 1);
-//    performQuery(pStmt, getItemCb, &track);
-//
-//    if (track.id.empty())
-//    {
-//        throw std::runtime_error("No track found in db with path: " + filepath);
-//    }
-//
-//    return track;
-//}
 
 void MusicDb::removeItem(const std::string& id)
 {
