@@ -17,8 +17,8 @@
 #include "server.h"
 
 #include "common/settings.h"
-//#include "devicedescriptions.h"
-//#include "mediarendererdevice.h"
+#include "devicedescriptions.h"
+#include "mediaserverdevice.h"
 
 #include "utils/log.h"
 #include "utils/readerfactory.h"
@@ -67,32 +67,28 @@ void Server::run(const std::string& configFile)
         m_Lib.reset(MusicLibraryFactory::create(doozy::MusicLibraryType::FileSystem, settings));
         m_Lib->scan(true);
 
-//        auto udn                = "uuid:" + settings.get("UDN");
-//        auto friendlyName       = settings.get("FriendlyName");
-//        auto audioOutput        = settings.get("AudioOutput");
-//        auto audioDevice        = settings.get("AudioDevice");
-//        auto description        = format(g_mediaRendererDevice.c_str(), m_Client.getIpAddress(), m_Client.getPort(), friendlyName, udn);
-//        auto advertiseInterval  = 180;
-//
-//        log::info("FriendlyName = %s", friendlyName);
-//        log::info("AudioOutput = %s", audioOutput);
-//        log::info("AudioDevice = %s", audioDevice);
-//
-//        upnp::WebServer webserver("/opt/");
-//
-//        webserver.addVirtualDirectory("Doozy");
-//        addServiceFileToWebserver(webserver, "RenderingControlDesc.xml", g_rendererControlService);
-//        addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
-//        addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
-//
-//        MediaRendererDevice dev(udn, description, advertiseInterval, audioOutput, audioDevice, webserver);
-//        dev.start();
+        auto udn                = "uuid:" + settings.get("UDN");
+        auto friendlyName       = settings.get("FriendlyName");
+        auto description        = format(g_mediaServerDevice.c_str(), m_Client.getIpAddress(), m_Client.getPort(), friendlyName, udn);
+        auto advertiseInterval  = 180;
+
+        log::info("FriendlyName = %s", friendlyName);
+
+        upnp::WebServer webserver("/opt/");
+        
+        webserver.addVirtualDirectory("Doozy");
+        addServiceFileToWebserver(webserver, "RenderingControlDesc.xml", g_rendererControlService);
+        addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
+        addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
+
+        MediaServerDevice dev(udn, description, advertiseInterval, webserver);
+        dev.start();
 
         std::unique_lock<std::mutex> lock(m_Mutex);
         m_Condition.wait(lock, [this] () { return m_Stop == true; });
 
-//        dev.stop();
-//        webserver.removeVirtualDirectory("Doozy");
+        dev.stop();
+        webserver.removeVirtualDirectory("Doozy");
     }
     catch(std::exception& e)
     {

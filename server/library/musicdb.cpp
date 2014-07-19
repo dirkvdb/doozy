@@ -260,7 +260,7 @@ std::vector<LibraryItem> MusicDb::getItems(const std::string& parentId, uint32_t
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     sqlite3_stmt* pStmt = createStatement(
-        "SELECT objects.ObjectId, objects.Title, objects.ParentId, objects.RefId, objects.Class, metadata.ModifiedTime, metadata.FilePath "
+        "SELECT objects.ObjectId, objects.Title, objects.ParentId, objects.RefId, objects.Class, metadata.ModifiedTime, metadata.FilePath , Objects.MetaData "
         "FROM objects "
         "LEFT OUTER JOIN metadata ON objects.MetaData = metadata.Id "
         "WHERE objects.ParentId = ? LIMIT ? OFFSET ?");
@@ -326,7 +326,7 @@ void MusicDb::removeNonExistingFiles()
 
     for (size_t i = 0; i < files.size(); ++i)
     {
-        log::debug("Removed deleted file from database: %d", files[i]);
+        log::debug("Removed deleted file from database: %d", files[i].first);
         removeItem(numericops::toString(files[i].first));
         removeMetaData(numericops::toString(files[i].second));
     }
@@ -621,7 +621,7 @@ static std::string getStringFromColumn(sqlite3_stmt* pStmt, int column)
 
 void MusicDb::getItemCb(sqlite3_stmt *pStmt, void *pData)
 {
-    assert(sqlite3_column_count(pStmt) == 7);
+    assert(sqlite3_column_count(pStmt) == 8);
 
     auto& item = *reinterpret_cast<LibraryItem*>(pData);
 
@@ -637,7 +637,7 @@ void MusicDb::getItemCb(sqlite3_stmt *pStmt, void *pData)
 
 void MusicDb::getItemsCb(sqlite3_stmt *pStmt, void *pData)
 {
-    assert(sqlite3_column_count(pStmt) == 7);
+    assert(sqlite3_column_count(pStmt) == 8);
 
     auto& items = *reinterpret_cast<std::vector<LibraryItem>*>(pData);
     

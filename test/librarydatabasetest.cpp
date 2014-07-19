@@ -66,6 +66,14 @@ TEST_F(LibraryDatabaseTest, ItemExists)
     EXPECT_TRUE(m_db->itemExists(m_item.path));
 }
 
+TEST_F(LibraryDatabaseTest, ItemStatus)
+{
+    m_db->addItem(m_item);
+    EXPECT_EQ(ItemStatus::DoesntExist, m_db->getItemStatus("/bad/path", 100));
+    EXPECT_EQ(ItemStatus::UpToDate, m_db->getItemStatus(m_item.path, m_item.modifiedTime));
+    EXPECT_EQ(ItemStatus::NeedsUpdate, m_db->getItemStatus(m_item.path, m_item.modifiedTime + 1));
+}
+
 TEST_F(LibraryDatabaseTest, AddGetItem)
 {
     m_db->addItem(m_item);
