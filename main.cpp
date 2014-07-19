@@ -45,6 +45,12 @@ int main(int argc, char **argv)
 #endif
 
     log::info("Doozy server");
+
+    if (!setlocale(LC_CTYPE, "en_US.UTF-8"))
+    {
+        std::cerr << "Locale not specified. Check LANG, LC_CTYPE, LC_ALL" << std::endl;
+        return 1;
+    }
     
     int option;
     bool daemonize = false;

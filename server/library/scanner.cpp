@@ -75,18 +75,18 @@ void Scanner::performScan(const std::string& libraryPath)
         createInitialLayout();
     }
 
-    m_ThreadPool.start();
+    //m_ThreadPool.start();
     scan(libraryPath, g_browseFileSystemId);
 
-    if (m_Stop)
-    {
-        m_ThreadPool.stop();
-        log::warn("Scan aborted");
-    }
-    else
-    {
-        m_ThreadPool.stopFinishJobs();
-    }
+//    if (m_Stop)
+//    {
+//        m_ThreadPool.stop();
+//        log::warn("Scan aborted");
+//    }
+//    else
+//    {
+//        m_ThreadPool.stopFinishJobs();
+//    }
 
     log::debug("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_ScannedFiles);
 }
@@ -105,7 +105,7 @@ void Scanner::createInitialLayout()
     LibraryItem browse;
     browse.upnpItem = std::make_shared<upnp::Item>(g_browseFileSystemId, "Browse filesystem");
     browse.upnpItem->setParentId(g_rootId);
-    browse.upnpItem->setClass(upnp::Item::Class::Container);
+    browse.upnpItem->setClass(upnp::Item::Class::StorageFolder);
     m_LibraryDb.addItem(browse);
 }
 
@@ -122,36 +122,40 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
         auto type = entry.type();
         if (type == FileSystemEntryType::Directory)
         {
-            if (!m_LibraryDb.itemExists(entry.path()))
+            std::string objectId;
+            if (!m_LibraryDb.itemExists(entry.path(), objectId))
             {
-                auto id = stringops::format("%s#%d", parentId, index++);
+                // TODO: make sure this id is unique!!
+                objectId = stringops::format("%s#%d", parentId, index++);
             
                 LibraryItem item;
                 item.path = entry.path();
-                item.upnpItem = std::make_shared<upnp::Item>(id, fileops::getFileName(entry.path()));
+                item.upnpItem = std::make_shared<upnp::Item>(objectId, fileops::getFileName(entry.path()));
                 item.upnpItem->setParentId(parentId);
                 item.upnpItem->setClass(upnp::Item::Class::Container);
-                
+
                 m_LibraryDb.addItem(item);
+                log::debug("Add container: %s (%s) parent: %s", entry.path(), objectId, parentId);
             }
             
-            scan(entry.path(), stringops::format("%s#%d", parentId, index));
+            scan(entry.path(), objectId);
         }
         else if (type == FileSystemEntryType::File)
         {
             auto path = entry.path();
-            log::debug("Add Item: %s parent: %s (%d)", path, parentId, index);
-            m_ThreadPool.addJob([this, path, index, parentId] () {
-                try
-                {
-                    onFile(path, index, parentId);
-                }
-                catch (std::exception& e)
-                {
-                    log::warn("Ignored file %s: %s", path, e.what());
-                }
-            });
-            
+            onFile(path, index, parentId);
+
+//            m_ThreadPool.addJob([this, path, index, parentId] () {
+//                try
+//                {
+//                    onFile(path, index, parentId);
+//                }
+//                catch (std::exception& e)
+//                {
+//                    log::warn("Ignored file %s: %s", path, e.what());
+//                }
+//            });
+
             ++index;
         }
     }
@@ -165,8 +169,10 @@ void Scanner::cancel()
 
 void Scanner::onFile(const std::string& filepath, uint32_t index, const std::string& parentId)
 {
-    auto type = mime::typeFromFile(filepath);
-    if (type == mime::Type::Other)
+    ++m_ScannedFiles;
+
+    auto type = mime::groupFromFile(filepath);
+    if (type == mime::Group::Other)
     {
         return;
     }
@@ -186,9 +192,24 @@ void Scanner::onFile(const std::string& filepath, uint32_t index, const std::str
     item.modifiedTime = info.modifyTime;
     item.upnpItem = std::make_shared<upnp::Item>(id, getFileName(filepath));
     item.upnpItem->setParentId(parentId);
-    item.upnpItem->setClass(upnp::Item::Class::Generic);
-    
+
+    switch (type)
+    {
+        case mime::Group::Audio:
+            item.upnpItem->setClass(upnp::Item::Class::Audio);
+            break;
+        case mime::Group::Video:
+            item.upnpItem->setClass(upnp::Item::Class::Video);
+            break;
+        case mime::Group::Image:
+            item.upnpItem->setClass(upnp::Item::Class::Image);
+            break;
+        default:
+            throw std::runtime_error("Unexpected mime type");
+    }
+
     m_LibraryDb.addItem(item);
+    log::debug("Add Item: %s parent: %s (%d)", item.upnpItem->getTitle(), parentId, index);
 
 //    audio::Metadata md(track.filepath, audio::Metadata::ReadAudioProperties::Yes);
 //    track.artist        = md.getArtist();

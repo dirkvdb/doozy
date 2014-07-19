@@ -26,7 +26,40 @@ namespace mime
 
 using namespace utils;
 
-Type typeFromFile(const std::string filePath)
+Group groupFromFile(const std::string& filePath)
+{
+    switch (typeFromFile(filePath))
+    {
+    case Type::AudioMp3:
+    case Type::AudioM4a:
+    case Type::AudioWma:
+    case Type::AudioFlac:
+    case Type::AudioWave:
+    case Type::AudioPcm:
+    case Type::AudioOgg:
+        return Group::Audio;
+
+    case Type::VideoAvi:
+    case Type::VideoMpeg:
+    case Type::VideoMp4:
+    case Type::VideoWmv:
+    case Type::VideoMkv:
+    case Type::VideoFlv:
+    case Type::VideoMov:
+    case Type::Video3gp:
+    case Type::VideoTivo:
+        return Group::Video;
+
+    case Type::ImageJpeg:
+    case Type::ImageTiff:
+    case Type::ImageBmp:
+        return Group::Image;
+    default:
+        return Group::Other;
+    }
+}
+
+Type typeFromFile(const std::string& filePath)
 {
     auto ext = stringops::lowercase(fileops::getFileExtension(filePath));
     

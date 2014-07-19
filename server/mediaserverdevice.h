@@ -36,12 +36,14 @@ class WebServer;
 namespace doozy
 {
 
+class IMusicLibrary;
+
 class MediaServerDevice : public upnp::IConnectionManager
                         , public upnp::ContentDirectory::IContentDirectory
                         //, public upnp::IAVTransport
 {
 public:
-    MediaServerDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, upnp::WebServer& webServer);
+    MediaServerDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, upnp::WebServer& webServer, std::unique_ptr<IMusicLibrary> library);
     MediaServerDevice(const MediaServerDevice&) = delete;
     
     void start();
@@ -84,6 +86,8 @@ private:
     upnp::ContentDirectory::Service             m_ContentDirectory;
     //upnp::AVTransport::Service                  m_AVTransport;
     upnp::WebServer&                            m_WebServer;
+
+    std::unique_ptr<IMusicLibrary>              m_Lib;
     
     upnp::ConnectionManager::ConnectionInfo     m_CurrentConnectionInfo;
     utils::WorkerThread                         m_Thread;

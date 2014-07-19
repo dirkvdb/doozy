@@ -32,7 +32,7 @@ namespace doozy
 
 std::string Settings::get(const std::string& setting, const std::string& defaultValue) const
 {
-    std::map<std::string, std::string>::const_iterator iter = m_Settings.find(setting);
+    auto iter = m_Settings.find(setting);
     if (iter != m_Settings.end())
     {
         return iter->second;
@@ -45,7 +45,7 @@ int32_t Settings::getAsInt(const std::string& setting, int32_t defaultValue) con
 {
     int32_t result = defaultValue;
 
-    std::map<std::string, std::string>::const_iterator iter = m_Settings.find(setting);
+    auto iter = m_Settings.find(setting);
     if (iter != m_Settings.end())
     {
         result = stringops::toNumeric<int32_t>(iter->second);
@@ -58,7 +58,7 @@ bool Settings::getAsBool(const std::string& setting, bool defaultValue) const
 {
     bool result = defaultValue;
 
-    std::map<std::string, std::string>::const_iterator iter = m_Settings.find(setting);
+    auto iter = m_Settings.find(setting);
     if (iter != m_Settings.end())
     {
         std::string value = stringops::lowercase(iter->second);

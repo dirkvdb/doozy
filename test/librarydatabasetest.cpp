@@ -59,11 +59,24 @@ TEST_F(LibraryDatabaseTest, GetObjectCount)
     EXPECT_EQ(1, m_db->getObjectCount());
 }
 
+TEST_F(LibraryDatabaseTest, GetChildCount)
+{
+    addItem("0", "-1", "root");
+    addItem("0#1", "0", "item1");
+    addItem("0#2", "0", "item2");
+
+    EXPECT_EQ(2, m_db->getChildCount("0"));
+    EXPECT_EQ(0, m_db->getChildCount("0#1"));
+    EXPECT_EQ(0, m_db->getChildCount("0#2"));
+}
+
 TEST_F(LibraryDatabaseTest, ItemExists)
 {
-    EXPECT_FALSE(m_db->itemExists(m_item.path));
+    std::string id;
+    EXPECT_FALSE(m_db->itemExists(m_item.path, id));
     m_db->addItem(m_item);
-    EXPECT_TRUE(m_db->itemExists(m_item.path));
+    EXPECT_TRUE(m_db->itemExists(m_item.path, id));
+    EXPECT_EQ(m_item.upnpItem->getObjectId(), id);
 }
 
 TEST_F(LibraryDatabaseTest, ItemStatus)
@@ -76,6 +89,35 @@ TEST_F(LibraryDatabaseTest, ItemStatus)
 
 TEST_F(LibraryDatabaseTest, AddGetItem)
 {
+    m_db->addItem(m_item);
+    auto item = m_db->getItem(m_item.upnpItem->getObjectId());
+
+    EXPECT_EQ(m_item.upnpItem->getObjectId(),   item.upnpItem->getObjectId());
+    EXPECT_EQ(m_item.upnpItem->getRefId(),      item.upnpItem->getRefId());
+    EXPECT_EQ(m_item.upnpItem->getParentId(),   item.upnpItem->getParentId());
+    EXPECT_EQ(m_item.upnpItem->getTitle(),      item.upnpItem->getTitle());
+    EXPECT_EQ(m_item.upnpItem->getClass(),      item.upnpItem->getClass());
+}
+
+TEST_F(LibraryDatabaseTest, AddGetItemAmpersand)
+{
+    m_item.upnpItem->setTitle("Me & my title");
+
+    m_db->addItem(m_item);
+    auto item = m_db->getItem(m_item.upnpItem->getObjectId());
+
+    EXPECT_EQ(m_item.upnpItem->getObjectId(),   item.upnpItem->getObjectId());
+    EXPECT_EQ(m_item.upnpItem->getRefId(),      item.upnpItem->getRefId());
+    EXPECT_EQ(m_item.upnpItem->getParentId(),   item.upnpItem->getParentId());
+    EXPECT_EQ(m_item.upnpItem->getTitle(),      item.upnpItem->getTitle());
+    EXPECT_EQ(m_item.upnpItem->getClass(),      item.upnpItem->getClass());
+}
+
+TEST_F(LibraryDatabaseTest, AddGetItemLongPath)
+{
+    //m_item.upnpItem->setTitle("02 - 14 - David Bowie - Dancing In The Street (ft. Mick Jagger).mp3");
+    m_item.upnpItem->setTitle("----------------------------------------------------------------");
+
     m_db->addItem(m_item);
     auto item = m_db->getItem(m_item.upnpItem->getObjectId());
 

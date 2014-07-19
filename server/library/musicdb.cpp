@@ -79,6 +79,17 @@ uint32_t MusicDb::getObjectCount()
     return count;
 }
 
+uint32_t MusicDb::getChildCount(const std::string& id)
+{
+    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    auto statement = createStatement(
+        "SELECT Id FROM objects "
+        "WHERE objects.ParentId=?");
+
+    bindValue(statement, id, 1);
+    return performQuery(statement);
+}
+
 void MusicDb::addItem(const LibraryItem& item)
 {
     assert(item.upnpItem);
@@ -90,6 +101,9 @@ void MusicDb::addItem(const LibraryItem& item)
         "INSERT INTO objects "
         "(Id, ObjectId, ParentId, RefId, Title, Class, MetaData) "
         "VALUES (NULL, ?, ?, ?, ?, ?, ?)");
+
+    log::debug(item.upnpItem->getTitle());
+    assert(item.upnpItem->getTitle().front() >= ' ');
 
     bindValue(pStmt, item.upnpItem->getObjectId(), 1);
     bindValue(pStmt, item.upnpItem->getParentId(), 2);
@@ -193,12 +207,14 @@ void MusicDb::updateItem(const LibraryItem& item)
 //    performQuery(pStmt);
 //}
 
-bool MusicDb::itemExists(const string& filepath)
+bool MusicDb::itemExists(const string& filepath, string& objectId)
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     sqlite3_stmt* pStmt = createStatement(
-        "SELECT Id FROM metadata "
-        "WHERE metadata.Filepath = ?"
+        "SELECT objects.ObjectId "
+        "FROM metadata "
+        "LEFT OUTER JOIN objects ON objects.MetaData = metadata.Id "
+        "WHERE metadata.FilePath=?"
     );
     
     if (sqlite3_bind_text(pStmt, 1, filepath.c_str(), static_cast<int>(filepath.size()), SQLITE_STATIC) != SQLITE_OK)
@@ -206,13 +222,15 @@ bool MusicDb::itemExists(const string& filepath)
         throw runtime_error(string("Failed to bind value: ") + sqlite3_errmsg(m_pDb));
     }
 
-    return performQuery(pStmt) == 1;
+    auto numObjects = performQuery(pStmt, getIdCb, &objectId);
+    assert(numObjects <= 1);
+    return numObjects == 1;
 }
 
 ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modifiedTime)
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-    sqlite3_stmt* pStmt = createStatement("SELECT ModifiedTime FROM metadata WHERE metadata.Filepath = ?");
+    sqlite3_stmt* pStmt = createStatement("SELECT ModifiedTime FROM metadata WHERE metadata.FilePath = ?");
     if (sqlite3_bind_text(pStmt, 1, filepath.c_str(), static_cast<int>(filepath.size()), SQLITE_STATIC) != SQLITE_OK)
     {
         throw runtime_error(string("Failed to bind value: ") + sqlite3_errmsg(m_pDb));
@@ -422,7 +440,7 @@ void MusicDb::removeNonExistingFilesCb(sqlite3_stmt* pStmt, void* pData)
 void MusicDb::clearDatabase()
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-    performQuery(createStatement("DROP INDEX IF EXISTS tracks.pathIndex;"));
+    performQuery(createStatement("DROP INDEX IF EXISTS metadata.pathIndex;"));
     performQuery(createStatement("DROP TABLE IF EXISTS objects;"));
     performQuery(createStatement("DROP TABLE IF EXISTS metadata;"));
 
@@ -438,7 +456,7 @@ void MusicDb::createInitialDatabase()
         "ObjectId TEXT UNIQUE,"
         "ParentId TEXT,"
         "RefId TEXT,"
-        "Title TEXT,"
+        "Title TEXT NOT NULL,"
         "Class TEXT,"
         "MetaData INTEGER,"
         "FOREIGN KEY (MetaData) REFERENCES metadata(id));"));
@@ -447,8 +465,7 @@ void MusicDb::createInitialDatabase()
         "Id INTEGER PRIMARY KEY,"
         "Album TEXT,"
         "Artist TEXT,"
-        "AlbumArtist TEXT"
-        "Title TEXT,"
+        "AlbumArtist TEXT,"
         "Genre TEXT,"
         "Composer TEXT,"
         "Year INTEGER,"
@@ -465,6 +482,8 @@ void MusicDb::createInitialDatabase()
         "ModifiedTime INTEGER,"
         "FilePath TEXT,"
         "CoverImage BLOB);"));
+
+    performQuery(createStatement("CREATE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);"));
 
     log::debug("database created");
 }

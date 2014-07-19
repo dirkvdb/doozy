@@ -32,8 +32,6 @@ namespace upnp
 namespace doozy
 {
 
-class IMusicLibrary;
-
 class Server
 {
 public:
@@ -48,7 +46,6 @@ private:
     std::condition_variable                 m_Condition;
     std::mutex                              m_Mutex;
     upnp::Client                            m_Client;
-    std::unique_ptr<doozy::IMusicLibrary>   m_Lib;
     bool                                    m_Stop;
 };
     

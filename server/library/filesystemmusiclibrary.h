@@ -39,6 +39,8 @@ public:
     ~FilesystemMusicLibrary();
 
     uint32_t getObjectCount() override;
+    uint32_t getObjectCountInContainer(const std::string& id) override;
+
     upnp::ItemPtr getItem(const std::string& id) override;
     std::vector<upnp::ItemPtr> getItems(const std::string& id, uint32_t offset, uint32_t count) override;
 

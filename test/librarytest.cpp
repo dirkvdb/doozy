@@ -56,7 +56,7 @@ class LibraryTest : public testing::Test
 };
 
 //├── audio
-//│   ├── song\ 2.mp3
+//│   ├── song & 2.mp3
 //│   ├── song1.mp3
 //│   └── subdir
 //│       └── test.mp3
@@ -74,7 +74,17 @@ TEST_F(LibraryTest, GetRootContainer)
 TEST_F(LibraryTest, GetItems)
 {
     auto items = m_library->getItems("#1", 0, 0);
-    EXPECT_EQ(3, items.size());
+    ASSERT_EQ(3, items.size());
+
+    EXPECT_EQ("audio", items[0]->getTitle());
+    EXPECT_EQ("delaytest.mp3", items[1]->getTitle());
+    EXPECT_EQ("delaytestwithid3.mp3", items[2]->getTitle());
+
+    items = m_library->getItems("#1#1", 0, 0);
+    ASSERT_EQ(3, items.size());
+    EXPECT_EQ("subdir", items[2]->getTitle());
+    EXPECT_EQ("song1.mp3", items[1]->getTitle());
+    EXPECT_EQ("song & 2.mp3", items[0]->getTitle());
 }
 
 }

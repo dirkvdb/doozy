@@ -22,6 +22,8 @@
 
 #include "upnp/upnpwebserver.h"
 
+#include "library/musiclibraryinterface.h"
+
 #include <sstream>
 
 using namespace utils;
@@ -32,12 +34,13 @@ using namespace std::placeholders;
 namespace doozy
 {
 
-MediaServerDevice::MediaServerDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, upnp::WebServer& webServer)
+MediaServerDevice::MediaServerDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, upnp::WebServer& webServer, std::unique_ptr<IMusicLibrary> library)
 : m_RootDevice(udn, descriptionXml, advertiseIntervalInSeconds)
 , m_ConnectionManager(m_RootDevice, *this)
 , m_ContentDirectory(m_RootDevice, *this)
 //, m_AVTransport(m_RootDevice, *this)
 , m_WebServer(webServer)
+, m_Lib(std::move(library))
 {
 }
 
@@ -50,6 +53,8 @@ void MediaServerDevice::start()
 
     m_RootDevice.initialize();
     setInitialValues();
+
+    m_Lib->scan(true);
 }
 
 void MediaServerDevice::stop()
@@ -116,6 +121,10 @@ void MediaServerDevice::onControlActionRequest(Upnp_Action_Request* pRequest)
     default:
         throw ServiceException("Invalid subscribtionId", 401);
     }
+
+
+    xml::Document responesDoc(pRequest->ActionResult, xml::Document::NoOwnership);
+    log::debug(responesDoc.toString());
 }
 
 //void MediaServerDevice::throwOnBadInstanceId(uint32_t id) const
@@ -182,6 +191,23 @@ std::string MediaServerDevice::GetSystemUpdateId()
 ContentDirectory::ActionResult MediaServerDevice::Browse(const std::string& id, ContentDirectory::BrowseFlag flag, const std::vector<Property>& filter, uint32_t startIndex, uint32_t count, const std::vector<ContentDirectory::SortProperty>& sortCriteria)
 {
     ContentDirectory::ActionResult result;
+
+    log::debug("Browse: %s (%d - %d)", id, startIndex, count);
+
+    result.result = m_Lib->getItems(id, startIndex, count);
+    result.updateId = 1;
+    result.totalMatches = m_Lib->getObjectCountInContainer(id);
+    result.numberReturned = static_cast<uint32_t>(result.result.size());
+
+    log::debug("Browse result: Update id %d (ret %d - #matches %d)", result.updateId, result.numberReturned, result.totalMatches);
+    for (auto& item : result.result)
+    {
+        log::debug(item->getTitle());
+        if (item->isContainer())
+        {
+            item->setChildCount(m_Lib->getObjectCountInContainer(item->getObjectId()));
+        }
+    }
     
     return result;
 }

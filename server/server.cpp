@@ -64,9 +64,6 @@ void Server::run(const std::string& configFile)
             settings.loadFromFile(configFile);
         }
 
-        m_Lib.reset(MusicLibraryFactory::create(doozy::MusicLibraryType::FileSystem, settings));
-        m_Lib->scan(true);
-
         auto udn                = "uuid:" + settings.get("UDN");
         auto friendlyName       = settings.get("FriendlyName");
         auto description        = format(g_mediaServerDevice.c_str(), m_Client.getIpAddress(), m_Client.getPort(), friendlyName, udn);
@@ -77,11 +74,12 @@ void Server::run(const std::string& configFile)
         upnp::WebServer webserver("/opt/");
         
         webserver.addVirtualDirectory("Doozy");
-        addServiceFileToWebserver(webserver, "RenderingControlDesc.xml", g_rendererControlService);
+        addServiceFileToWebserver(webserver, "ContentDirectoryDesc.xml", g_contentDirectoryService);
         addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
-        addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
+        //addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
 
-        MediaServerDevice dev(udn, description, advertiseInterval, webserver);
+        MediaServerDevice dev(udn, description, advertiseInterval, webserver,
+                              std::unique_ptr<IMusicLibrary>(MusicLibraryFactory::create(doozy::MusicLibraryType::FileSystem, settings)));
         dev.start();
 
         std::unique_lock<std::mutex> lock(m_Mutex);
@@ -93,7 +91,6 @@ void Server::run(const std::string& configFile)
     catch(std::exception& e)
     {
         log::error(e.what());
-        m_Lib.reset();
     }
 
     m_Client.destroy();

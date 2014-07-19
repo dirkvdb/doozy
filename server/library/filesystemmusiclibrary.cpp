@@ -64,6 +64,11 @@ uint32_t FilesystemMusicLibrary::getObjectCount()
     return m_Db.getObjectCount();
 }
 
+uint32_t FilesystemMusicLibrary::getObjectCountInContainer(const std::string& id)
+{
+    return m_Db.getChildCount(id);
+}
+
 upnp::ItemPtr FilesystemMusicLibrary::getItem(const std::string& id)
 {
     return m_Db.getItem(id).upnpItem;

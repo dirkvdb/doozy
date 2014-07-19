@@ -34,7 +34,10 @@ class IMusicLibrary
 public:
     virtual ~IMusicLibrary() {}
 
+    // returns the total number of objects in the library
     virtual uint32_t getObjectCount() = 0;
+
+    virtual uint32_t getObjectCountInContainer(const std::string& id) = 0;
 
     virtual upnp::ItemPtr getItem(const std::string& id) = 0;
     virtual std::vector<upnp::ItemPtr> getItems(const std::string& id, uint32_t offset, uint32_t count) = 0;

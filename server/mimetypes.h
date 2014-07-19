@@ -25,6 +25,14 @@ namespace doozy
 namespace mime
 {
 
+enum class Group
+{
+    Audio,
+    Video,
+    Image,
+    Other
+};
+
 enum class Type
 {
     AudioMp3,
@@ -54,7 +62,8 @@ enum class Type
     Other
 };
 
-Type typeFromFile(const std::string filePath);
+Group groupFromFile(const std::string& filePath);
+Type typeFromFile(const std::string& filePath);
 
 }
 }

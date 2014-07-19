@@ -44,11 +44,12 @@ public:
     ~MusicDb();
 
     uint32_t getObjectCount();
+    uint32_t getChildCount(const std::string& id);
 
     void addItem(const LibraryItem& item);
     void updateItem(const LibraryItem& item);
 
-    bool itemExists(const std::string& filepath);
+    bool itemExists(const std::string& filepath, std::string& objectId);
     ItemStatus getItemStatus(const std::string& filepath, uint64_t modifiedTime);
 
     LibraryItem getItem(const std::string& id);
