@@ -102,9 +102,6 @@ void MusicDb::addItem(const LibraryItem& item)
         "(Id, ObjectId, ParentId, RefId, Title, Class, MetaData) "
         "VALUES (NULL, ?, ?, ?, ?, ?, ?)");
 
-    log::debug(item.upnpItem->getTitle());
-    assert(item.upnpItem->getTitle().front() >= ' ');
-
     // create copies of temporary values, the query keeps a pointer to it
     auto title = item.upnpItem->getTitle();
     auto classStr = item.upnpItem->getClassString();
