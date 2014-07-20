@@ -124,16 +124,16 @@ void MusicDb::addItem(const LibraryItem& item)
 void MusicDb::addItems(const std::vector<LibraryItem>& items)
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-    sqlite3_stmt* pStmt = createStatement(
-        "INSERT INTO objects "
-        "(Id, ObjectId, ParentId, RefId, Title, Class, MetaData) "
-        "VALUES (NULL, ?, ?, ?, ?, ?, ?)");
-
+    
     sqlite3_stmt* pMetaStmt = createStatement(
         "INSERT INTO metadata "
         "(Id, ModifiedTime, FilePath) "
-        "VALUES (NULL, ?, ?)"
-        );
+        "VALUES (NULL, ?, ?)");
+    
+    sqlite3_stmt* pStmt = createStatement(
+        "INSERT INTO objects "
+        "(Id, ObjectId, ParentId, RefId, Title, Class, MetaData) "
+        "VALUES (NULL, ?, ?, ?, ?, ?, last_insert_rowid())");
 
     performQuery(m_pBeginStatement, nullptr, nullptr, false);
     for (auto& item : items)
@@ -142,15 +142,11 @@ void MusicDb::addItems(const std::vector<LibraryItem>& items)
         bindValue(pMetaStmt, item.path, 2);
         performQuery(pMetaStmt, nullptr, nullptr, false);
         
-        //TODO this is not ok
-        auto metaId = sqlite3_last_insert_rowid(m_pDb);
-
         bindValue(pStmt, item.upnpItem->getObjectId(), 1);
         bindValue(pStmt, item.upnpItem->getParentId(), 2);
         bindValue(pStmt, item.upnpItem->getRefId(), 3);
         bindValue(pStmt, item.upnpItem->getTitle(), 4, true);
         bindValue(pStmt, item.upnpItem->getClassString(), 5, true);
-        bindValue(pStmt, metaId, 6);
         performQuery(pStmt, nullptr, nullptr, false);
     }
     
