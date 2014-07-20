@@ -56,6 +56,9 @@ MusicDb::MusicDb(const string& dbFilepath)
     {
         throw runtime_error("Failed to set busy handler");
     }
+    
+    m_pBeginStatement = createStatement("BEGIN");
+    m_pCommitStatement = createStatement("COMMIT");
 
     createInitialDatabase();
 
@@ -64,9 +67,12 @@ MusicDb::MusicDb(const string& dbFilepath)
 
 MusicDb::~MusicDb()
 {
+    sqlite3_finalize(m_pBeginStatement);
+    sqlite3_finalize(m_pCommitStatement);
+
     if (sqlite3_close(m_pDb) != SQLITE_OK)
     {
-        log::error("Failed to close database");
+        log::error("Failed to close database: " + std::string(sqlite3_errmsg(m_pDb)));
     }
 }
 
@@ -115,6 +121,46 @@ void MusicDb::addItem(const LibraryItem& item)
     performQuery(pStmt);
 }
 
+void MusicDb::addItems(const std::vector<LibraryItem>& items)
+{
+    sqlite3_stmt* pStmt = createStatement(
+        "INSERT INTO objects "
+        "(Id, ObjectId, ParentId, RefId, Title, Class, MetaData) "
+        "VALUES (NULL, ?, ?, ?, ?, ?, ?)");
+    
+    sqlite3_stmt* pMetaStmt = createStatement(
+        "INSERT INTO metadata "
+        "(Id, ModifiedTime, FilePath) "
+        "VALUES (NULL, ?, ?)"
+    );
+
+    
+    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    performQuery(m_pBeginStatement, nullptr, nullptr, false);
+    for (auto& item : items)
+    {
+        bindValue(pMetaStmt, item.modifiedTime, 1);
+        bindValue(pMetaStmt, item.path, 2);
+        performQuery(pMetaStmt, nullptr, nullptr, false);
+        
+        //TODO this is not ok
+        auto metaId = sqlite3_last_insert_rowid(m_pDb);
+
+        bindValue(pStmt, item.upnpItem->getObjectId(), 1);
+        bindValue(pStmt, item.upnpItem->getParentId(), 2);
+        bindValue(pStmt, item.upnpItem->getRefId(), 3);
+        bindValue(pStmt, item.upnpItem->getTitle(), 4, true);
+        bindValue(pStmt, item.upnpItem->getClassString(), 5, true);
+        bindValue(pStmt, metaId, 6);
+        performQuery(pStmt, nullptr, nullptr, false);
+    }
+    
+    performQuery(m_pCommitStatement, nullptr, nullptr, false);
+    
+    sqlite3_finalize(pStmt);
+    sqlite3_finalize(pMetaStmt);
+}
+
 int64_t MusicDb::addMetadata(const LibraryItem& item)
 {
     sqlite3_stmt* pStmt = createStatement(
@@ -124,7 +170,7 @@ int64_t MusicDb::addMetadata(const LibraryItem& item)
     );
     
     bindValue(pStmt, item.modifiedTime, 1);
-    bindValue(pStmt, item.path, 2);
+    bindValue(pStmt, item.path, 2, true);
     performQuery(pStmt);
     
     return sqlite3_last_insert_rowid(m_pDb);
@@ -185,28 +231,7 @@ void MusicDb::updateItem(const LibraryItem& item)
 //        getIdFromTable("albums", album.title, album.id);
 //    }
 //}
-//
-//void MusicDb::updateAlbum(const Album& album)
-//{
-//    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
-//    sqlite3_stmt* pStmt = createStatement(
-//        "UPDATE albums "
-//        "SET Name=?, AlbumArtist=?, Year=?, Duration=?, GenreId=?"
-//        "WHERE Id=?;"
-//    );
-//
-//    string genreId;
-//    addGenreIfNotExists(album.genre, genreId);
-//
-//    bindValue(pStmt, album.title, 1);
-//    bindValue(pStmt, album.artist, 2);
-//    bindValue(pStmt, album.year, 3);
-//    bindValue(pStmt, album.durationInSec, 4);
-//    bindValue(pStmt, genreId, 5);
-//    bindValue(pStmt, album.id, 6);
-//
-//    performQuery(pStmt);
-//}
+
 
 bool MusicDb::itemExists(const string& filepath, string& objectId)
 {
@@ -498,6 +523,11 @@ uint32_t MusicDb::performQuery(sqlite3_stmt* pStmt, QueryCallback cb, void* pDat
     {
         sqlite3_finalize(pStmt);
     }
+    else
+    {
+        sqlite3_reset(pStmt);
+    }
+    
     return rowCount;
 }
 
@@ -513,7 +543,7 @@ sqlite3_stmt* MusicDb::createStatement(const char* query)
     return pStmt;
 }
 
-void MusicDb::bindValue(sqlite3_stmt* pStmt, const string& value, int32_t index)
+void MusicDb::bindValue(sqlite3_stmt* pStmt, const string& value, int32_t index, bool copy)
 {
     if (value.empty())
     {
@@ -522,7 +552,7 @@ void MusicDb::bindValue(sqlite3_stmt* pStmt, const string& value, int32_t index)
             throw runtime_error(string("Failed to bind string value as NULL: ") + sqlite3_errmsg(m_pDb));
         }
     }
-    else if (sqlite3_bind_text(pStmt, index, value.c_str(), static_cast<int>(value.size()), SQLITE_STATIC) != SQLITE_OK)
+    else if (sqlite3_bind_text(pStmt, index, value.c_str(), static_cast<int>(value.size()), copy ? SQLITE_TRANSIENT : SQLITE_STATIC) != SQLITE_OK)
     {
         throw runtime_error(string("Failed to bind string value: ") + sqlite3_errmsg(m_pDb));
     }

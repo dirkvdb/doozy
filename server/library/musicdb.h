@@ -47,6 +47,7 @@ public:
     uint32_t getChildCount(const std::string& id);
 
     void addItem(const LibraryItem& item);
+    void addItems(const std::vector<LibraryItem>& items);
     void updateItem(const LibraryItem& item);
 
     bool itemExists(const std::string& filepath, std::string& objectId);
@@ -84,13 +85,15 @@ private:
     void createInitialDatabase();
     uint32_t performQuery(sqlite3_stmt* pStmt, QueryCallback cb = nullptr, void* pData = nullptr, bool finalize = true);
     sqlite3_stmt* createStatement(const char* query);
-    void bindValue(sqlite3_stmt* pStmt, const std::string& value, int32_t index);
+    void bindValue(sqlite3_stmt* pStmt, const std::string& value, int32_t index, bool copy = false);
     void bindValue(sqlite3_stmt* pStmt, uint32_t value, int32_t index);
     void bindValue(sqlite3_stmt* pStmt, int64_t value, int32_t index);
     void bindValue(sqlite3_stmt* pStmt, uint64_t value, int32_t index);
     void bindValue(sqlite3_stmt* pStmt, const void* pData, size_t dataSize, int32_t index);
 
     sqlite3*                m_pDb;
+    sqlite3_stmt*           m_pBeginStatement;
+    sqlite3_stmt*           m_pCommitStatement;
     std::recursive_mutex    m_DbMutex;
 };
 

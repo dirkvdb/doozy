@@ -14,6 +14,7 @@
 #include "Utils/numericoperations.h"
 
 #define TEST_DB "test.db"
+#define PERFORMANCE_TEST
 
 using namespace std;
 namespace doozy
@@ -86,6 +87,18 @@ TEST_F(LibraryTest, GetItems)
     EXPECT_EQ("song1.mp3", items[1]->getTitle());
     EXPECT_EQ("song & 2.mp3", items[0]->getTitle());
 }
+
+#ifdef PERFORMANCE_TEST
+
+TEST_F(LibraryTest, FullScan)
+{
+    m_settings.set("MusicLibrary", "/Users/dirk/Music");
+
+    FullScan();
+}
+
+#endif
+
 
 }
 }
