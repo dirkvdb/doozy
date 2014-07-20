@@ -123,19 +123,18 @@ void MusicDb::addItem(const LibraryItem& item)
 
 void MusicDb::addItems(const std::vector<LibraryItem>& items)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     sqlite3_stmt* pStmt = createStatement(
         "INSERT INTO objects "
         "(Id, ObjectId, ParentId, RefId, Title, Class, MetaData) "
         "VALUES (NULL, ?, ?, ?, ?, ?, ?)");
-    
+
     sqlite3_stmt* pMetaStmt = createStatement(
         "INSERT INTO metadata "
         "(Id, ModifiedTime, FilePath) "
         "VALUES (NULL, ?, ?)"
-    );
+        );
 
-    
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     performQuery(m_pBeginStatement, nullptr, nullptr, false);
     for (auto& item : items)
     {

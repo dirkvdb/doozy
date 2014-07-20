@@ -23,7 +23,7 @@ ADD_LIBRARY(doozyserver
     mimetypes.h                         mimetypes.cpp
     server.h                            server.cpp
     library/filesystemmusiclibrary.h    library/filesystemmusiclibrary.cpp
-    library/libraryitem.h               library/libraryitem.cpp
+    library/libraryitem.h
     library/musicdb.h                   library/musicdb.cpp
     library/musiclibraryinterface.h
     library/musiclibraryfactory.h       library/musiclibraryfactory.cpp

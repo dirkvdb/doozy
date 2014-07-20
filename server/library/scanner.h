@@ -28,6 +28,7 @@ class Track;
 class Album;
 class AlbumArt;
 class MusicDb;
+struct LibraryItem;
 
 class Scanner
 {
@@ -41,13 +42,12 @@ public:
 private:
     void createInitialLayout();
     void scan(const std::string& dir, const std::string& parentId);
-    void onFile(const std::string& filepath, uint32_t index, const std::string& parentId);
+    void onFile(const std::string& filepath, uint32_t index, const std::string& parentId, std::vector<LibraryItem>& items);
     void processAlbumArt(const std::string& filepath, AlbumArt& art);
 
     MusicDb&                        m_LibraryDb;
     int32_t                         m_ScannedFiles;
     std::vector<std::string>        m_AlbumArtFilenames;
-    utils::ThreadPool               m_ThreadPool;
 
     bool                            m_InitialScan;
     bool                            m_Stop;

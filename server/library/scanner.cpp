@@ -75,19 +75,7 @@ void Scanner::performScan(const std::string& libraryPath)
         createInitialLayout();
     }
 
-    //m_ThreadPool.start();
     scan(libraryPath, g_browseFileSystemId);
-
-//    if (m_Stop)
-//    {
-//        m_ThreadPool.stop();
-//        log::warn("Scan aborted");
-//    }
-//    else
-//    {
-//        m_ThreadPool.stopFinishJobs();
-//    }
-
     log::debug("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_ScannedFiles);
 }
 
@@ -111,6 +99,8 @@ void Scanner::createInitialLayout()
 
 void Scanner::scan(const std::string& dir, const std::string& parentId)
 {
+    std::vector<LibraryItem> items;
+
     uint32_t index = 0;
     for (auto& entry : Directory(dir))
     {
@@ -122,6 +112,7 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
         auto type = entry.type();
         if (type == FileSystemEntryType::Directory)
         {
+            auto path = entry.path();
             std::string objectId;
             if (!m_LibraryDb.itemExists(entry.path(), objectId))
             {
@@ -137,37 +128,29 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
                 m_LibraryDb.addItem(item);
                 log::debug("Add container: %s (%s) parent: %s", entry.path(), objectId, parentId);
             }
-            
-            scan(entry.path(), objectId);
+
+            scan(path, objectId);
         }
         else if (type == FileSystemEntryType::File)
         {
             auto path = entry.path();
-            onFile(path, index, parentId);
-
-//            m_ThreadPool.addJob([this, path, index, parentId] () {
-//                try
-//                {
-//                    onFile(path, index, parentId);
-//                }
-//                catch (std::exception& e)
-//                {
-//                    log::warn("Ignored file %s: %s", path, e.what());
-//                }
-//            });
-
+            onFile(path, index, parentId, items);
             ++index;
         }
+    }
+
+    if (!items.empty())
+    {
+        m_LibraryDb.addItems(items);
     }
 }
 
 void Scanner::cancel()
 {
     m_Stop = true;
-    m_ThreadPool.stop();
 }
 
-void Scanner::onFile(const std::string& filepath, uint32_t index, const std::string& parentId)
+void Scanner::onFile(const std::string& filepath, uint32_t index, const std::string& parentId, std::vector<LibraryItem>& items)
 {
     ++m_ScannedFiles;
 
@@ -208,8 +191,9 @@ void Scanner::onFile(const std::string& filepath, uint32_t index, const std::str
             throw std::runtime_error("Unexpected mime type");
     }
 
-    m_LibraryDb.addItem(item);
-    log::debug("Add Item: %s parent: %s (%d)", item.upnpItem->getTitle(), parentId, index);
+    //m_LibraryDb.addItem(item);
+    items.push_back(item);
+    log::debug("Add Item: %s parent: %s (%d)", filepath, parentId, index);
 
 //    audio::Metadata md(track.filepath, audio::Metadata::ReadAudioProperties::Yes);
 //    track.artist        = md.getArtist();

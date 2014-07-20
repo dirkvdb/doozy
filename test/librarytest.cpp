@@ -14,7 +14,7 @@
 #include "Utils/numericoperations.h"
 
 #define TEST_DB "test.db"
-#define PERFORMANCE_TEST
+//#define PERFORMANCE_TEST
 
 using namespace std;
 namespace doozy
@@ -92,7 +92,7 @@ TEST_F(LibraryTest, GetItems)
 
 TEST_F(LibraryTest, FullScan)
 {
-    m_settings.set("MusicLibrary", "/Users/dirk/Music");
+    m_settings.set("MusicLibrary", "/Volumes/Data/Music");
 
     FullScan();
 }
