@@ -26,14 +26,15 @@
 
 #include "utils/log.h"
 #include "common/settings.h"
-#include "server/server.h"
-#include "crashhandler.h"
+#include "common/doozydeviceinterface.h"
+#include "common/doozydevicefactory.h"
+#include "common/crashhandler.h"
 
 static bool set_signal_handlers();
 
 using namespace utils;
 
-static std::unique_ptr<doozy::Server> serverInstance;
+static std::unique_ptr<doozy::IDevice> g_deviceInstance;
 
 int main(int argc, char **argv)
 {
@@ -44,8 +45,6 @@ int main(int argc, char **argv)
     }
 #endif
 
-    log::info("Doozy server");
-
     if (!setlocale(LC_CTYPE, "en_US.UTF-8"))
     {
         std::cerr << "Locale not specified. Check LANG, LC_CTYPE, LC_ALL" << std::endl;
@@ -55,11 +54,15 @@ int main(int argc, char **argv)
     int option;
     bool daemonize = false;
     std::string configFile;
+    std::string deviceType;
     
-    while ((option = getopt (argc, argv, "f:d")) != -1)
+    while ((option = getopt (argc, argv, "ft:d")) != -1)
     {
         switch (option)
         {
+        case 't':
+            deviceType = optarg != nullptr ? optarg : "";
+            break;
         case 'f':
             configFile = optarg != nullptr ? optarg : "";
             break;
@@ -74,10 +77,20 @@ int main(int argc, char **argv)
         }
     }
 
-    serverInstance.reset(new doozy::Server());
-    serverInstance->run("");
-    log::info("Bye");
-    return 0;
+    try
+    {
+        g_deviceInstance = doozy::DeviceFactory::createDevice(deviceType, configFile);
+        log::info("Doozy %s", deviceType);
+        g_deviceInstance->start();
+        log::info("Bye");
+
+        return 0;
+    }
+    catch (std::exception& e)
+    {
+        log::error(e.what());
+        return -1;
+    }
 }
 
 static void sigterm(int signo)
@@ -85,7 +98,7 @@ static void sigterm(int signo)
     try
     {
         log::info("Sigterm %d", signo);
-        serverInstance->stop();
+        g_deviceInstance->stop();
     }
     catch (std::exception& e)
     {

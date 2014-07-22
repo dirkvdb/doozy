@@ -14,8 +14,8 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef DOOZY_SERVER_SETTINGS_H
-#define DOOZY_SERVER_SETTINGS_H
+#ifndef DOOZY_RENDERER_SETTINGS_H
+#define DOOZY_RENDERER_SETTINGS_H
 
 #include <string>
 #include <vector>
@@ -24,18 +24,17 @@
 namespace doozy
 {
 
-class ServerSettings
+class RendererSettings
 {
 public:
-    virtual ~ServerSettings() {}
+    virtual ~RendererSettings() {}
 
     void loadFromFile(const std::string& filepath);
     
     virtual std::string getFriendlyName() const;
     virtual std::string getUdn() const;
-    virtual std::string getDatabaseFilePath() const;
-    virtual std::string getLibraryPath() const;
-    virtual std::vector<std::string> getAlbumArtFilenames() const;
+    virtual std::string getAudioOutput() const;
+    virtual std::string getAudioDevice() const;
 
 private:
     std::string     m_settingsPath;

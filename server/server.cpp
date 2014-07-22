@@ -17,8 +17,8 @@
 #include "server.h"
 
 #include "serversettings.h"
-#include "devicedescriptions.h"
 #include "mediaserverdevice.h"
+#include "common/devicedescriptions.h"
 
 #include "utils/log.h"
 #include "utils/readerfactory.h"
@@ -36,8 +36,9 @@ using namespace utils::stringops;
 namespace doozy
 {
 
-Server::Server()
-: m_Stop(false)
+Server::Server(ServerSettings& settings)
+: m_settings(settings)
+, m_stop(false)
 {
     // make sure we can read http urls
     ReaderFactory::registerBuilder(std::unique_ptr<IReaderBuilder>(new upnp::HttpReaderBuilder()));
@@ -48,25 +49,16 @@ Server::~Server()
     stop();
 }
 
-void Server::run(const std::string& configFile)
+void Server::start()
 {
     try
     {
-        m_Stop = false;
-        m_Client.initialize();
+        m_stop = false;
+        m_client.initialize();
 
-        // load settings
-        ServerSettings settings;
-        settings.loadDefaultSettings();
-        if (!configFile.empty())
-        {
-            log::info("Loading settings from: %s", configFile);
-            settings.loadFromFile(configFile);
-        }
-
-        auto udn                = "uuid:" + settings.getUdn();
-        auto friendlyName       = settings.getFriendlyName();
-        auto description        = format(g_mediaServerDevice.c_str(), m_Client.getIpAddress(), m_Client.getPort(), friendlyName, udn);
+        auto udn                = "uuid:" + m_settings.getUdn();
+        auto friendlyName       = m_settings.getFriendlyName();
+        auto description        = format(g_mediaServerDevice.c_str(), m_client.getIpAddress(), m_client.getPort(), friendlyName, udn);
         auto advertiseInterval  = 180;
 
         log::info("FriendlyName = %s", friendlyName);
@@ -79,11 +71,11 @@ void Server::run(const std::string& configFile)
         //addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
 
         MediaServerDevice dev(udn, description, advertiseInterval, webserver,
-                              std::unique_ptr<IMusicLibrary>(MusicLibraryFactory::create(doozy::MusicLibraryType::FileSystem, settings)));
+                              std::unique_ptr<IMusicLibrary>(MusicLibraryFactory::create(doozy::MusicLibraryType::FileSystem, m_settings)));
         dev.start();
 
-        std::unique_lock<std::mutex> lock(m_Mutex);
-        m_Condition.wait(lock, [this] () { return m_Stop == true; });
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_condition.wait(lock, [this] () { return m_stop == true; });
 
         dev.stop();
         webserver.removeVirtualDirectory("Doozy");
@@ -93,14 +85,14 @@ void Server::run(const std::string& configFile)
         log::error(e.what());
     }
 
-    m_Client.destroy();
+    m_client.destroy();
 }
 
 void Server::stop()
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    m_Stop = true;
-    m_Condition.notify_all();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_stop = true;
+    m_condition.notify_all();
 }
 
 void Server::addServiceFileToWebserver(upnp::WebServer& webserver, const std::string& filename, const std::string& fileContents)

@@ -92,12 +92,16 @@ SET(LINK_LIBS
     ${UPNPFRAMEWORK_LIBRARIES}
     ${SQLITE_LIBRARIES}
     doozyserver
+    doozyrenderer
 )
 
 ADD_EXECUTABLE(doozy
     main.cpp
-    crashhandler.h
-    devicedescriptions.h
+    common/doozydeviceinterface.h
+    common/doozydevicefactory.h common/doozydevicefactory.cpp
+    common/settings.h common/settings.cpp
+    common/crashhandler.h
+    common/devicedescriptions.h
 )
 
 TARGET_LINK_LIBRARIES(doozy ${LINK_LIBS})

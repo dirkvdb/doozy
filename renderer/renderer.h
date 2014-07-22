@@ -1,4 +1,4 @@
-//    Copyright (C) 20013 Dirk Vanden Boer <dirk.vdb@gmail.com>
+//    Copyright (C) 2013 Dirk Vanden Boer <dirk.vdb@gmail.com>
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -14,35 +14,43 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef DOOZY_SERVER_SETTINGS_H
-#define DOOZY_SERVER_SETTINGS_H
 
-#include <string>
-#include <vector>
-#include "common/settings.h"
+#ifndef DOOZY_RENDERER_H
+#define DOOZY_RENDERER_H
+
+#include <iostream>
+#include <condition_variable>
+#include <mutex>
+
+#include "upnp/upnpclient.h"
+#include "renderersettings.h"
+#include "common/doozydeviceinterface.h"
+
+namespace upnp
+{
+    class WebServer;
+}
 
 namespace doozy
 {
 
-class ServerSettings
+class Renderer : public IDevice
 {
 public:
-    virtual ~ServerSettings() {}
-
-    void loadFromFile(const std::string& filepath);
+    Renderer(RendererSettings& settings);
+    void start() override;
+    void stop() override;
     
-    virtual std::string getFriendlyName() const;
-    virtual std::string getUdn() const;
-    virtual std::string getDatabaseFilePath() const;
-    virtual std::string getLibraryPath() const;
-    virtual std::vector<std::string> getAlbumArtFilenames() const;
-
 private:
-    std::string     m_settingsPath;
-    Settings        m_settings;
-};
+    void addServiceFileToWebserver(upnp::WebServer& webserver, const std::string& filename, const std::string& fileContents);
 
+    RendererSettings            m_settings;
+    std::condition_variable     m_condition;
+    std::mutex                  m_mutex;
+    upnp::Client                m_client;
+    bool                        m_stop;
+};
+    
 }
 
 #endif
-

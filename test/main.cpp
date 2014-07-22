@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <clocale>
 
 int main(int argc, char **argv)
@@ -25,6 +25,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-  	testing::InitGoogleTest(&argc, argv);
+  	testing::InitGoogleMock(&argc, argv);
+    testing::FLAGS_gmock_verbose = "error";
   	return RUN_ALL_TESTS();
 }

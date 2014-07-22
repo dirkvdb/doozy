@@ -4,6 +4,7 @@
 
 #include "doozytestconfig.h"
 #include "eventnotification.h"
+#include "settingsmocks.h"
 
 #include "serversettings.h"
 #include "server/library/musiclibraryinterface.h"
@@ -17,6 +18,8 @@
 //#define PERFORMANCE_TEST
 
 using namespace std;
+using namespace testing;
+
 namespace doozy
 {
 namespace test
@@ -28,8 +31,11 @@ class LibraryTest : public testing::Test
 
     virtual void SetUp()
     {
-        m_settings.set("MusicLibrary", TEST_DATA_DIR);
-        m_settings.set("DBFile", TEST_DB);
+        std::vector<std::string> artFilenames = { "cover.jpg" };
+
+        ON_CALL(m_settings, getDatabaseFilePath()).WillByDefault(Return(TEST_DB));
+        ON_CALL(m_settings, getLibraryPath()).WillByDefault(Return(TEST_DATA_DIR));
+        ON_CALL(m_settings, getAlbumArtFilenames()).WillByDefault(Return(artFilenames));
 
         m_library.reset(MusicLibraryFactory::create(MusicLibraryType::FileSystem, m_settings));
         m_library->OnScanComplete = [this] {
@@ -51,7 +57,7 @@ class LibraryTest : public testing::Test
         EXPECT_TRUE(m_notification.waitForEvent());
     }
 
-    ServerSettings                  m_settings;
+    ServerSettingsMock              m_settings;
     std::unique_ptr<IMusicLibrary>  m_library;
     EventNotification               m_notification;
 };

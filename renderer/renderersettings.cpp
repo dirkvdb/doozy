@@ -1,4 +1,4 @@
-//    Copyright (C) 2013 Dirk Vanden Boer <dirk.vdb@gmail.com>
+//    Copyright (C) 2014 Dirk Vanden Boer <dirk.vdb@gmail.com>
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -14,45 +14,52 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "serversettings.h"
+#include "renderersettings.h"
+#include "audioconfig.h"
 
 namespace doozy
 {
 
 static const std::string g_friendlyName = "FriendlyName";
 static const std::string g_udn          = "UDN";
-static const std::string g_dbFilePath   = "DBFile";
-static const std::string g_libraryPath  = "MusicLibrary";
-static const std::string g_artNames     = "AlbumArtFilenames";
+static const std::string g_audioOutput  = "AudioOutput";
+static const std::string g_audioDevice  = "AudioDevice";
 
-void ServerSettings::loadFromFile(const std::string& filepath)
+void RendererSettings::loadFromFile(const std::string& filepath)
 {
     m_settings.loadFromFile(filepath);
 }
 
-std::string  ServerSettings::getFriendlyName() const
+std::string RendererSettings::getFriendlyName() const
 {
     return m_settings.get(g_friendlyName, "Doozy");
 }
 
-std::string  ServerSettings::getUdn() const
+std::string  RendererSettings::getUdn() const
 {
-    return m_settings.get(g_udn, "356a6e90-8e58-11e2-9e96-0800200c9a66");
+    return m_settings.get(g_udn, "356a6e90-8e58-11e2-9e96-0800200c9a55");
 }
 
-std::string  ServerSettings::getDatabaseFilePath() const
+std::string RendererSettings::getAudioOutput() const
 {
-    return m_settings.get(g_dbFilePath, "./doozyserver.db");
+    std::string fallback;
+
+#ifdef HAVE_OPENAL
+    fallback = "OpenAL";
+#endif
+#ifdef HAVE_ALSA
+    fallback = "Alsa";
+#endif
+#ifdef HAVE_PULSE
+    fallback = "PulseAudio";
+#endif
+
+    return m_settings.get(g_audioOutput, fallback);
 }
 
-std::string  ServerSettings::getLibraryPath() const
+std::string RendererSettings::getAudioDevice() const
 {
-    return m_settings.get(g_libraryPath, "/Volumes/Data/Music");
-}
-
-std::vector<std::string> ServerSettings::getAlbumArtFilenames() const
-{
-    return m_settings.getAsVector(g_artNames, { "cover.jpg" });
+    return m_settings.get(g_audioDevice, "Default");
 }
 
 }

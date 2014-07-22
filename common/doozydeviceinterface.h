@@ -1,4 +1,4 @@
-//    Copyright (C) 2013 Dirk Vanden Boer <dirk.vdb@gmail.com>
+//    Copyright (C) 2014 Dirk Vanden Boer <dirk.vdb@gmail.com>
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -14,40 +14,23 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+#ifndef DOOZY_DEVICE_INTERFACE_H
+#define DOOZY_DEVICE_INTERFACE_H
 
-#ifndef DOOZY_H
-#define DOOZY_H
-
-#include <iostream>
-#include <condition_variable>
-#include <mutex>
-
-#include "upnp/upnpclient.h"
-
-namespace upnp
-{
-    class WebServer;
-}
 
 namespace doozy
 {
 
-class Doozy
+class IDevice
 {
 public:
-    Doozy();
-    void run(const std::string& configFile);
-    void stop();
-    
-private:
-    void addServiceFileToWebserver(upnp::WebServer& webserver, const std::string& filename, const std::string& fileContents);
-    
-    std::condition_variable     m_Condition;
-    std::mutex                  m_Mutex;
-    upnp::Client                m_Client;
-    bool                        m_Stop;
+    virtual ~IDevice() {}
+
+    virtual void start() = 0;
+    virtual void stop() = 0;
 };
-    
+
 }
 
 #endif
+

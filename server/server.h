@@ -15,14 +15,16 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-#ifndef DOOZY_H
-#define DOOZY_H
+#ifndef DOOZY_SERVER_H
+#define DOOZY_SERVER_H
 
 #include <iostream>
 #include <condition_variable>
 #include <mutex>
 
 #include "upnp/upnpclient.h"
+#include "serversettings.h"
+#include "common/doozydeviceinterface.h"
 
 namespace upnp
 {
@@ -32,21 +34,22 @@ namespace upnp
 namespace doozy
 {
 
-class Server
+class Server : public IDevice
 {
 public:
-    Server();
+    Server(ServerSettings& settings);
     ~Server();
-    void run(const std::string& configFile);
-    void stop();
+    void start() override;
+    void stop() override;
     
 private:
     void addServiceFileToWebserver(upnp::WebServer& webserver, const std::string& filename, const std::string& fileContents);
     
-    std::condition_variable                 m_Condition;
-    std::mutex                              m_Mutex;
-    upnp::Client                            m_Client;
-    bool                                    m_Stop;
+    ServerSettings                          m_settings;
+    std::condition_variable                 m_condition;
+    std::mutex                              m_mutex;
+    upnp::Client                            m_client;
+    bool                                    m_stop;
 };
     
 }

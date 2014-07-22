@@ -31,14 +31,18 @@ SET(LINK_LIBS
     ${UPNPFRAMEWORK_LIBRARIES}
     ${SQLITE_LIBRARIES}
     doozyserver
+    doozyrenderer
 )
 
 ADD_EXECUTABLE(doozytest EXCLUDE_FROM_ALL
     gmock-gtest-all.cpp
     eventnotification.h
+    eventlistenermock.h
     main.cpp
     librarytest.cpp
     librarydatabasetest.cpp
+    settingsmocks.h
+    ../common/settings.cpp
 )
 
 TARGET_LINK_LIBRARIES(doozytest

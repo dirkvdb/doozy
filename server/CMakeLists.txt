@@ -29,7 +29,6 @@ ADD_LIBRARY(doozyserver
     library/musiclibraryinterface.h
     library/musiclibraryfactory.h       library/musiclibraryfactory.cpp
     library/scanner.h                   library/scanner.cpp
-    ../common/settings.h                ../common/settings.cpp
 )
 
 SOURCE_GROUP(library REGULAR_EXPRESSION library/)

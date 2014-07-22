@@ -16,32 +16,10 @@ INCLUDE_DIRECTORIES(
     ${UPNPFRAMEWORK_INCLUDE_DIRS}
 )
 
-LINK_DIRECTORIES(
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${AUDIO_LIBRARY_DIRS}
-    ${IMAGE_LIBRARY_DIRS}
-    ${UTILS_LIBRARY_DIRS}
-    ${UPNPFRAMEWORK_LIBRARY_DIRS}
-)
-
-SET(LINK_LIBS
-    ${AUDIO_LIBRARIES}
-    ${IMAGE_LIBRARIES}
-    ${UTILS_LIBRARIES}
-    ${UPNPFRAMEWORK_LIBRARIES}
-)
-
-ADD_EXECUTABLE(doozyrenderer
-    main.cpp
-    crashhandler.h
-    devicedescriptions.h
-    doozy.h                     doozy.cpp
+ADD_LIBRARY(doozyrenderer
+    renderer.h                  renderer.cpp
+    renderersettings.h          renderersettings.cpp
     mediarendererdevice.h       mediarendererdevice.cpp
     playqueue.h                 playqueue.cpp
-    ../common/settings.h        ../common/settings.cpp
     typeconversions.h
 )
-
-TARGET_LINK_LIBRARIES(doozyrenderer ${LINK_LIBS})
-INSTALL(TARGETS doozyrenderer RUNTIME DESTINATION bin)
-

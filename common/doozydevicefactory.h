@@ -1,4 +1,4 @@
-//    Copyright (C) 20013 Dirk Vanden Boer <dirk.vdb@gmail.com>
+//    Copyright (C) 2014 Dirk Vanden Boer <dirk.vdb@gmail.com>
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -14,33 +14,20 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef DOOZY_SERVER_SETTINGS_H
-#define DOOZY_SERVER_SETTINGS_H
-
-#include <string>
-#include <vector>
-#include "common/settings.h"
+#ifndef DOOZY_DEVICE_FACTORY_H
+#define DOOZY_DEVICE_FACTORY_H
 
 namespace doozy
 {
 
-class ServerSettings
+class IDevice;
+
+namespace DeviceFactory
 {
-public:
-    virtual ~ServerSettings() {}
 
-    void loadFromFile(const std::string& filepath);
-    
-    virtual std::string getFriendlyName() const;
-    virtual std::string getUdn() const;
-    virtual std::string getDatabaseFilePath() const;
-    virtual std::string getLibraryPath() const;
-    virtual std::vector<std::string> getAlbumArtFilenames() const;
+std::unique_ptr<IDevice> createDevice(const std::string& deviceType, const std::string& configFile);
 
-private:
-    std::string     m_settingsPath;
-    Settings        m_settings;
-};
+}
 
 }
 

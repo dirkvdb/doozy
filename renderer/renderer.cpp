@@ -14,7 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "doozy.h"
+#include "renderer.h"
 
 #include "common/settings.h"
 #include "devicedescriptions.h"
@@ -33,34 +33,26 @@ using namespace utils::stringops;
 namespace doozy
 {
 
-Doozy::Doozy()
-: m_Stop(false)
+Renderer::Renderer(RendererSettings& settings)
+: m_settings(settings)
+, m_stop(false)
 {
     // make sure we can read http urls
     ReaderFactory::registerBuilder(std::unique_ptr<IReaderBuilder>(new upnp::HttpReaderBuilder()));
 }
 
-void Doozy::run(const std::string& configFile)
+void Renderer::start()
 {
     try
     {
-        m_Stop = false;
-        m_Client.initialize();
+        m_stop = false;
+        m_client.initialize();
         
-        // load settings
-        Settings settings;
-        settings.loadDefaultSettings();
-        if (!configFile.empty())
-        {
-            log::info("Loading settings from: %s", configFile);
-            settings.loadFromFile(configFile);
-        }
-    
-        auto udn                = "uuid:" + settings.get("UDN");
-        auto friendlyName       = settings.get("FriendlyName");
-        auto audioOutput        = settings.get("AudioOutput");
-        auto audioDevice        = settings.get("AudioDevice");
-        auto description        = format(g_mediaRendererDevice.c_str(), m_Client.getIpAddress(), m_Client.getPort(), friendlyName, udn);
+        auto udn                = "uuid:" + m_settings.getUdn();
+        auto friendlyName       = m_settings.getFriendlyName();
+        auto audioOutput        = m_settings.getAudioOutput();
+        auto audioDevice        = m_settings.getAudioDevice();
+        auto description        = format(g_mediaRendererDevice.c_str(), m_client.getIpAddress(), m_client.getPort(), friendlyName, udn);
         auto advertiseInterval  = 180;
         
         log::info("FriendlyName = %s", friendlyName);
@@ -77,8 +69,8 @@ void Doozy::run(const std::string& configFile)
         MediaRendererDevice dev(udn, description, advertiseInterval, audioOutput, audioDevice, webserver);
         dev.start();
         
-        std::unique_lock<std::mutex> lock(m_Mutex);
-        m_Condition.wait(lock, [this] () { return m_Stop == true; });
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_condition.wait(lock, [this] () { return m_stop == true; });
         
         dev.stop();
         webserver.removeVirtualDirectory("Doozy");
@@ -88,17 +80,17 @@ void Doozy::run(const std::string& configFile)
         log::error(e.what());
     }
     
-    m_Client.destroy();
+    m_client.destroy();
 }
     
-void Doozy::stop()
+void Renderer::stop()
 {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    m_Stop = true;
-    m_Condition.notify_all();
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_stop = true;
+    m_condition.notify_all();
 }
     
-void Doozy::addServiceFileToWebserver(upnp::WebServer& webserver, const std::string& filename, const std::string& fileContents)
+void Renderer::addServiceFileToWebserver(upnp::WebServer& webserver, const std::string& filename, const std::string& fileContents)
 {
     webserver.addFile("Doozy", filename, "text/xml", fileContents);
 }
