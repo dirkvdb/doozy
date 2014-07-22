@@ -19,7 +19,7 @@
 #include <stdexcept>
 #include <cassert>
 
-#include "common/settings.h"
+#include "serversettings.h"
 #include "scanner.h"
 #include "utils/log.h"
 #include "utils/trace.h"
@@ -29,8 +29,8 @@ using namespace utils;
 namespace doozy
 {
 
-FilesystemMusicLibrary::FilesystemMusicLibrary(const Settings& settings)
-: m_Db(settings.get("DBFile"))
+FilesystemMusicLibrary::FilesystemMusicLibrary(const ServerSettings& settings)
+: m_Db(settings.getDatabaseFilePath())
 , m_Destroy(false)
 , m_Settings(settings)
 {
@@ -88,7 +88,7 @@ std::vector<upnp::ItemPtr> FilesystemMusicLibrary::getItems(const std::string& p
 
 void FilesystemMusicLibrary::scan(bool startFresh)
 {
-    auto libraryPath = m_Settings.get("MusicLibrary");
+    auto libraryPath = m_Settings.getLibraryPath();
 
     if (startFresh || (m_LibraryPath != libraryPath && !m_LibraryPath.empty()))
     {
@@ -110,7 +110,7 @@ void FilesystemMusicLibrary::scannerThread()
 {
     try
     {
-        auto filenames = m_Settings.getAsVector("AlbumArtFilenames");
+        auto filenames = m_Settings.getAlbumArtFilenames();
 
         {
             std::lock_guard<std::mutex> lock(m_ScanMutex);

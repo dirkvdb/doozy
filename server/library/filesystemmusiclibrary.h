@@ -29,13 +29,13 @@
 namespace doozy
 {
 
-class Settings;
+class ServerSettings;
 class Scanner;
 
 class FilesystemMusicLibrary : public IMusicLibrary
 {
 public:
-    FilesystemMusicLibrary(const Settings& settings);
+    FilesystemMusicLibrary(const ServerSettings& settings);
     ~FilesystemMusicLibrary();
 
     uint32_t getObjectCount() override;
@@ -57,7 +57,7 @@ private:
     std::mutex                      m_ScanMutex;
     std::unique_ptr<Scanner>        m_Scanner;
     bool                            m_Destroy;
-    const Settings&                 m_Settings;
+    const ServerSettings&           m_Settings;
 };
 
 }

@@ -23,7 +23,7 @@ namespace doozy
 {
 
 class IMusicLibrary;
-class Settings;
+class ServerSettings;
 
 enum class MusicLibraryType
 {
@@ -33,7 +33,7 @@ enum class MusicLibraryType
 class MusicLibraryFactory
 {
 public:
-    static IMusicLibrary* create(MusicLibraryType type, Settings& settings);
+    static IMusicLibrary* create(MusicLibraryType type, ServerSettings& settings);
 };
 
 }

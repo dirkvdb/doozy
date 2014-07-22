@@ -1,4 +1,4 @@
-//    Copyright (C) 2009 Dirk Vanden Boer <dirk.vdb@gmail.com>
+//    Copyright (C) 20013 Dirk Vanden Boer <dirk.vdb@gmail.com>
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -14,23 +14,34 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#include "musiclibraryfactory.h"
+#ifndef DOOZY_SERVER_SETTINGS_H
+#define DOOZY_SERVER_SETTINGS_H
 
-#include "filesystemmusiclibrary.h"
-
-#include <stdexcept>
+#include <string>
+#include <vector>
+#include "common/settings.h"
 
 namespace doozy
 {
 
-IMusicLibrary* MusicLibraryFactory::create(MusicLibraryType type, ServerSettings& settings)
+class ServerSettings
 {
-    if (type == MusicLibraryType::FileSystem)
-    {
-        return new FilesystemMusicLibrary(settings);
-    }
+public:
+    void loadDefaultSettings() noexcept;
+    void loadFromFile(const std::string& filepath);
+    
+    std::string getFriendlyName() const;
+    std::string getUdn() const;
+    std::string getDatabaseFilePath() const;
+    std::string getLibraryPath() const;
+    std::vector<std::string> getAlbumArtFilenames() const;
 
-    throw std::logic_error("MusicLibraryFactory: Unsupported music library type provided");
+private:
+    std::string     m_settingsPath;
+    Settings        m_settings;
+};
+
 }
 
-}
+#endif
+

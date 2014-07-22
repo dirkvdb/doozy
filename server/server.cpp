@@ -16,7 +16,7 @@
 
 #include "server.h"
 
-#include "common/settings.h"
+#include "serversettings.h"
 #include "devicedescriptions.h"
 #include "mediaserverdevice.h"
 
@@ -56,7 +56,7 @@ void Server::run(const std::string& configFile)
         m_Client.initialize();
 
         // load settings
-        Settings settings;
+        ServerSettings settings;
         settings.loadDefaultSettings();
         if (!configFile.empty())
         {
@@ -64,8 +64,8 @@ void Server::run(const std::string& configFile)
             settings.loadFromFile(configFile);
         }
 
-        auto udn                = "uuid:" + settings.get("UDN");
-        auto friendlyName       = settings.get("FriendlyName");
+        auto udn                = "uuid:" + settings.getUdn();
+        auto friendlyName       = settings.getFriendlyName();
         auto description        = format(g_mediaServerDevice.c_str(), m_Client.getIpAddress(), m_Client.getPort(), friendlyName, udn);
         auto advertiseInterval  = 180;
 

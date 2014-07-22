@@ -32,19 +32,22 @@ public:
     void loadDefaultSettings();
     void loadFromFile(const std::string& filepath);
 
-    std::string get(const std::string& setting, const std::string& defaultValue = "") const;
-    int32_t getAsInt(const std::string& setting, int32_t defaultValue = 0) const;
-    bool getAsBool(const std::string& setting, bool defaultValue) const;
+    std::string get(const std::string& setting) const;
+    std::string get(const std::string& setting, const std::string& defaultValue) const noexcept;
+    int32_t getAsInt(const std::string& setting) const;
+    int32_t getAsInt(const std::string& setting, int32_t defaultValue) const noexcept;
+    bool getAsBool(const std::string& setting) const;
+    bool getAsBool(const std::string& setting, bool defaultValue) const noexcept;
     std::vector<std::string> getAsVector(const std::string& setting) const;
+    std::vector<std::string> getAsVector(const std::string& setting, const std::vector<std::string>& defaultValue) const noexcept;
     
-    void set(const std::string& setting, const char* value);
-    void set(const std::string& setting, const std::string& value);
-    void set(const std::string& setting, int32_t value);
-    void set(const std::string& setting, bool value);
-
-    void saveToFile();
+    void set(const std::string& setting, const char* value) noexcept;
+    void set(const std::string& setting, const std::string& value) noexcept;
+    void set(const std::string& setting, int32_t value) noexcept;
+    void set(const std::string& setting, bool value) noexcept;
 
 private:
+    std::string getSetting(const std::string& setting) const;
     std::map<std::string, std::string>  m_Settings;
 };
 

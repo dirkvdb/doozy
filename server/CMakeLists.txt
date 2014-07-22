@@ -22,6 +22,7 @@ ADD_LIBRARY(doozyserver
     mediaserverdevice.h                 mediaserverdevice.cpp
     mimetypes.h                         mimetypes.cpp
     server.h                            server.cpp
+    serversettings.h                    serversettings.cpp
     library/filesystemmusiclibrary.h    library/filesystemmusiclibrary.cpp
     library/libraryitem.h
     library/musicdb.h                   library/musicdb.cpp

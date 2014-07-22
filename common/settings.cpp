@@ -30,50 +30,68 @@ using namespace utils;
 namespace doozy
 {
 
-std::string Settings::get(const std::string& setting, const std::string& defaultValue) const
+std::string Settings::get(const std::string& setting) const
 {
-    auto iter = m_Settings.find(setting);
-    if (iter != m_Settings.end())
-    {
-        return iter->second;
-    }
-
-    return defaultValue;
+    return getSetting(setting);
 }
 
-int32_t Settings::getAsInt(const std::string& setting, int32_t defaultValue) const
+std::string Settings::get(const std::string& setting, const std::string& defaultValue) const noexcept
 {
-    int32_t result = defaultValue;
-
-    auto iter = m_Settings.find(setting);
-    if (iter != m_Settings.end())
+    try
     {
-        result = stringops::toNumeric<int32_t>(iter->second);
+        return get(setting);
     }
-
-    return result;
+    catch (std::exception&)
+    {
+        return defaultValue;
+    }
 }
 
-bool Settings::getAsBool(const std::string& setting, bool defaultValue) const
+int32_t Settings::getAsInt(const std::string& setting) const
 {
-    bool result = defaultValue;
+    return stringops::toNumeric<int32_t>(getSetting(setting));
+}
 
-    auto iter = m_Settings.find(setting);
-    if (iter != m_Settings.end())
+int32_t Settings::getAsInt(const std::string& setting, int32_t defaultValue) const noexcept
+{
+    try
     {
-        std::string value = stringops::lowercase(iter->second);
-        if (value == "true")
-        {
-            result = true;
-        }
-        else if (value == "false")
-        {
-            result = false;
-        }
+        return getAsInt(setting);
+    }
+    catch (std::exception&)
+    {
+        return defaultValue;
+    }
+}
+
+
+bool Settings::getAsBool(const std::string& setting) const
+{
+    std::string value = stringops::lowercase(getSetting(setting));
+    if (value == "true")
+    {
+        return true;
+    }
+    else if (value == "false")
+    {
+        return false;
     }
 
-    return result;
+    throw std::runtime_error(stringops::format("Invalid boolean value for setting %s: (%s)", setting, value));
 }
+
+bool Settings::getAsBool(const std::string& setting, bool defaultValue) const noexcept
+{
+    try
+    {
+        return getAsBool(setting);
+    }
+    catch (std::exception&)
+    {
+        return defaultValue;
+    }
+}
+
 
 std::vector<std::string> Settings::getAsVector(const std::string& setting) const
 {
@@ -91,22 +109,34 @@ std::vector<std::string> Settings::getAsVector(const std::string& setting) const
     return settings;
 }
 
-void Settings::set(const std::string& setting, const char* value)
+std::vector<std::string> Settings::getAsVector(const std::string& setting, const std::vector<std::string>& defaultValue) const noexcept
+{
+    try
+    {
+        return getAsVector(setting);
+    }
+    catch (std::exception&)
+    {
+        return defaultValue;
+    }
+}
+
+void Settings::set(const std::string& setting, const char* value) noexcept
 {
     set(setting, std::string(value));
 }
 
-void Settings::set(const std::string& setting, const std::string& value)
+void Settings::set(const std::string& setting, const std::string& value) noexcept
 {
     m_Settings[setting] = value;
 }
 
-void Settings::set(const std::string& setting, int32_t value)
+void Settings::set(const std::string& setting, int32_t value) noexcept
 {
     set(setting, numericops::toString(value));
 }
 
-void Settings::set(const std::string& setting, bool value)
+void Settings::set(const std::string& setting, bool value) noexcept
 {
     set(setting, std::string(value ? "true" : "false"));
 }
@@ -142,6 +172,17 @@ void Settings::loadFromFile(const std::string& filepath)
     }
 }
 
+std::string Settings::getSetting(const std::string& setting) const
+{
+    auto iter = m_Settings.find(setting);
+    if (iter == m_Settings.end())
+    {
+        throw std::runtime_error("No such setting: " + setting);
+    }
+    
+    return iter->second;
+}
+
 void Settings::loadDefaultSettings()
 {
 #ifdef HAVE_OPENAL
@@ -157,9 +198,6 @@ void Settings::loadDefaultSettings()
     m_Settings["AudioDevice"]       = "default";
     m_Settings["FriendlyName"]      = "Doozy";
     m_Settings["UDN"]               = "356a6e90-8e58-11e2-9e96-0800200c9a66";
-    m_Settings["DBFile"]            = "./doozyserver.db";
-    m_Settings["MusicLibrary"]      = "/Volumes/Data/Music";
-    m_Settings["AlbumArtFilenames"] = "cover.jpg";
 }
 
 }

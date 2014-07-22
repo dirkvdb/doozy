@@ -5,7 +5,7 @@
 #include "doozytestconfig.h"
 #include "eventnotification.h"
 
-#include "common/settings.h"
+#include "serversettings.h"
 #include "server/library/musiclibraryinterface.h"
 #include "server/library/musiclibraryfactory.h"
 
@@ -51,7 +51,7 @@ class LibraryTest : public testing::Test
         EXPECT_TRUE(m_notification.waitForEvent());
     }
 
-    Settings                        m_settings;
+    ServerSettings                  m_settings;
     std::unique_ptr<IMusicLibrary>  m_library;
     EventNotification               m_notification;
 };
