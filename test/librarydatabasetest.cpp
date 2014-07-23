@@ -30,6 +30,7 @@ protected:
         m_item.upnpItem->setClass("object.container");
         m_item.modifiedTime = 100;
         m_item.path = "/the/path";
+        m_item.name = "path";
     }
 
     virtual void TearDown()
@@ -46,7 +47,8 @@ protected:
     LibraryItem createItem(const std::string& id, const std::string& parent, const std::string& title)
     {
         LibraryItem item;
-        item.path = "/path";
+        item.path = "/the/path";
+        item.name = "path";
         item.upnpItem = std::make_shared<upnp::Item>(id, "TestItem");
         item.upnpItem->setParentId(parent);
         item.upnpItem->setTitle(title);
@@ -136,7 +138,6 @@ TEST_F(LibraryDatabaseTest, AddGetItemAmpersand)
 
 TEST_F(LibraryDatabaseTest, AddGetItemLongPath)
 {
-    //m_item.upnpItem->setTitle("02 - 14 - David Bowie - Dancing In The Street (ft. Mick Jagger).mp3");
     m_item.upnpItem->setTitle("----------------------------------------------------------------");
 
     m_db->addItem(m_item);

@@ -27,6 +27,7 @@ struct LibraryItem
 {
     upnp::ItemPtr   upnpItem;
     uint64_t        modifiedTime = 0;
+    std::string     name;
     std::string     path;
 };
 

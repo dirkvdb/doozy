@@ -85,13 +85,13 @@ TEST_F(LibraryTest, GetItems)
 
     EXPECT_EQ("audio", items[0]->getTitle());
     EXPECT_EQ("delaytest.mp3", items[1]->getTitle());
-    EXPECT_EQ("delaytestwithid3.mp3", items[2]->getTitle());
+    EXPECT_EQ("aTitle", items[2]->getTitle());
 
     items = m_library->getItems("#1#1", 0, 0);
     ASSERT_EQ(3, items.size());
     EXPECT_EQ("subdir", items[0]->getTitle());
-    EXPECT_EQ("song & 2.mp3", items[1]->getTitle());
-    EXPECT_EQ("song1.mp3", items[2]->getTitle());
+    EXPECT_EQ("aTitle", items[1]->getTitle());
+    EXPECT_EQ("aTitle", items[2]->getTitle());
 }
 
 #ifdef PERFORMANCE_TEST

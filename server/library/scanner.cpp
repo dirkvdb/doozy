@@ -37,7 +37,7 @@ using namespace fileops;
 namespace doozy
 {
 
-static constexpr int32_t ALBUM_ART_DB_SIZE = 96;
+//static constexpr int32_t ALBUM_ART_DB_SIZE = 96;
 static const std::string g_unknownAlbum = "Unknown Album";
 static const std::string g_unknownArtist = "Unknown Artist";
 static const std::string g_unknownTitle = "Unknown Title";
@@ -83,6 +83,7 @@ void Scanner::createInitialLayout()
 {
     // Root Item
     LibraryItem root;
+    root.name = PACKAGE_NAME;
     root.upnpItem = std::make_shared<upnp::Item>(g_rootId, PACKAGE_NAME);
     root.upnpItem->setChildCount(1);
     root.upnpItem->setParentId("-1");
@@ -91,6 +92,7 @@ void Scanner::createInitialLayout()
     
     // Browse folders
     LibraryItem browse;
+    browse.name = "Browse filesystem";
     browse.upnpItem = std::make_shared<upnp::Item>(g_browseFileSystemId, "Browse filesystem");
     browse.upnpItem->setParentId(g_rootId);
     browse.upnpItem->setClass(upnp::Item::Class::StorageFolder);
@@ -121,6 +123,7 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
             
                 LibraryItem item;
                 item.path = entry.path();
+                item.name = fileops::getFileName(item.path);
                 item.upnpItem = std::make_shared<upnp::Item>(objectId, fileops::getFileName(entry.path()));
                 item.upnpItem->setParentId(parentId);
                 item.upnpItem->setClass(upnp::Item::Class::Container);
@@ -172,6 +175,7 @@ void Scanner::onFile(const std::string& filepath, uint32_t index, const std::str
 
     LibraryItem item;
     item.path = filepath;
+    item.name = fileops::getFileName(item.path);
     item.modifiedTime = info.modifyTime;
     item.upnpItem = std::make_shared<upnp::Item>(id, getFileName(filepath));
     item.upnpItem->setParentId(parentId);
@@ -191,29 +195,24 @@ void Scanner::onFile(const std::string& filepath, uint32_t index, const std::str
             throw std::runtime_error("Unexpected mime type");
     }
 
-    //m_LibraryDb.addItem(item);
-    items.push_back(item);
-    log::debug("Add Item: %s parent: %s (%d)", filepath, parentId, index);
-
-//    audio::Metadata md(track.filepath, audio::Metadata::ReadAudioProperties::Yes);
-//    track.artist        = md.getArtist();
+    audio::Metadata md(filepath, audio::Metadata::ReadAudioProperties::Yes);
+    item.upnpItem->addMetaData(upnp::Property::Artist, md.getArtist());
+    item.upnpItem->addMetaData(upnp::Property::Title, md.getTitle());
+    item.upnpItem->addMetaData(upnp::Property::Album, md.getAlbum());
+    item.upnpItem->addMetaData(upnp::Property::Genre, md.getGenre());
+    item.upnpItem->addMetaData(upnp::Property::Date, std::to_string(md.getYear()));
+    item.upnpItem->addMetaData(upnp::Property::TrackNumber, std::to_string(md.getTrackNr()));
+    item.upnpItem->addMetaData(upnp::Property::StorageUsed, std::to_string(info.sizeInBytes));
+    
+    
 //    track.albumArtist   = md.getAlbumArtist();
-//    track.title         = md.getTitle();
-//    track.album         = md.getAlbum();
-//    track.genre         = md.getGenre();
 //    track.composer      = md.getComposer();
-//    track.year          = md.getYear();
-//    track.trackNr       = md.getTrackNr();
 //    track.discNr        = md.getDiscNr();
 //    track.bitrate       = md.getBitRate();
 //    track.sampleRate    = md.getSampleRate();
 //    track.channels      = md.getChannels();
 //    track.durationInSec = md.getDuration();
-//
-//    if (track.album.empty())    track.album = g_unknownAlbum;
-//    if (track.artist.empty())   track.artist = g_unknownArtist;
-//    if (track.title.empty())    track.title = g_unknownTitle;
-//
+
 //    Album album;
 //    std::string albumId;
 //    m_LibraryDb.albumExists(track.album, albumId);
@@ -295,6 +294,9 @@ void Scanner::onFile(const std::string& filepath, uint32_t index, const std::str
 //        log::debug("Needs update: %s", filepath);
 //        //m_LibraryDb.updateTrack(track);
 //    }
+
+    items.push_back(item);
+    log::debug("Add Item: %s parent: %s (%d)", filepath, parentId, index);
 }
 
 void Scanner::processAlbumArt(const std::string& filepath, AlbumArt& art)
