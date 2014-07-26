@@ -18,6 +18,7 @@
 
 #include "serversettings.h"
 #include "mediaserverdevice.h"
+#include "filerequesthandler.h"
 #include "common/devicedescriptions.h"
 
 #include "utils/log.h"
@@ -27,14 +28,16 @@
 #include "upnp/upnpwebserver.h"
 #include "upnp/upnphttpreader.h"
 
-#include "library/musiclibraryfactory.h"
-#include "library/musiclibraryinterface.h"
+#include "library/filesystemmusiclibrary.h"
+#include "library/musicdb.h"
 
 using namespace utils;
 using namespace utils::stringops;
 
 namespace doozy
 {
+
+static const std::string g_mediaDir = "Media";
 
 Server::Server(ServerSettings& settings)
 : m_settings(settings)
@@ -69,9 +72,20 @@ void Server::start()
         addServiceFileToWebserver(webserver, "ContentDirectoryDesc.xml", g_contentDirectoryService);
         addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
         //addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
+        
+        auto getInfoCb = [this] (const std::string& path) -> fileops::FileSystemEntryInfo {
+            MusicDb musicDb(m_settings.getDatabaseFilePath());
+            return fileops::getFileInfo(musicDb.getItemPath(path.substr(g_mediaDir.size() + 2)));
+        };
+        
+        auto requestCb = [this] (const std::string& path) {
+            return std::make_shared<FileRequestHandler>(m_settings.getDatabaseFilePath(), path);
+        };
+        
+        webserver.addVirtualDirectory(g_mediaDir, getInfoCb, requestCb);
 
-        MediaServerDevice dev(udn, description, advertiseInterval, webserver,
-                              std::unique_ptr<IMusicLibrary>(MusicLibraryFactory::create(doozy::MusicLibraryType::FileSystem, m_settings)));
+        auto library = std::unique_ptr<IMusicLibrary>(new FilesystemMusicLibrary(m_settings, webserver.getWebRootUrl() + g_mediaDir + "/"));
+        MediaServerDevice dev(udn, description, advertiseInterval, webserver, std::move(library));
         dev.start();
 
         std::unique_lock<std::mutex> lock(m_mutex);
@@ -79,6 +93,7 @@ void Server::start()
 
         dev.stop();
         webserver.removeVirtualDirectory("Doozy");
+        webserver.removeVirtualDirectory(g_mediaDir);
     }
     catch(std::exception& e)
     {

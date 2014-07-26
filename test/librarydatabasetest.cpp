@@ -94,6 +94,12 @@ TEST_F(LibraryDatabaseTest, ItemStatus)
     EXPECT_EQ(ItemStatus::NeedsUpdate, m_db->getItemStatus(m_item.path, m_item.modifiedTime + 1));
 }
 
+TEST_F(LibraryDatabaseTest, GetItemPath)
+{
+    m_db->addItem(m_item);
+    EXPECT_EQ(m_item.path, m_db->getItemPath(m_item.upnpItem->getObjectId()));
+}
+
 TEST_F(LibraryDatabaseTest, AddGetItem)
 {
     m_db->addItem(m_item);

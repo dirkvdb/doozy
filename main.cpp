@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     std::string configFile;
     std::string deviceType;
     
-    while ((option = getopt (argc, argv, "ft:d")) != -1)
+    while ((option = getopt(argc, argv, "f:t:d")) != -1)
     {
         switch (option)
         {

@@ -29,8 +29,9 @@ using namespace utils;
 namespace doozy
 {
 
-FilesystemMusicLibrary::FilesystemMusicLibrary(const ServerSettings& settings)
+FilesystemMusicLibrary::FilesystemMusicLibrary(const ServerSettings& settings, const std::string& webRoot)
 : m_Db(settings.getDatabaseFilePath())
+, m_WebRoot(webRoot)
 , m_Destroy(false)
 , m_Settings(settings)
 {
@@ -79,7 +80,13 @@ std::vector<upnp::ItemPtr> FilesystemMusicLibrary::getItems(const std::string& p
     auto items = m_Db.getItems(parentId, count, offset);
 
     std::vector<upnp::ItemPtr> upnpItems;
-    std::transform(items.begin(), items.end(), std::back_inserter(upnpItems), [] (const LibraryItem& item) {
+    std::transform(items.begin(), items.end(), std::back_inserter(upnpItems), [this] (const LibraryItem& item) {
+        // add the resource urls
+        upnp::Resource res;
+        res.setUrl(m_WebRoot + item.upnpItem->getObjectId());
+        res.setProtocolInfo(upnp::ProtocolInfo("http-get:*:audio/mpeg:*"));
+        
+        item.upnpItem->addResource(res);
         return item.upnpItem;
     });
     

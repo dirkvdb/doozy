@@ -19,6 +19,7 @@ INCLUDE_DIRECTORIES(
 )
 
 ADD_LIBRARY(doozyserver
+    filerequesthandler.h				filerequesthandler.cpp
     mediaserverdevice.h                 mediaserverdevice.cpp
     mimetypes.h                         mimetypes.cpp
     server.h                            server.cpp
@@ -27,7 +28,6 @@ ADD_LIBRARY(doozyserver
     library/libraryitem.h
     library/musicdb.h                   library/musicdb.cpp
     library/musiclibraryinterface.h
-    library/musiclibraryfactory.h       library/musiclibraryfactory.cpp
     library/scanner.h                   library/scanner.cpp
 )
 

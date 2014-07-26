@@ -249,7 +249,7 @@ bool MusicDb::itemExists(const string& filepath, string& objectId)
         throw runtime_error(string("Failed to bind value: ") + sqlite3_errmsg(m_pDb));
     }
 
-    auto numObjects = performQuery(pStmt, getIdCb, &objectId);
+    auto numObjects = performQuery(pStmt, getStringCb, &objectId);
     assert(numObjects <= 1);
     return numObjects == 1;
 }
@@ -319,6 +319,26 @@ std::vector<LibraryItem> MusicDb::getItems(const std::string& parentId, uint32_t
 
     performQuery(pStmt, getItemsCb, &items);
     return items;
+}
+
+std::string MusicDb::getItemPath(const std::string& id)
+{
+    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    sqlite3_stmt* pStmt = createStatement(
+        "SELECT metadata.FilePath "
+        "FROM objects "
+        "LEFT OUTER JOIN metadata ON objects.MetaData = metadata.Id "
+        "WHERE objects.ObjectId = ?");
+
+    bindValue(pStmt, id, 1);
+
+    std::string path;
+    if (0 == performQuery(pStmt, getStringCb, &path))
+    {
+        throw std::runtime_error("No item in database with id: " + id);
+    }
+    
+    return path;
 }
 
 void MusicDb::removeItem(const std::string& id)
@@ -455,7 +475,6 @@ void MusicDb::clearDatabase()
 
 void MusicDb::createInitialDatabase()
 {
-    log::debug("Create initial database");
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     performQuery(createStatement("CREATE TABLE IF NOT EXISTS objects("
         "Id INTEGER PRIMARY KEY,"
@@ -491,8 +510,6 @@ void MusicDb::createInitialDatabase()
         "CoverImage BLOB);"));
 
     performQuery(createStatement("CREATE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);"));
-
-    log::debug("database created");
 }
 
 uint32_t MusicDb::performQuery(sqlite3_stmt* pStmt, QueryCallback cb, void* pData, bool finalize)
@@ -606,7 +623,7 @@ void MusicDb::getIdFromTable(const string& table, const string& name, string& id
     bindValue(pStmt, name, 1);
 
     id.clear();
-    performQuery(pStmt, getIdCb, &id);
+    performQuery(pStmt, getStringCb, &id);
 }
 
 uint32_t MusicDb::getIdFromTable(const string& table, const string& name)
@@ -621,13 +638,13 @@ uint32_t MusicDb::getIdFromTable(const string& table, const string& name)
     return id;
 }
 
-void MusicDb::getIdCb(sqlite3_stmt* pStmt, void* pData)
+void MusicDb::getStringCb(sqlite3_stmt* pStmt, void* pData)
 {
     assert(sqlite3_column_count(pStmt) == 1);
     assert(sqlite3_column_text(pStmt, 0));
 
-    string* pId = reinterpret_cast<string*>(pData);
-    *pId = reinterpret_cast<const char*>(sqlite3_column_text(pStmt, 0));
+    string* pStr = reinterpret_cast<string*>(pData);
+    *pStr = reinterpret_cast<const char*>(sqlite3_column_text(pStmt, 0));
 }
 
 void MusicDb::getIdIntCb(sqlite3_stmt* pStmt, void* pData)

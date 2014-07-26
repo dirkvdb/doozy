@@ -44,7 +44,7 @@ static const std::string g_unknownTitle = "Unknown Title";
 static const std::string g_variousArtists = "Various Artists";
 
 static const std::string g_rootId = "0";
-static const std::string g_browseFileSystemId = "#1";
+static const std::string g_browseFileSystemId = "@1";
 
 Scanner::Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames)
 : m_LibraryDb(db)
@@ -119,7 +119,7 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
             if (!m_LibraryDb.itemExists(entry.path(), objectId))
             {
                 // TODO: make sure this id is unique!!
-                objectId = stringops::format("%s#%d", parentId, index++);
+                objectId = stringops::format("%s@%d", parentId, index++);
             
                 LibraryItem item;
                 item.path = entry.path();
@@ -136,9 +136,16 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
         }
         else if (type == FileSystemEntryType::File)
         {
-            auto path = entry.path();
-            onFile(path, index, parentId, items);
-            ++index;
+            try
+            {
+                auto path = entry.path();
+                onFile(path, index, parentId, items);
+                ++index;
+            }
+            catch (std::exception& e)
+            {
+                log::error(e.what());
+            }
         }
     }
 
@@ -171,7 +178,7 @@ void Scanner::onFile(const std::string& filepath, uint32_t index, const std::str
         return;
     }
 
-    auto id = stringops::format("%s#%d", parentId, index);
+    auto id = stringops::format("%s@%d", parentId, index);
 
     LibraryItem item;
     item.path = filepath;

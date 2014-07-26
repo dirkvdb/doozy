@@ -56,6 +56,7 @@ public:
     LibraryItem getItem(const std::string& id);
     std::vector<LibraryItem> getItems(const std::string& parentId, uint32_t offset, uint32_t count);
     //Track getTrackWithPath(const std::string& filepath);
+    std::string getItemPath(const std::string& id);
 
     void removeItem(const std::string& id);
     void removeNonExistingFiles();
@@ -65,7 +66,7 @@ public:
 
 private:
     typedef void (*QueryCallback)(sqlite3_stmt*, void*);
-    static void getIdCb(sqlite3_stmt* pStmt, void* pData);
+    static void getStringCb(sqlite3_stmt* pStmt, void* pData);
     static void getIdIntCb(sqlite3_stmt* pStmt, void* pData);
     static void getItemCb(sqlite3_stmt *pStmt, void *pData);
     static void getItemsCb(sqlite3_stmt* pStmt, void* pData);

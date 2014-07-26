@@ -8,11 +8,13 @@
 
 #include "serversettings.h"
 #include "server/library/musiclibraryinterface.h"
-#include "server/library/musiclibraryfactory.h"
+#include "server/library/filesystemmusiclibrary.h"
 
 #include "Utils/fileoperations.h"
 #include "Utils/stringoperations.h"
 #include "Utils/numericoperations.h"
+
+#include "upnp/upnphttpclient.h"
 
 #define TEST_DB "test.db"
 //#define PERFORMANCE_TEST
@@ -37,7 +39,7 @@ class LibraryTest : public testing::Test
         ON_CALL(m_settings, getLibraryPath()).WillByDefault(Return(TEST_DATA_DIR));
         ON_CALL(m_settings, getAlbumArtFilenames()).WillByDefault(Return(artFilenames));
 
-        m_library.reset(MusicLibraryFactory::create(MusicLibraryType::FileSystem, m_settings));
+        m_library.reset(new FilesystemMusicLibrary(m_settings, "http://127.0.0.1/Media/"));
         m_library->OnScanComplete = [this] {
             m_notification.triggerEvent();
         };
@@ -80,19 +82,31 @@ TEST_F(LibraryTest, GetRootContainer)
 
 TEST_F(LibraryTest, GetItems)
 {
-    auto items = m_library->getItems("#1", 0, 0);
+    auto items = m_library->getItems("@1", 0, 0);
     ASSERT_EQ(3, items.size());
 
     EXPECT_EQ("audio", items[0]->getTitle());
     EXPECT_EQ("delaytest.mp3", items[1]->getTitle());
     EXPECT_EQ("aTitle", items[2]->getTitle());
 
-    items = m_library->getItems("#1#1", 0, 0);
+    items = m_library->getItems("@1@1", 0, 0);
     ASSERT_EQ(3, items.size());
     EXPECT_EQ("subdir", items[0]->getTitle());
     EXPECT_EQ("aTitle", items[1]->getTitle());
     EXPECT_EQ("aTitle", items[2]->getTitle());
 }
+
+//TEST_F(LibraryTest, DownloadFile)
+//{
+//    auto item = m_library->getItems("@1@1", 0, 1).front();
+//    
+//    auto res = item->getResources();
+//    EXPECT_EQ(1, res.size());
+//
+//    upnp::HttpClient client(10);
+//    auto data = client.getData(res.front().getUrl());
+//    EXPECT_GT(0, data.size());
+//}
 
 #ifdef PERFORMANCE_TEST
 
