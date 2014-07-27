@@ -21,7 +21,7 @@
 #include <vector>
 #include <mutex>
 
-#include "library/libraryitem.h"
+#include "upnp/upnpfwd.h"
 
 namespace doozy
 {

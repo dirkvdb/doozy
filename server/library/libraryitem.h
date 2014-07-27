@@ -18,17 +18,27 @@
 #define LIBRARY_ITEM_H
 
 #include <string>
-#include "upnp/upnpitem.h"
 
 namespace doozy
 {
 
 struct LibraryItem
 {
-    upnp::ItemPtr   upnpItem;
-    uint64_t        modifiedTime = 0;
+    std::string     objectId;
+    std::string     parentId;
+    std::string     refId;
     std::string     name;
+    std::string     artist;
+    std::string     title;
+    std::string     album;
+    std::string     genre;
+    std::string     date;
+    std::string     upnpClass;
     std::string     path;
+    uint32_t        trackNumber;
+    uint32_t        discNumber;
+    uint64_t        fileSize = 0;
+    uint64_t        modifiedTime = 0;
 };
 
 }

@@ -8,6 +8,8 @@
 #include "Utils/fileoperations.h"
 #include "Utils/numericoperations.h"
 
+#include "upnp/upnpitem.h"
+
 #define TEST_DB "test.db"
 
 using namespace std;
@@ -24,10 +26,11 @@ protected:
         try { utils::fileops::deleteFile(TEST_DB); } catch (...) {}
         m_db.reset(new MusicDb(TEST_DB));
 
-        m_item.upnpItem = std::make_shared<upnp::Item>("#1", "TestItem");
-        m_item.upnpItem->setParentId("0");
-        m_item.upnpItem->setRefId("#88");
-        m_item.upnpItem->setClass("object.container");
+        m_item.objectId = "#1";
+        m_item.title = "TestItem";
+        m_item.parentId = "0";
+        m_item.refId = "#88";
+        m_item.upnpClass = "object.container";
         m_item.modifiedTime = 100;
         m_item.path = "/the/path";
         m_item.name = "path";
@@ -49,9 +52,9 @@ protected:
         LibraryItem item;
         item.path = "/the/path";
         item.name = "path";
-        item.upnpItem = std::make_shared<upnp::Item>(id, "TestItem");
-        item.upnpItem->setParentId(parent);
-        item.upnpItem->setTitle(title);
+        item.objectId = id;
+        item.title = title;
+        item.parentId = parent;
         return item;
     }
 
@@ -83,7 +86,7 @@ TEST_F(LibraryDatabaseTest, ItemExists)
     EXPECT_FALSE(m_db->itemExists(m_item.path, id));
     m_db->addItem(m_item);
     EXPECT_TRUE(m_db->itemExists(m_item.path, id));
-    EXPECT_EQ(m_item.upnpItem->getObjectId(), id);
+    EXPECT_EQ(m_item.objectId, id);
 }
 
 TEST_F(LibraryDatabaseTest, ItemStatus)
@@ -97,19 +100,19 @@ TEST_F(LibraryDatabaseTest, ItemStatus)
 TEST_F(LibraryDatabaseTest, GetItemPath)
 {
     m_db->addItem(m_item);
-    EXPECT_EQ(m_item.path, m_db->getItemPath(m_item.upnpItem->getObjectId()));
+    EXPECT_EQ(m_item.path, m_db->getItemPath(m_item.objectId));
 }
 
 TEST_F(LibraryDatabaseTest, AddGetItem)
 {
     m_db->addItem(m_item);
-    auto item = m_db->getItem(m_item.upnpItem->getObjectId());
+    auto item = m_db->getItem(m_item.objectId);
 
-    EXPECT_EQ(m_item.upnpItem->getObjectId(),   item.upnpItem->getObjectId());
-    EXPECT_EQ(m_item.upnpItem->getRefId(),      item.upnpItem->getRefId());
-    EXPECT_EQ(m_item.upnpItem->getParentId(),   item.upnpItem->getParentId());
-    EXPECT_EQ(m_item.upnpItem->getTitle(),      item.upnpItem->getTitle());
-    EXPECT_EQ(m_item.upnpItem->getClass(),      item.upnpItem->getClass());
+    EXPECT_EQ(m_item.objectId,      item->getObjectId());
+    EXPECT_EQ(m_item.refId,         item->getRefId());
+    EXPECT_EQ(m_item.parentId,      item->getParentId());
+    EXPECT_EQ(m_item.title,         item->getTitle());
+    EXPECT_EQ(m_item.upnpClass,     item->getClassString());
 }
 
 TEST_F(LibraryDatabaseTest, AddItems)
@@ -124,58 +127,56 @@ TEST_F(LibraryDatabaseTest, AddItems)
     EXPECT_EQ(3, m_db->getObjectCount());
     
     auto item = m_db->getItem("0");
-    EXPECT_EQ("root", item.upnpItem->getTitle());
+    EXPECT_EQ("root", item->getTitle());
 }
 
 
 TEST_F(LibraryDatabaseTest, AddGetItemAmpersand)
 {
-    m_item.upnpItem->setTitle("Me & my title");
+    m_item.title = "Me & my title";
 
     m_db->addItem(m_item);
-    auto item = m_db->getItem(m_item.upnpItem->getObjectId());
+    auto item = m_db->getItem(m_item.objectId);
 
-    EXPECT_EQ(m_item.upnpItem->getObjectId(),   item.upnpItem->getObjectId());
-    EXPECT_EQ(m_item.upnpItem->getRefId(),      item.upnpItem->getRefId());
-    EXPECT_EQ(m_item.upnpItem->getParentId(),   item.upnpItem->getParentId());
-    EXPECT_EQ(m_item.upnpItem->getTitle(),      item.upnpItem->getTitle());
-    EXPECT_EQ(m_item.upnpItem->getClass(),      item.upnpItem->getClass());
+    EXPECT_EQ(m_item.objectId,   item->getObjectId());
+    EXPECT_EQ(m_item.refId,      item->getRefId());
+    EXPECT_EQ(m_item.parentId,   item->getParentId());
+    EXPECT_EQ(m_item.title,      item->getTitle());
+    EXPECT_EQ(m_item.upnpClass,  item->getClassString());
 }
 
 TEST_F(LibraryDatabaseTest, AddGetItemLongPath)
 {
-    m_item.upnpItem->setTitle("----------------------------------------------------------------");
+    m_item.title = "----------------------------------------------------------------";
 
     m_db->addItem(m_item);
-    auto item = m_db->getItem(m_item.upnpItem->getObjectId());
+    auto item = m_db->getItem(m_item.objectId);
 
-    EXPECT_EQ(m_item.upnpItem->getObjectId(),   item.upnpItem->getObjectId());
-    EXPECT_EQ(m_item.upnpItem->getRefId(),      item.upnpItem->getRefId());
-    EXPECT_EQ(m_item.upnpItem->getParentId(),   item.upnpItem->getParentId());
-    EXPECT_EQ(m_item.upnpItem->getTitle(),      item.upnpItem->getTitle());
-    EXPECT_EQ(m_item.upnpItem->getClass(),      item.upnpItem->getClass());
+    EXPECT_EQ(m_item.objectId,   item->getObjectId());
+    EXPECT_EQ(m_item.refId,      item->getRefId());
+    EXPECT_EQ(m_item.parentId,   item->getParentId());
+    EXPECT_EQ(m_item.title,      item->getTitle());
+    EXPECT_EQ(m_item.upnpClass,  item->getClassString());
 }
 
 TEST_F(LibraryDatabaseTest, UpdateItem)
 {
     m_db->addItem(m_item);
 
-    m_item.upnpItem->setParentId("NewParent");
-    m_item.upnpItem->setRefId("NewRefId");
-    m_item.upnpItem->setTitle("NewTitle");
-    m_item.upnpItem->setClass("object.audiocontainer");
+    m_item.parentId     = "NewParent";
+    m_item.refId        = "NewRefId";
+    m_item.title        = "NewTitle";
+    m_item.upnpClass    = "object.audiocontainer";
     m_item.modifiedTime = 200;
 
     m_db->updateItem(m_item);
-    auto item = m_db->getItem(m_item.upnpItem->getObjectId());
+    auto item = m_db->getItem(m_item.objectId);
 
-    EXPECT_EQ(m_item.upnpItem->getObjectId(),   item.upnpItem->getObjectId());
-    EXPECT_EQ(m_item.upnpItem->getRefId(),      item.upnpItem->getRefId());
-    EXPECT_EQ(m_item.upnpItem->getParentId(),   item.upnpItem->getParentId());
-    EXPECT_EQ(m_item.upnpItem->getTitle(),      item.upnpItem->getTitle());
-    EXPECT_EQ(m_item.upnpItem->getClass(),      item.upnpItem->getClass());
-    EXPECT_EQ(m_item.modifiedTime,              item.modifiedTime);
-    EXPECT_EQ(m_item.path,                      item.path);
+    EXPECT_EQ(m_item.objectId,   item->getObjectId());
+    EXPECT_EQ(m_item.refId,      item->getRefId());
+    EXPECT_EQ(m_item.parentId,   item->getParentId());
+    EXPECT_EQ(m_item.title,      item->getTitle());
+    EXPECT_EQ(m_item.upnpClass,  item->getClassString());
 }
 
 TEST_F(LibraryDatabaseTest, GetItems)

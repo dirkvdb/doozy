@@ -31,6 +31,8 @@
 #include "utils/log.h"
 #include "utils/trace.h"
 
+#include "upnp/upnpitem.h"
+
 
 using namespace std;
 using namespace utils;
@@ -98,8 +100,6 @@ uint32_t MusicDb::getChildCount(const std::string& id)
 
 void MusicDb::addItem(const LibraryItem& item)
 {
-    assert(item.upnpItem);
-
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     auto metaId = addMetadata(item);
     
@@ -109,13 +109,11 @@ void MusicDb::addItem(const LibraryItem& item)
         "VALUES (NULL, ?, ?, ?, ?, ?, ?)");
 
     // create copies of temporary values, the query keeps a pointer to it
-    auto classStr = item.upnpItem->getClassString();
-
-    bindValue(pStmt, item.upnpItem->getObjectId(), 1);
-    bindValue(pStmt, item.upnpItem->getParentId(), 2);
-    bindValue(pStmt, item.upnpItem->getRefId(), 3);
+    bindValue(pStmt, item.objectId, 1);
+    bindValue(pStmt, item.parentId, 2);
+    bindValue(pStmt, item.refId, 3);
     bindValue(pStmt, item.name, 4);
-    bindValue(pStmt, classStr, 5);
+    bindValue(pStmt, item.upnpClass, 5);
     bindValue(pStmt, metaId, 6);
     performQuery(pStmt);
 }
@@ -139,15 +137,15 @@ void MusicDb::addItems(const std::vector<LibraryItem>& items)
     {
         bindValue(pMetaStmt, item.modifiedTime, 1);
         bindValue(pMetaStmt, item.path, 2);
-        bindValue(pMetaStmt, item.upnpItem->getMetaData(upnp::Property::Title), 3);
-        bindValue(pMetaStmt, item.upnpItem->getMetaData(upnp::Property::Artist), 4);
+        bindValue(pMetaStmt, item.title, 3);
+        bindValue(pMetaStmt, item.artist, 4);
         performQuery(pMetaStmt, nullptr, nullptr, false);
         
-        bindValue(pStmt, item.upnpItem->getObjectId(), 1);
-        bindValue(pStmt, item.upnpItem->getParentId(), 2);
-        bindValue(pStmt, item.upnpItem->getRefId(), 3);
+        bindValue(pStmt, item.objectId, 1);
+        bindValue(pStmt, item.parentId, 2);
+        bindValue(pStmt, item.refId, 3);
         bindValue(pStmt, item.name, 4);
-        bindValue(pStmt, item.upnpItem->getClassString(), 5, true);
+        bindValue(pStmt, item.upnpClass, 5);
         performQuery(pStmt, nullptr, nullptr, false);
     }
     
@@ -167,8 +165,8 @@ int64_t MusicDb::addMetadata(const LibraryItem& item)
     
     bindValue(pStmt, item.modifiedTime, 1);
     bindValue(pStmt, item.path, 2);
-    bindValue(pStmt, item.upnpItem->getMetaData(upnp::Property::Title), 3);
-    bindValue(pStmt, item.upnpItem->getMetaData(upnp::Property::Artist), 4);
+    bindValue(pStmt, item.title, 3);
+    bindValue(pStmt, item.artist, 4);
     performQuery(pStmt);
     
     return sqlite3_last_insert_rowid(m_pDb);
@@ -183,11 +181,11 @@ void MusicDb::updateItem(const LibraryItem& item)
         "WHERE ObjectId=?"
     );
 
-    bindValue(pStmt, item.upnpItem->getParentId(), 1);
-    bindValue(pStmt, item.upnpItem->getRefId(), 2);
+    bindValue(pStmt, item.parentId, 1);
+    bindValue(pStmt, item.refId, 2);
     bindValue(pStmt, item.name, 3);
-    bindValue(pStmt, item.upnpItem->getClassString(), 4);
-    bindValue(pStmt, item.upnpItem->getObjectId(), 5);
+    bindValue(pStmt, item.upnpClass, 4);
+    bindValue(pStmt, item.objectId, 5);
     performQuery(pStmt);
     
     pStmt = createStatement(
@@ -197,8 +195,8 @@ void MusicDb::updateItem(const LibraryItem& item)
     );
 
     bindValue(pStmt, item.modifiedTime, 1);
-    bindValue(pStmt, item.upnpItem->getTitle(), 2);
-    bindValue(pStmt, item.upnpItem->getMetaData(upnp::Property::Artist), 3);
+    bindValue(pStmt, item.title, 2);
+    bindValue(pStmt, item.artist, 3);
     bindValue(pStmt, item.path, 4);
     
     performQuery(pStmt);
@@ -281,20 +279,20 @@ ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modified
     }
 }
 
-LibraryItem MusicDb::getItem(const std::string& id)
+upnp::ItemPtr MusicDb::getItem(const std::string& id)
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     sqlite3_stmt* pStmt = createStatement(
         "SELECT o.ObjectId, o.Name, o.ParentId, o.RefId, o.Class, "
-        "m.ModifiedTime, m.FilePath, m.Artist, m.Title "
+        "m.Artist, m.Title "
         "FROM objects AS o "
         "LEFT OUTER JOIN metadata AS m ON o.MetaData = m.Id "
         "WHERE o.ObjectId = ? ");
 
-    LibraryItem item;
+    auto item = std::make_shared<upnp::Item>();
     bindValue(pStmt, id, 1);
 
-    if (performQuery(pStmt, getItemCb, &item) == 0 || item.upnpItem->getObjectId().empty())
+    if (performQuery(pStmt, getItemCb, &item) == 0 || item->getObjectId().empty())
     {
         throw std::runtime_error("No track found in db with id: " + id);
     }
@@ -302,17 +300,17 @@ LibraryItem MusicDb::getItem(const std::string& id)
     return item;
 }
 
-std::vector<LibraryItem> MusicDb::getItems(const std::string& parentId, uint32_t offset, uint32_t count)
+std::vector<upnp::ItemPtr> MusicDb::getItems(const std::string& parentId, uint32_t offset, uint32_t count)
 {
     std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
     sqlite3_stmt* pStmt = createStatement(
         "SELECT o.ObjectId, o.Name, o.ParentId, o.RefId, o.Class, "
-        "m.ModifiedTime, m.FilePath, m.Artist, m.Title "
+        "m.Artist, m.Title "
         "FROM objects AS o "
         "LEFT OUTER JOIN metadata AS m ON o.MetaData = m.Id "
         "WHERE o.ParentId = ? LIMIT ? OFFSET ?");
 
-    std::vector<LibraryItem> items;
+    std::vector<upnp::ItemPtr> items;
     bindValue(pStmt, parentId, 1);
     bindValue(pStmt, count == 0 ? -1 : count, 2);
     bindValue(pStmt, offset, 3);
@@ -669,32 +667,29 @@ static std::string getStringFromColumn(sqlite3_stmt* pStmt, int column)
 
 void MusicDb::getItemCb(sqlite3_stmt *pStmt, void *pData)
 {
-    assert(sqlite3_column_count(pStmt) == 9);
+    assert(sqlite3_column_count(pStmt) == 7);
 
-    auto& item = *reinterpret_cast<LibraryItem*>(pData);
+    auto& item = *reinterpret_cast<upnp::ItemPtr*>(pData);
 
-    item.upnpItem = std::make_shared<upnp::Item>();
-    item.upnpItem->setObjectId(getStringFromColumn(pStmt, 0));
-    item.upnpItem->setTitle(getStringFromColumn(pStmt, 1));
-    item.upnpItem->setParentId(getStringFromColumn(pStmt, 2));
-    item.upnpItem->setRefId(getStringFromColumn(pStmt, 3));
-    item.upnpItem->setClass(getStringFromColumn(pStmt, 4));
-    item.modifiedTime = sqlite3_column_int64(pStmt, 5);
-    item.path = getStringFromColumn(pStmt, 6);
-    item.upnpItem->addMetaData(upnp::Property::Artist, getStringFromColumn(pStmt, 7));
+    item->setObjectId(getStringFromColumn(pStmt, 0));
+    item->setTitle(getStringFromColumn(pStmt, 1));
+    item->setParentId(getStringFromColumn(pStmt, 2));
+    item->setRefId(getStringFromColumn(pStmt, 3));
+    item->setClass(getStringFromColumn(pStmt, 4));
+    item->addMetaData(upnp::Property::Artist, getStringFromColumn(pStmt, 5));
     
-    auto title = getStringFromColumn(pStmt, 8);
+    auto title = getStringFromColumn(pStmt, 6);
     if (!title.empty())
     {
-        item.upnpItem->setTitle(getStringFromColumn(pStmt, 8));
+        item->setTitle(getStringFromColumn(pStmt, 6));
     }
 }
 
 void MusicDb::getItemsCb(sqlite3_stmt *pStmt, void *pData)
 {
-    auto& items = *reinterpret_cast<std::vector<LibraryItem>*>(pData);
+    auto& items = *reinterpret_cast<std::vector<upnp::ItemPtr>*>(pData);
     
-    LibraryItem item;
+    auto item = std::make_shared<upnp::Item>();
     getItemCb(pStmt, &item);
     items.push_back(item);
 }

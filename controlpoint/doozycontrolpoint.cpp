@@ -97,25 +97,25 @@ void ControlPoint::GetServers(rpc::DeviceResponse& response)
     log::info("Get servers returned %d servers", devs.size());
 }
 
-static rpc::ItemClass::type convertClass(upnp::Item::Class c)
+static rpc::ItemClass::type convertClass(upnp::Class c)
 {
     switch (c)
     {
-        case upnp::Item::Class::Container:
+        case upnp::Class::Container:
             return rpc::ItemClass::Container;
-        case upnp::Item::Class::AudioContainer:
+        case upnp::Class::AudioContainer:
             return rpc::ItemClass::AudioContainer;
-        case upnp::Item::Class::VideoContainer:
+        case upnp::Class::VideoContainer:
             return rpc::ItemClass::VideoContainer;
-        case upnp::Item::Class::ImageContainer:
+        case upnp::Class::ImageContainer:
             return rpc::ItemClass::ImageContainer;
-        case upnp::Item::Class::Video:
+        case upnp::Class::Video:
             return rpc::ItemClass::VideoItem;
-        case upnp::Item::Class::Audio:
+        case upnp::Class::Audio:
             return rpc::ItemClass::AudioItem;
-        case upnp::Item::Class::Image:
+        case upnp::Class::Image:
             return rpc::ItemClass::ImageItem;
-        case upnp::Item::Class::Generic:
+        case upnp::Class::Generic:
             return rpc::ItemClass::Item;
         default:
             return rpc::ItemClass::Unknown;
@@ -151,7 +151,7 @@ void ControlPoint::Browse(rpc::BrowseResponse& response, const rpc::BrowseReques
         i.itemclass = convertClass(item->getClass());
         
         std::string url;
-        if (item->getClass() == upnp::Item::Class::AudioContainer)
+        if (item->getClass() == upnp::Class::AudioContainer)
         {
             url = item->getMetaData(upnp::Property::AlbumArt);
         }

@@ -21,6 +21,7 @@
 #include "utils/fileoperations.h"
 
 #include "upnp/upnpwebserver.h"
+#include "upnp/upnpitem.h"
 
 #include "library/musiclibraryinterface.h"
 

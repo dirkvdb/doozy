@@ -31,6 +31,9 @@
 #include "image/imageloadstoreinterface.h"
 #include "mimetypes.h"
 
+#include "upnp/upnptypes.h"
+#include "upnp/upnpitem.h"
+
 using namespace utils;
 using namespace fileops;
 
@@ -84,18 +87,19 @@ void Scanner::createInitialLayout()
     // Root Item
     LibraryItem root;
     root.name = PACKAGE_NAME;
-    root.upnpItem = std::make_shared<upnp::Item>(g_rootId, PACKAGE_NAME);
-    root.upnpItem->setChildCount(1);
-    root.upnpItem->setParentId("-1");
-    root.upnpItem->setClass(upnp::Item::Class::Container);
+    root.objectId = g_rootId;
+    root.title = PACKAGE_NAME;
+    root.parentId = "-1";
+    root.upnpClass = toString(upnp::Class::Container);
     m_LibraryDb.addItem(root);
     
     // Browse folders
     LibraryItem browse;
     browse.name = "Browse filesystem";
-    browse.upnpItem = std::make_shared<upnp::Item>(g_browseFileSystemId, "Browse filesystem");
-    browse.upnpItem->setParentId(g_rootId);
-    browse.upnpItem->setClass(upnp::Item::Class::StorageFolder);
+    browse.objectId = g_browseFileSystemId;
+    browse.title = "Browse filesystem";
+    browse.parentId = g_rootId;
+    browse.upnpClass = toString(upnp::Class::StorageFolder);
     m_LibraryDb.addItem(browse);
 }
 
@@ -124,9 +128,10 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
                 LibraryItem item;
                 item.path = entry.path();
                 item.name = fileops::getFileName(item.path);
-                item.upnpItem = std::make_shared<upnp::Item>(objectId, fileops::getFileName(entry.path()));
-                item.upnpItem->setParentId(parentId);
-                item.upnpItem->setClass(upnp::Item::Class::Container);
+                item.objectId = objectId;
+                item.title = item.name;
+                item.parentId = parentId;
+                item.upnpClass = toString(upnp::Class::Container);
 
                 m_LibraryDb.addItem(item);
                 log::debug("Add container: %s (%s) parent: %s", entry.path(), objectId, parentId);
@@ -184,32 +189,33 @@ void Scanner::onFile(const std::string& filepath, uint32_t index, const std::str
     item.path = filepath;
     item.name = fileops::getFileName(item.path);
     item.modifiedTime = info.modifyTime;
-    item.upnpItem = std::make_shared<upnp::Item>(id, getFileName(filepath));
-    item.upnpItem->setParentId(parentId);
+    item.fileSize = info.sizeInBytes;
+    
+    item.objectId = id;
+    item.parentId = parentId;
 
     switch (type)
     {
         case mime::Group::Audio:
-            item.upnpItem->setClass(upnp::Item::Class::Audio);
+            item.upnpClass = toString(upnp::Class::Audio);
             break;
         case mime::Group::Video:
-            item.upnpItem->setClass(upnp::Item::Class::Video);
+            item.upnpClass = toString(upnp::Class::Video);
             break;
         case mime::Group::Image:
-            item.upnpItem->setClass(upnp::Item::Class::Image);
+            item.upnpClass = toString(upnp::Class::Image);
             break;
         default:
             throw std::runtime_error("Unexpected mime type");
     }
 
     audio::Metadata md(filepath, audio::Metadata::ReadAudioProperties::Yes);
-    item.upnpItem->addMetaData(upnp::Property::Artist, md.getArtist());
-    item.upnpItem->addMetaData(upnp::Property::Title, md.getTitle());
-    item.upnpItem->addMetaData(upnp::Property::Album, md.getAlbum());
-    item.upnpItem->addMetaData(upnp::Property::Genre, md.getGenre());
-    item.upnpItem->addMetaData(upnp::Property::Date, std::to_string(md.getYear()));
-    item.upnpItem->addMetaData(upnp::Property::TrackNumber, std::to_string(md.getTrackNr()));
-    item.upnpItem->addMetaData(upnp::Property::StorageUsed, std::to_string(info.sizeInBytes));
+    item.artist         = md.getArtist();
+    item.title          = md.getTitle();
+    item.album          = md.getAlbum();
+    item.genre          = md.getGenre();
+    item.date           = std::to_string(md.getYear());
+    item.trackNumber    = md.getTrackNr();
     
     
 //    track.albumArtist   = md.getAlbumArtist();

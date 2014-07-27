@@ -24,6 +24,8 @@
 #include "utils/log.h"
 #include "utils/trace.h"
 
+#include "upnp/upnpitem.h"
+
 using namespace utils;
 
 namespace doozy
@@ -72,25 +74,22 @@ uint32_t FilesystemMusicLibrary::getObjectCountInContainer(const std::string& id
 
 upnp::ItemPtr FilesystemMusicLibrary::getItem(const std::string& id)
 {
-    return m_Db.getItem(id).upnpItem;
+    return m_Db.getItem(id);
 }
 
 std::vector<upnp::ItemPtr> FilesystemMusicLibrary::getItems(const std::string& parentId, uint32_t count, uint32_t offset)
 {
     auto items = m_Db.getItems(parentId, count, offset);
-
-    std::vector<upnp::ItemPtr> upnpItems;
-    std::transform(items.begin(), items.end(), std::back_inserter(upnpItems), [this] (const LibraryItem& item) {
+    for (auto& item : items)
+    {
         // add the resource urls
         upnp::Resource res;
-        res.setUrl(m_WebRoot + item.upnpItem->getObjectId());
+        res.setUrl(m_WebRoot + item->getObjectId());
         res.setProtocolInfo(upnp::ProtocolInfo("http-get:*:audio/mpeg:*"));
-        
-        item.upnpItem->addResource(res);
-        return item.upnpItem;
-    });
+        item->addResource(res);
+    }
     
-    return upnpItems;
+    return items;
 }
 
 void FilesystemMusicLibrary::scan(bool startFresh)

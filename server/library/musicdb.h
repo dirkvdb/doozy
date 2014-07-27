@@ -21,6 +21,7 @@
 #include <vector>
 #include <mutex>
 
+#include "upnp/upnpfwd.h"
 #include "library/libraryitem.h"
 
 
@@ -53,8 +54,8 @@ public:
     bool itemExists(const std::string& filepath, std::string& objectId);
     ItemStatus getItemStatus(const std::string& filepath, uint64_t modifiedTime);
 
-    LibraryItem getItem(const std::string& id);
-    std::vector<LibraryItem> getItems(const std::string& parentId, uint32_t offset, uint32_t count);
+    upnp::ItemPtr getItem(const std::string& id);
+    std::vector<upnp::ItemPtr> getItems(const std::string& parentId, uint32_t offset, uint32_t count);
     //Track getTrackWithPath(const std::string& filepath);
     std::string getItemPath(const std::string& id);
 

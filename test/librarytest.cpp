@@ -14,6 +14,7 @@
 #include "Utils/stringoperations.h"
 #include "Utils/numericoperations.h"
 
+#include "upnp/upnpitem.h"
 #include "upnp/upnphttpclient.h"
 
 #define TEST_DB "test.db"
@@ -77,7 +78,7 @@ TEST_F(LibraryTest, GetRootContainer)
     auto item = m_library->getItem("0");
     EXPECT_EQ("0", item->getObjectId());
     EXPECT_EQ("-1", item->getParentId());
-    EXPECT_EQ(upnp::Item::Class::Container, item->getClass());
+    EXPECT_EQ(upnp::Class::Container, item->getClass());
 }
 
 TEST_F(LibraryTest, GetItems)
