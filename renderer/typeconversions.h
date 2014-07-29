@@ -49,23 +49,6 @@ inline std::ostream& operator<< (std::ostream& os, const audio::PlaybackAction& 
     return os;
 }
 
-inline std::string durationToString(uint32_t durationInSecs)
-{
-    uint32_t hours = durationInSecs / 3600;
-    durationInSecs -= hours * 3600;
-
-    uint32_t minutes = durationInSecs / 60;
-    uint32_t seconds = durationInSecs % 60;
-
-
-    std::stringstream ss;
-
-    ss << std::setw(2) << std::setfill('0') << hours << ':'
-       << std::setw(2) << std::setfill('0') << minutes << ':'
-       << std::setw(2) << std::setfill('0') << seconds;
-    return ss.str();
-}
-
 template <typename T>
 inline std::string toString(const T& t)
 {

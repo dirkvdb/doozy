@@ -36,6 +36,10 @@ struct LibraryItem
     std::string     upnpClass;
     std::string     path;
     std::string     mimeType;
+    uint32_t        duration;
+    uint32_t        nrChannels;
+    uint32_t        bitrate;
+    uint32_t        sampleRate;
     uint32_t        trackNumber;
     uint32_t        discNumber;
     uint64_t        fileSize = 0;

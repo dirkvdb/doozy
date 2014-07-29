@@ -22,8 +22,10 @@
 
 #include "audio/audioplaybackfactory.h"
 #include "upnp/upnpwebserver.h"
+#include "upnp/upnputils.h"
 
 #include "typeconversions.h"
+
 #include <sstream>
 
 using namespace utils;

@@ -33,6 +33,7 @@
 
 #include "upnp/upnptypes.h"
 #include "upnp/upnpitem.h"
+#include "upnp/upnputils.h"
 
 using namespace utils;
 using namespace fileops;
@@ -219,6 +220,10 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
             item.genre          = md.getGenre();
             item.date           = std::to_string(md.getYear());
             item.trackNumber    = md.getTrackNr();
+            item.duration       = md.getDuration();
+            item.nrChannels     = md.getChannels();
+            item.sampleRate     = md.getSampleRate();
+            item.bitrate        = md.getBitRate();
         }
         catch (std::exception& e)
         {
