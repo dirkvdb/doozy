@@ -21,12 +21,23 @@
 #include <vector>
 #include "utils/threadpool.h"
 
+namespace image
+{
+    class ILoadStore;
+}
+
+namespace audio
+{
+
+struct AlbumArt;
+
+}
+
 namespace doozy
 {
 
 class Track;
 class Album;
-class AlbumArt;
 class MusicDb;
 struct LibraryItem;
 
@@ -43,14 +54,16 @@ private:
     void createInitialLayout();
     void scan(const std::string& dir, const std::string& parentId);
     void onFile(const std::string& filepath, uint64_t id, const std::string& parentId, std::vector<LibraryItem>& items);
-    void processAlbumArt(const std::string& filepath, AlbumArt& art);
+    bool processAlbumArt(const std::string& filepath, const std::string& id, const audio::AlbumArt& art);
 
-    MusicDb&                        m_libraryDb;
-    int32_t                         m_scannedFiles;
-    std::vector<std::string>        m_albumArtFilenames;
+    MusicDb&                            m_libraryDb;
+    int32_t                             m_scannedFiles;
+    std::vector<std::string>            m_albumArtFilenames;
+    std::unique_ptr<image::ILoadStore>  m_jpgLoadStore;
+    std::unique_ptr<image::ILoadStore>  m_pngLoadStore;
 
-    bool                            m_initialScan;
-    bool                            m_stop;
+    bool                                m_initialScan;
+    bool                                m_stop;
 };
 
 }

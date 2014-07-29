@@ -36,6 +36,7 @@ struct LibraryItem
     std::string     upnpClass;
     std::string     path;
     std::string     mimeType;
+    std::string     thumbnail;
     uint32_t        duration;
     uint32_t        nrChannels;
     uint32_t        bitrate;

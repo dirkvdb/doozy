@@ -180,8 +180,8 @@ void MusicDb::addItems(const std::vector<LibraryItem>& items)
     
     sqlite3_stmt* pMetaStmt = createStatement(
         "INSERT INTO metadata "
-        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist, Genre, MimeType, Duration, Channels, BitRate, SampleRate) "
-        "VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist, Genre, MimeType, Duration, Channels, BitRate, SampleRate, Thumbnail) "
+        "VALUES (NULL, ?,   ?,        ?,        ?,     ?,      ?,     ?,        ?,        ?,        ?,       ?,          ?)");
     
     sqlite3_stmt* pStmt = createStatement(
         "INSERT INTO objects "
@@ -202,6 +202,7 @@ void MusicDb::addItems(const std::vector<LibraryItem>& items)
         bindValue(pMetaStmt, item.nrChannels, 9);
         bindValue(pMetaStmt, item.bitrate, 10);
         bindValue(pMetaStmt, item.sampleRate, 11);
+        bindValue(pMetaStmt, item.thumbnail, 12);
         performQuery(pMetaStmt, false);
         
         bindValue(pStmt, item.objectId, 1);
@@ -222,8 +223,8 @@ int64_t MusicDb::addMetadata(const LibraryItem& item)
 {
     sqlite3_stmt* pStmt = createStatement(
         "INSERT INTO metadata "
-        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist, Genre, MimeType, Duration, Channels, BitRate, SampleRate) "
-        "VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist, Genre, MimeType, Duration, Channels, BitRate, SampleRate, Thumbnail) "
+        "VALUES (NULL, ?,   ?,        ?,        ?,     ?,      ?,     ?,        ?,        ?,        ?,       ?,          ?)"
     );
     
     bindValue(pStmt, item.modifiedTime, 1);
@@ -237,6 +238,7 @@ int64_t MusicDb::addMetadata(const LibraryItem& item)
     bindValue(pStmt, item.nrChannels, 9);
     bindValue(pStmt, item.bitrate, 10);
     bindValue(pStmt, item.sampleRate, 11);
+    bindValue(pStmt, item.thumbnail, 12);
     performQuery(pStmt);
     
     return sqlite3_last_insert_rowid(m_pDb);
@@ -271,36 +273,6 @@ void MusicDb::updateItem(const LibraryItem& item)
     
     performQuery(pStmt);
 }
-
-//void MusicDb::addAlbum(Album& album, AlbumArt& art)
-//{
-//    {
-//        std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-//        if (album.title.empty()) return;
-//
-//		sqlite3_stmt* pStmt = createStatement(
-//			"INSERT INTO albums "
-//			"(Id, Name, AlbumArtist, Year, Duration, DiscCount, DateAdded, CoverImage, GenreId) "
-//			"VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?);");
-//
-//		string genreId;
-//		addGenreIfNotExists(album.genre, genreId);
-//
-//		bindValue(pStmt, album.title, 1);
-//		bindValue(pStmt, album.artist, 2);
-//		bindValue(pStmt, album.year, 3);
-//		bindValue(pStmt, album.durationInSec, 4);
-//		bindValue(pStmt, uint32_t(0), 5);
-//		bindValue(pStmt, static_cast<uint64_t>(album.dateAdded), 6);
-//		art.getData().empty() ? bindValue(pStmt, "NULL", 7) : bindValue(pStmt, art.getData().data(), art.getData().size(), 7);
-//		bindValue(pStmt, genreId, 8);
-//
-//		performQuery(pStmt);
-//
-//        getIdFromTable("albums", album.title, album.id);
-//    }
-//}
-
 
 bool MusicDb::itemExists(const string& filepath, string& objectId)
 {
@@ -352,8 +324,7 @@ ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modified
 
 upnp::ItemPtr MusicDb::getItemCb(sqlite3_stmt* stmt)
 {
-    assert(sqlite3_column_count(stmt) == 14);
-
+    assert(sqlite3_column_count(stmt) == 15);
     assert(!m_webRoot.empty());
 
     auto item = std::make_shared<upnp::Item>();
@@ -378,7 +349,7 @@ upnp::ItemPtr MusicDb::getItemCb(sqlite3_stmt* stmt)
         upnp::Resource res;
         auto mimeType = getStringFromColumn(stmt, 8);
         res.setProtocolInfo(upnp::ProtocolInfo(stringops::format("http-get:*:%s:*", mimeType)));
-        res.setUrl(stringops::format("%s%s.%s", m_webRoot, item->getObjectId(), mime::extensionFromType(mime::typeFromString(mimeType))));
+        res.setUrl(stringops::format("%sMedia/%s.%s", m_webRoot, item->getObjectId(), mime::extensionFromType(mime::typeFromString(mimeType))));
         res.setSize(sqlite3_column_int64(stmt, 9));
         res.setDuration(sqlite3_column_int(stmt, 10));
         res.setNrAudioChannels(sqlite3_column_int(stmt, 11));
@@ -391,6 +362,12 @@ upnp::ItemPtr MusicDb::getItemCb(sqlite3_stmt* stmt)
     {
         item->addMetaData(upnp::Property::StorageUsed, "-1");
     }
+    
+    auto thumbnail = getStringFromColumn(stmt, 14);
+    if (!thumbnail.empty())
+    {
+        item->addMetaData(upnp::Property::AlbumArt, stringops::format("%sArtCache/%s", m_webRoot, thumbnail));
+    }
 
     return item;
 }
@@ -400,7 +377,7 @@ upnp::ItemPtr MusicDb::getItem(const std::string& id)
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     auto stmt = createStatement(
         "SELECT o.ObjectId, o.Name, o.ParentId, o.RefId, o.Class, "
-        "m.Artist, m.Title, m.Genre, m.MimeType, m.FileSize, m.Duration, m.Channels, m.BitRate, m.SampleRate "
+        "m.Artist, m.Title, m.Genre, m.MimeType, m.FileSize, m.Duration, m.Channels, m.BitRate, m.SampleRate, m.Thumbnail "
         "FROM objects AS o "
         "LEFT OUTER JOIN metadata AS m ON o.MetaData = m.Id "
         "WHERE o.ObjectId = ? ");
@@ -425,7 +402,7 @@ std::vector<upnp::ItemPtr> MusicDb::getItems(const std::string& parentId, uint32
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     auto stmt = createStatement(
         "SELECT o.ObjectId, o.Name, o.ParentId, o.RefId, o.Class, "
-        "m.Artist, m.Title, m.Genre, m.MimeType, m.FileSize, m.Duration, m.Channels, m.BitRate, m.SampleRate "
+        "m.Artist, m.Title, m.Genre, m.MimeType, m.FileSize, m.Duration, m.Channels, m.BitRate, m.SampleRate, m.Thumbnail "
         "FROM objects AS o "
         "LEFT OUTER JOIN metadata AS m ON o.MetaData = m.Id "
         "WHERE o.ParentId = ? LIMIT ? OFFSET ?");
@@ -624,8 +601,8 @@ void MusicDb::createInitialDatabase()
         "FileSize INTEGER,"
         "DateAdded INTEGER,"
         "ModifiedTime INTEGER,"
-        "FilePath TEXT UNIQUE,"
-        "CoverImage BLOB);"));
+        "Thumbnail TEXT,"
+        "FilePath TEXT UNIQUE);"));
 
     performQuery(createStatement("CREATE UNIQUE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);"));
 }
@@ -781,24 +758,6 @@ uint64_t MusicDb::getIdFromTable(const string& table, const string& name)
 //    pSearchData->subscriber.onItem(track);
 //    pSearchData->ids.insert(stringops::toNumeric<uint32_t>(track.albumId));
 //}
-
-static void getDataFromColumn(sqlite3_stmt* pStmt, int column, vector<uint8_t>& data)
-{
-	int type = sqlite3_column_type(pStmt, column);
-	if (type == SQLITE_BLOB)
-	{
-		const void* dataPtr = sqlite3_column_blob(pStmt, column);
-		int size = sqlite3_column_bytes(pStmt, column);
-		if (size == 0)
-		{
-			return;
-		}
-
-		data.resize(size);
-		memcpy(&data[0], dataPtr, size);
-	}
-}
-
 
 
 void MusicDb::addResultCb(sqlite3_stmt* pStmt, void* pData)

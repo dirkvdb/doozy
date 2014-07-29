@@ -23,6 +23,7 @@
 #include "utils/stringoperations.h"
 #include "utils/fileoperations.h"
 #include "utils/log.h"
+
 #include "subscribers.h"
 #include "doozyconfig.h"
 
@@ -41,7 +42,7 @@ using namespace fileops;
 namespace doozy
 {
 
-//static constexpr int32_t ALBUM_ART_DB_SIZE = 96;
+static constexpr int32_t ALBUM_ART_CACHE_SIZE = 128;
 static const std::string g_unknownAlbum = "Unknown Album";
 static const std::string g_unknownArtist = "Unknown Artist";
 static const std::string g_unknownTitle = "Unknown Title";
@@ -49,11 +50,14 @@ static const std::string g_variousArtists = "Various Artists";
 
 static const std::string g_rootId = "0";
 static const std::string g_browseFileSystemId = "0@1";
+static const std::string g_cacheDir = "/tmp/doozycache";
 
 Scanner::Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames)
 : m_libraryDb(db)
 , m_scannedFiles(0)
 , m_albumArtFilenames(albumArtFilenames)
+, m_jpgLoadStore(image::Factory::createLoadStore(image::Type::Jpeg))
+, m_pngLoadStore(image::Factory::createLoadStore(image::Type::Png))
 , m_initialScan(false)
 , m_stop(false)
 {
@@ -78,6 +82,8 @@ void Scanner::performScan(const std::string& libraryPath)
     {
         createInitialLayout();
     }
+    
+    fileops::createDirectoryIfNotExists(g_cacheDir);
 
     scan(libraryPath, g_browseFileSystemId);
     log::info("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_scannedFiles);
@@ -224,6 +230,11 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
             item.nrChannels     = md.getChannels();
             item.sampleRate     = md.getSampleRate();
             item.bitrate        = md.getBitRate();
+            
+            if (processAlbumArt(filepath, item.objectId, md.getAlbumArt()))
+            {
+                item.thumbnail = item.objectId + "_thumb.jpg";
+            }
         }
         catch (std::exception& e)
         {
@@ -235,10 +246,6 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
 //    track.albumArtist   = md.getAlbumArtist();
 //    track.composer      = md.getComposer();
 //    track.discNr        = md.getDiscNr();
-//    track.bitrate       = md.getBitRate();
-//    track.sampleRate    = md.getSampleRate();
-//    track.channels      = md.getChannels();
-//    track.durationInSec = md.getDuration();
 
 //    Album album;
 //    std::string albumId;
@@ -326,45 +333,46 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
     log::debug("Add Item: %s (%s parent: %s)", filepath, item.objectId, parentId);
 }
 
-void Scanner::processAlbumArt(const std::string& filepath, AlbumArt& art)
+bool Scanner::processAlbumArt(const std::string& filepath, const std::string& id, const audio::AlbumArt& art)
 {
-//    if (art.getData().empty())
-//    {
-//        //no embedded album art found, see if we can find a cover.jpg, ... file
-//        auto dir = fileops::getPathFromFilepath(filepath);
-//
-//        for (auto& filename : m_AlbumArtFilenames)
-//        {
-//            try
-//            {
-//                auto possibleAlbumArt = fileops::combinePath(dir, filename);
-//                audio::Metadata::AlbumArt artData;
-//                artData.data = fileops::readFile(possibleAlbumArt);
-//                log::debug("Art found in: %s", possibleAlbumArt);
-//
-//                art.setAlbumArt(std::move(artData));
-//            }
-//            catch (std::exception&) {}
-//        }
-//    }
-//
-//
-//    // resize the album art if it is present
-//    if (!art.getData().empty())
-//    {
-//        try
-//        {
-//            auto image = image::Factory::createFromData(art.getData());
-//            image->resize(ALBUM_ART_DB_SIZE, ALBUM_ART_DB_SIZE, image::ResizeAlgorithm::Bilinear);
-//
-//            auto pngStore = image::Factory::createLoadStore(image::Type::Png);
-//            art.getData() = pngStore->storeToMemory(*image);
-//        }
-//        catch (std::exception& e)
-//        {
-//            log::warn("Failed to scale image: %s", e.what());
-//        }
-//    }
+    // resize the album art if it is present
+    if (!art.data.empty())
+    {
+        try
+        {
+            auto image = image::Factory::createFromData(art.data); // TODO: hint the proper image type from image.format
+            image->resize(ALBUM_ART_CACHE_SIZE, ALBUM_ART_CACHE_SIZE, image::ResizeAlgorithm::Bilinear);
+            m_jpgLoadStore->storeToFile(*image, fileops::combinePath(g_cacheDir, id + "_thumb.jpg"));
+            return true;
+        }
+        catch (std::exception& e)
+        {
+            log::warn("Failed to scale image: %s", e.what());
+        }
+    }
+    else
+    {
+        //no embedded album art found, see if we can find a cover.jpg, ... file
+        auto dir = fileops::getPathFromFilepath(filepath);
+
+        for (auto& artName : m_albumArtFilenames)
+        {
+            try
+            {
+                auto possibleAlbumArt = fileops::combinePath(dir, artName);
+                if (fileops::pathExists(possibleAlbumArt))
+                {
+                    auto image = image::Factory::createFromUri(possibleAlbumArt);
+                    image->resize(ALBUM_ART_CACHE_SIZE, ALBUM_ART_CACHE_SIZE, image::ResizeAlgorithm::Bilinear);
+                    m_jpgLoadStore->storeToFile(*image, fileops::combinePath(g_cacheDir, id + "_thumb.jpg"));
+                    return true;
+                }
+            }
+            catch (std::exception&) {}
+        }
+    }
+    
+    return false;
 }
 
 }

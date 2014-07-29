@@ -177,7 +177,7 @@ static void obtainMetadata(PlayQueueItemPtr qItem)
         {
             try
             {
-                if (art.format != audio::Metadata::ImageFormat::Jpeg)
+                if (art.format != audio::ImageFormat::Jpeg)
                 {
                     convertImageToJpeg(art.data);
                 }
