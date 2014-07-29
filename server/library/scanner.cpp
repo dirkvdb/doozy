@@ -209,14 +209,24 @@ void Scanner::onFile(const std::string& filepath, uint32_t index, const std::str
             throw std::runtime_error("Unexpected mime type");
     }
 
-    audio::Metadata md(filepath, audio::Metadata::ReadAudioProperties::Yes);
-    item.artist         = md.getArtist();
-    item.title          = md.getTitle();
-    item.album          = md.getAlbum();
-    item.genre          = md.getGenre();
-    item.date           = std::to_string(md.getYear());
-    item.trackNumber    = md.getTrackNr();
-    
+    if (type == mime::Group::Audio)
+    {
+        try
+        {
+            audio::Metadata md(filepath, audio::Metadata::ReadAudioProperties::Yes);
+            item.artist         = md.getArtist();
+            item.title          = md.getTitle();
+            item.album          = md.getAlbum();
+            item.genre          = md.getGenre();
+            item.date           = std::to_string(md.getYear());
+            item.trackNumber    = md.getTrackNr();
+        }
+        catch (std::exception& e)
+        {
+            log::warn(e.what());
+        }
+        
+    }
     
 //    track.albumArtist   = md.getAlbumArtist();
 //    track.composer      = md.getComposer();
