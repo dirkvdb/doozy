@@ -219,10 +219,6 @@ ContentDirectory::ActionResult MediaServerDevice::Browse(const std::string& id, 
         {
             item->setChildCount(m_Lib->getObjectCountInContainer(item->getObjectId()));
         }
-        else
-        {
-            item->setResourceUrl(stringops::format("%sMedia/%s", m_WebServer.getWebRootUrl(), item->getObjectId()));
-        }
     }
     
     return result;

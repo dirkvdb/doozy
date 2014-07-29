@@ -26,7 +26,7 @@ namespace doozy
 FileRequestHandler::FileRequestHandler(const std::string& dbPath, const std::string& fileUrl)
 : m_db(dbPath)
 {
-    auto id = fileops::getFileName(fileUrl);
+    auto id = fileops::getFileNameWithoutExtension(fileUrl);
     auto path = m_db.getItemPath(id);
     
     m_reader.open(path);

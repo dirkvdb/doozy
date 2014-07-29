@@ -44,8 +44,11 @@ public:
     MusicDb(const std::string& dbFilepath);
     ~MusicDb();
 
-    uint32_t getObjectCount();
-    uint32_t getChildCount(const std::string& id);
+    void setWebRoot(const std::string& webRoot);
+
+    uint64_t getObjectCount();
+    uint64_t getChildCount(const std::string& id);
+    uint64_t getUniqueIdInContainer(const std::string& containerId);
 
     void addItem(const LibraryItem& item);
     void addItems(const std::vector<LibraryItem>& items);
@@ -67,12 +70,10 @@ public:
 
 private:
     typedef void (*QueryCallback)(sqlite3_stmt*, void*);
-    static void getStringCb(sqlite3_stmt* pStmt, void* pData);
-    static void getIdIntCb(sqlite3_stmt* pStmt, void* pData);
-    static void getItemsCb(sqlite3_stmt* pStmt, void* pData);
-    static void getTrackModificationTimeCb(sqlite3_stmt* pStmt, void* pData);
-    static void removeNonExistingFilesCb(sqlite3_stmt* pStmt, void* pData);
-    static void countCb(sqlite3_stmt* pStmt, void* pData);
+
+    upnp::ItemPtr getItemCb(sqlite3_stmt *pStmt);
+    uint64_t performQuery(sqlite3_stmt* pStmt, bool finalize = true, std::function<void()> cb = nullptr);
+
     static void addResultCb(sqlite3_stmt* pStmt, void* pData);
     //static void searchTracksCb(sqlite3_stmt* pStmt, void* pData);
 
@@ -81,11 +82,11 @@ private:
     int64_t addMetadata(const LibraryItem& item);
     void removeMetaData(const std::string& id);
     
-    void getIdFromTable(const std::string& table, const std::string& name, std::string& id);
-    uint32_t getIdFromTable(const std::string& table, const std::string& name);
+    std::string getIdFromTableAsString(const std::string& table, const std::string& name);
+    uint64_t getIdFromTable(const std::string& table, const std::string& name);
     void createInitialDatabase();
-    uint32_t performQuery(sqlite3_stmt* pStmt, QueryCallback cb = nullptr, void* pData = nullptr, bool finalize = true);
     sqlite3_stmt* createStatement(const char* query);
+
     void bindValue(sqlite3_stmt* pStmt, const std::string& value, int32_t index, bool copy = false);
     void bindValue(sqlite3_stmt* pStmt, uint32_t value, int32_t index);
     void bindValue(sqlite3_stmt* pStmt, int64_t value, int32_t index);
@@ -96,6 +97,7 @@ private:
     sqlite3_stmt*           m_pBeginStatement;
     sqlite3_stmt*           m_pCommitStatement;
     std::recursive_mutex    m_dbMutex;
+    std::string             m_webRoot;
 };
 
 }

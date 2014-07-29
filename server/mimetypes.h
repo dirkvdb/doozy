@@ -64,6 +64,9 @@ enum class Type
 
 Group groupFromFile(const std::string& filePath);
 Type typeFromFile(const std::string& filePath);
+Type typeFromString(const std::string& type);
+std::string extensionFromType(Type type);
+std::string toString(Type type);
 
 }
 }

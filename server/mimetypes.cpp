@@ -84,10 +84,102 @@ Type typeFromFile(const std::string& filePath)
     
     else if (ext == "jpg")  return Type::ImageJpeg;
     else if (ext == "jpeg") return Type::ImageJpeg;
+    else if (ext == "png")  return Type::ImagePng;
     else if (ext == "tiff") return Type::ImageTiff;
     else if (ext == "bmp")  return Type::ImageBmp;
     
     return Type::Other;
+}
+
+Type typeFromString(const std::string& type)
+{
+         if (type == "audio/mpeg")          return Type::AudioMp3;
+    else if (type == "audio/mp4")           return Type::AudioM4a;
+    else if (type == "audio/x-ms-wma")      return Type::AudioWma;
+    else if (type == "audio/flac")          return Type::AudioFlac;
+    else if (type == "audio/x-wav")         return Type::AudioWave;
+    else if (type == "audio/L16")           return Type::AudioPcm;
+    else if (type == "application/ogg")     return Type::AudioOgg;
+
+    else if (type == "video/avi")           return Type::VideoAvi;
+    else if (type == "video/mpeg")          return Type::VideoMpeg;
+    else if (type == "video/mp4")           return Type::VideoMp4;
+    else if (type == "video/x-ms-wmv")      return Type::VideoWmv;
+    else if (type == "video/x-matroska")    return Type::VideoMkv;
+    else if (type == "video/x-flv")         return Type::VideoFlv;
+    else if (type == "video/quicktime")     return Type::VideoMov;
+    else if (type == "video/3gpp")          return Type::Video3gp;
+    else if (type == "video/x-tivo-mpeg")   return Type::VideoTivo;
+
+    else if (type == "image/jpeg")          return Type::ImageJpeg;
+    else if (type == "image/png")           return Type::ImagePng;
+    else if (type == "image/tiff")          return Type::ImageTiff;
+    else if (type == "image/bmp")           return Type::ImageBmp;
+    
+    return Type::Other;
+}
+
+std::string extensionFromType(Type type)
+{
+    switch (type)
+    {
+    case Type::AudioMp3:    return "mp3";
+    case Type::AudioM4a:    return "mp4";
+    case Type::AudioWma:    return "wma";
+    case Type::AudioFlac:   return "flac";
+    case Type::AudioWave:   return "wav";
+    case Type::AudioPcm:    return "pcm";
+    case Type::AudioOgg:    return "ogg";
+
+    case Type::VideoAvi:    return "avi";
+    case Type::VideoMpeg:   return "mpeg";
+    case Type::VideoMp4:    return "mp4";
+    case Type::VideoWmv:    return "wmv";
+    case Type::VideoMkv:    return "mkv";
+    case Type::VideoFlv:    return "flv";
+    case Type::VideoMov:    return "mpv";
+    case Type::Video3gp:    return "3gp";
+    case Type::VideoTivo:   return "tivo";
+
+    case Type::ImageJpeg:   return "jpg";
+    case Type::ImageTiff:   return "tiff";
+    case Type::ImageBmp:    return "bmp";
+    case Type::ImagePng:    return "png";
+    default:
+        throw std::runtime_error("Unknown mime type");
+    }
+
+}
+
+std::string toString(Type type)
+{
+    switch (type)
+    {
+    case Type::AudioMp3:    return "audio/mpeg";
+    case Type::AudioM4a:    return "audio/mp4";
+    case Type::AudioWma:    return "audio/x-ms-wma";
+    case Type::AudioFlac:   return "audio/flac";
+    case Type::AudioWave:   return "audio/x-wav";
+    case Type::AudioPcm:    return "audio/L16";
+    case Type::AudioOgg:    return "application/ogg";
+
+    case Type::VideoAvi:    return "video/avi";
+    case Type::VideoMpeg:   return "video/mpeg";
+    case Type::VideoMp4:    return "video/mp4";
+    case Type::VideoWmv:    return "video/x-ms-wmv";
+    case Type::VideoMkv:    return "video/x-matroska";
+    case Type::VideoFlv:    return "video/x-flv";
+    case Type::VideoMov:    return "video/quicktime";
+    case Type::Video3gp:    return "video/3gpp";
+    case Type::VideoTivo:   return "video/x-tivo-mpeg";
+
+    case Type::ImageJpeg:   return "image/jpeg";
+    case Type::ImageTiff:   return "image/tiff";
+    case Type::ImageBmp:    return "image/bmp";
+    case Type::ImagePng:    return "image/png";
+    default:
+        throw std::runtime_error("Unknown mime type");
+    }
 }
 
 }

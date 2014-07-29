@@ -25,6 +25,7 @@ protected:
     {
         try { utils::fileops::deleteFile(TEST_DB); } catch (...) {}
         m_db.reset(new MusicDb(TEST_DB));
+        m_db->setWebRoot("http://localhost:8080/Media/");
 
         m_item.objectId = "#1";
         m_item.title = "TestItem";
@@ -55,6 +56,8 @@ protected:
         item.objectId = id;
         item.title = title;
         item.parentId = parent;
+        item.upnpClass = "object.container";
+
         return item;
     }
 
@@ -166,7 +169,7 @@ TEST_F(LibraryDatabaseTest, UpdateItem)
     m_item.parentId     = "NewParent";
     m_item.refId        = "NewRefId";
     m_item.title        = "NewTitle";
-    m_item.upnpClass    = "object.audiocontainer";
+    m_item.upnpClass    = "object.container.album.musicAlbum";
     m_item.modifiedTime = 200;
 
     m_db->updateItem(m_item);

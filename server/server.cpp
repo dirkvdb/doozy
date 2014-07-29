@@ -75,7 +75,7 @@ void Server::start()
 
         auto getInfoCb = [this] (const std::string& path) -> fileops::FileSystemEntryInfo {
             MusicDb musicDb(m_settings.getDatabaseFilePath());
-            return fileops::getFileInfo(musicDb.getItemPath(path.substr(g_mediaDir.size() + 2)));
+            return fileops::getFileInfo(musicDb.getItemPath(fileops::getFileNameWithoutExtension(path)));
         };
         
         auto requestCb = [this] (const std::string& path) {
@@ -84,7 +84,7 @@ void Server::start()
         
         webserver.addVirtualDirectory(g_mediaDir, getInfoCb, requestCb);
 
-        auto library = std::unique_ptr<IMusicLibrary>(new FilesystemMusicLibrary(m_settings));
+        auto library = std::unique_ptr<IMusicLibrary>(new FilesystemMusicLibrary(m_settings, webserver.getWebRootUrl() + "Media/"));
         MediaServerDevice dev(udn, description, advertiseInterval, webserver, std::move(library));
         dev.start();
 

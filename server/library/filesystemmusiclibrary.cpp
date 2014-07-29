@@ -31,12 +31,13 @@ using namespace utils;
 namespace doozy
 {
 
-FilesystemMusicLibrary::FilesystemMusicLibrary(const ServerSettings& settings)
+FilesystemMusicLibrary::FilesystemMusicLibrary(const ServerSettings& settings, const std::string& webRoot)
 : m_db(settings.getDatabaseFilePath())
 , m_destroy(false)
 , m_settings(settings)
 {
     utils::trace("Create FilesystemMusicLibrary");
+    m_db.setWebRoot(webRoot);
 }
 
 FilesystemMusicLibrary::~FilesystemMusicLibrary()
@@ -63,12 +64,12 @@ void FilesystemMusicLibrary::cancelScanThread()
 
 uint32_t FilesystemMusicLibrary::getObjectCount()
 {
-    return m_db.getObjectCount();
+    return static_cast<uint32_t>(m_db.getObjectCount());
 }
 
 uint32_t FilesystemMusicLibrary::getObjectCountInContainer(const std::string& id)
 {
-    return m_db.getChildCount(id);
+    return static_cast<uint32_t>(m_db.getChildCount(id));
 }
 
 upnp::ItemPtr FilesystemMusicLibrary::getItem(const std::string& id)

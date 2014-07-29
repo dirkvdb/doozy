@@ -42,15 +42,15 @@ public:
 private:
     void createInitialLayout();
     void scan(const std::string& dir, const std::string& parentId);
-    void onFile(const std::string& filepath, uint32_t index, const std::string& parentId, std::vector<LibraryItem>& items);
+    void onFile(const std::string& filepath, uint64_t id, const std::string& parentId, std::vector<LibraryItem>& items);
     void processAlbumArt(const std::string& filepath, AlbumArt& art);
 
-    MusicDb&                        m_LibraryDb;
-    int32_t                         m_ScannedFiles;
-    std::vector<std::string>        m_AlbumArtFilenames;
+    MusicDb&                        m_libraryDb;
+    int32_t                         m_scannedFiles;
+    std::vector<std::string>        m_albumArtFilenames;
 
-    bool                            m_InitialScan;
-    bool                            m_Stop;
+    bool                            m_initialScan;
+    bool                            m_stop;
 };
 
 }

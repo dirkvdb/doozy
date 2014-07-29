@@ -32,7 +32,7 @@
 #include "utils/trace.h"
 
 #include "upnp/upnpitem.h"
-
+#include "mimetypes.h"
 
 using namespace std;
 using namespace utils;
@@ -42,7 +42,35 @@ using namespace utils;
 namespace doozy
 {
 
-static std::string getStringFromColumn(sqlite3_stmt* pStmt, int column);
+namespace
+{
+
+std::string getStringFromColumn(sqlite3_stmt* pStmt, int column)
+{
+    const char* pString = reinterpret_cast<const char*>(sqlite3_column_text(pStmt, column));
+    if (pString != nullptr)
+    {
+        return pString;
+    }
+
+    return std::string();
+}
+
+std::string getStringCb(sqlite3_stmt* pStmt)
+{
+    assert(sqlite3_column_count(pStmt) == 1);
+    assert(sqlite3_column_text(pStmt, 0));
+
+    return getStringFromColumn(pStmt, 0);
+}
+
+uint64_t getCountCb(sqlite3_stmt* pStmt)
+{
+    assert(sqlite3_column_count(pStmt) == 1);
+    return sqlite3_column_int64(pStmt, 0);
+}
+
+}
 
 MusicDb::MusicDb(const string& dbFilepath)
 : m_pDb(nullptr)
@@ -78,24 +106,52 @@ MusicDb::~MusicDb()
     }
 }
 
-uint32_t MusicDb::getObjectCount()
+void MusicDb::setWebRoot(const std::string& webRoot)
+{
+    m_webRoot = webRoot;
+}
+
+uint64_t MusicDb::getObjectCount()
 {
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    uint32_t count;
-    performQuery(createStatement("SELECT COUNT(Id) FROM objects;"), countCb, &count);
+
+    auto stmt = createStatement("SELECT COUNT(Id) FROM objects");
+
+    uint64_t count;
+    performQuery(stmt, true, [&] () {
+        count = getCountCb(stmt);
+    });
 
     return count;
 }
 
-uint32_t MusicDb::getChildCount(const std::string& id)
+uint64_t MusicDb::getChildCount(const std::string& id)
 {
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    auto statement = createStatement(
+    auto stmt = createStatement(
         "SELECT Id FROM objects "
         "WHERE objects.ParentId=?");
 
-    bindValue(statement, id, 1);
-    return performQuery(statement);
+    bindValue(stmt, id, 1);
+    return performQuery(stmt);
+}
+
+uint64_t MusicDb::getUniqueIdInContainer(const std::string& containerId)
+{
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
+    auto stmt = createStatement(
+        "SELECT COUNT(Id) FROM objects "
+        "WHERE objects.ParentId=?"
+    );
+
+    bindValue(stmt, containerId, 1);
+
+    uint64_t id;
+    performQuery(stmt, true, [&] () {
+        id = getCountCb(stmt);
+    });
+
+    return id;
 }
 
 void MusicDb::addItem(const LibraryItem& item)
@@ -124,15 +180,15 @@ void MusicDb::addItems(const std::vector<LibraryItem>& items)
     
     sqlite3_stmt* pMetaStmt = createStatement(
         "INSERT INTO metadata "
-        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist) "
-        "VALUES (NULL, ?, ?, ?, ?, ?)");
+        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist, MimeType) "
+        "VALUES (NULL, ?, ?, ?, ?, ?, ?)");
     
     sqlite3_stmt* pStmt = createStatement(
         "INSERT INTO objects "
         "(Id, ObjectId, ParentId, RefId, Name, Class, MetaData) "
         "VALUES (NULL, ?, ?, ?, ?, ?, last_insert_rowid())");
 
-    performQuery(m_pBeginStatement, nullptr, nullptr, false);
+    performQuery(m_pBeginStatement, false);
     for (auto& item : items)
     {
         bindValue(pMetaStmt, item.modifiedTime, 1);
@@ -140,17 +196,18 @@ void MusicDb::addItems(const std::vector<LibraryItem>& items)
         bindValue(pMetaStmt, item.fileSize, 3);
         bindValue(pMetaStmt, item.title, 4);
         bindValue(pMetaStmt, item.artist, 5);
-        performQuery(pMetaStmt, nullptr, nullptr, false);
+        bindValue(pMetaStmt, item.mimeType, 6);
+        performQuery(pMetaStmt, false);
         
         bindValue(pStmt, item.objectId, 1);
         bindValue(pStmt, item.parentId, 2);
         bindValue(pStmt, item.refId, 3);
         bindValue(pStmt, item.name, 4);
         bindValue(pStmt, item.upnpClass, 5);
-        performQuery(pStmt, nullptr, nullptr, false);
+        performQuery(pStmt, false);
     }
     
-    performQuery(m_pCommitStatement, nullptr, nullptr, false);
+    performQuery(m_pCommitStatement, false);
     
     sqlite3_finalize(pStmt);
     sqlite3_finalize(pMetaStmt);
@@ -160,14 +217,16 @@ int64_t MusicDb::addMetadata(const LibraryItem& item)
 {
     sqlite3_stmt* pStmt = createStatement(
         "INSERT INTO metadata "
-        "(Id, ModifiedTime, FilePath, Title, Artist) "
-        "VALUES (NULL, ?, ?, ?, ?)"
+        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist, MimeType) "
+        "VALUES (NULL, ?, ?, ?, ?, ?, ?)"
     );
     
     bindValue(pStmt, item.modifiedTime, 1);
     bindValue(pStmt, item.path, 2);
-    bindValue(pStmt, item.title, 3);
-    bindValue(pStmt, item.artist, 4);
+    bindValue(pStmt, item.fileSize, 3);
+    bindValue(pStmt, item.title, 4);
+    bindValue(pStmt, item.artist, 5);
+    bindValue(pStmt, item.mimeType, 6);
     performQuery(pStmt);
     
     return sqlite3_last_insert_rowid(m_pDb);
@@ -248,7 +307,9 @@ bool MusicDb::itemExists(const string& filepath, string& objectId)
         throw runtime_error(string("Failed to bind value: ") + sqlite3_errmsg(m_pDb));
     }
 
-    auto numObjects = performQuery(pStmt, getStringCb, &objectId);
+    auto numObjects = performQuery(pStmt, true, [&] () {
+        objectId = getStringCb(pStmt);
+    });
     assert(numObjects <= 1);
     return numObjects == 1;
 }
@@ -256,16 +317,15 @@ bool MusicDb::itemExists(const string& filepath, string& objectId)
 ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modifiedTime)
 {
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    sqlite3_stmt* pStmt = createStatement("SELECT ModifiedTime FROM metadata WHERE metadata.FilePath = ?");
-    if (sqlite3_bind_text(pStmt, 1, filepath.c_str(), static_cast<int>(filepath.size()), SQLITE_STATIC) != SQLITE_OK)
-    {
-        throw runtime_error(string("Failed to bind value: ") + sqlite3_errmsg(m_pDb));
-    }
+    auto stmt = createStatement("SELECT ModifiedTime FROM metadata WHERE metadata.FilePath = ?");
+    bindValue(stmt, filepath, 1);
 
-    uint32_t dbModifiedTime;
-    int32_t numTracks = performQuery(pStmt, getTrackModificationTimeCb, &dbModifiedTime);
-    assert (numTracks <= 1);
+    uint64_t dbModifiedTime;
+    auto numTracks = performQuery(stmt, true, [&] () {
+        dbModifiedTime = sqlite3_column_int64(stmt, 0);
+    });
 
+    assert(numTracks <= 1);
     if (numTracks == 0)
     {
         return ItemStatus::DoesntExist;
@@ -280,53 +340,62 @@ ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modified
     }
 }
 
-static void getItemCb(sqlite3_stmt *pStmt, void *pData)
+upnp::ItemPtr MusicDb::getItemCb(sqlite3_stmt* stmt)
 {
-    assert(sqlite3_column_count(pStmt) == 8);
+    assert(sqlite3_column_count(stmt) == 9);
 
-    auto& item = *reinterpret_cast<upnp::ItemPtr*>(pData);
+    assert(!m_webRoot.empty());
 
-    item->setObjectId(getStringFromColumn(pStmt, 0));
-    item->setTitle(getStringFromColumn(pStmt, 1));
-    item->setParentId(getStringFromColumn(pStmt, 2));
-    item->setRefId(getStringFromColumn(pStmt, 3));
-    item->setClass(getStringFromColumn(pStmt, 4));
-    item->addMetaData(upnp::Property::Artist, getStringFromColumn(pStmt, 5));
+    auto item = std::make_shared<upnp::Item>();
+    item->setObjectId(getStringFromColumn(stmt, 0));
+    item->setTitle(getStringFromColumn(stmt, 1));
+    item->setParentId(getStringFromColumn(stmt, 2));
+    item->setRefId(getStringFromColumn(stmt, 3));
+    item->setClass(getStringFromColumn(stmt, 4));
+    item->addMetaData(upnp::Property::Artist, getStringFromColumn(stmt, 5));
 
-    auto title = getStringFromColumn(pStmt, 6);
+    auto title = getStringFromColumn(stmt, 6);
     if (!title.empty())
     {
-        item->setTitle(getStringFromColumn(pStmt, 6));
+        item->setTitle(getStringFromColumn(stmt, 6));
     }
 
     if (!item->isContainer())
     {
         // add the resource urls
         upnp::Resource res;
-        res.setProtocolInfo(upnp::ProtocolInfo("http-get:*:audio/mpeg:*"));
-        res.setSize(sqlite3_column_int64(pStmt, 7));
+        auto mimeType = getStringFromColumn(stmt, 8);
+        res.setProtocolInfo(upnp::ProtocolInfo(stringops::format("http-get:*:%s:*", mimeType)));
+        res.setSize(sqlite3_column_int64(stmt, 7));
+        res.setUrl(stringops::format("%s%s.%s", m_webRoot, item->getObjectId(), mime::extensionFromType(mime::typeFromString(mimeType))));
         item->addResource(res);
     }
     else
     {
         item->addMetaData(upnp::Property::StorageUsed, "-1");
     }
+
+    return item;
 }
 
 upnp::ItemPtr MusicDb::getItem(const std::string& id)
 {
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    sqlite3_stmt* pStmt = createStatement(
+    auto stmt = createStatement(
         "SELECT o.ObjectId, o.Name, o.ParentId, o.RefId, o.Class, "
-        "m.Artist, m.Title, m.FileSize "
+        "m.Artist, m.Title, m.FileSize, m.MimeType "
         "FROM objects AS o "
         "LEFT OUTER JOIN metadata AS m ON o.MetaData = m.Id "
         "WHERE o.ObjectId = ? ");
 
-    auto item = std::make_shared<upnp::Item>();
-    bindValue(pStmt, id, 1);
+    bindValue(stmt, id, 1);
 
-    if (performQuery(pStmt, getItemCb, &item) == 0 || item->getObjectId().empty())
+    upnp::ItemPtr item;
+    auto count = performQuery(stmt, true, [&] () {
+        item = getItemCb(stmt);
+    });
+
+    if (count == 0 || item->getObjectId().empty())
     {
         throw std::runtime_error("No track found in db with id: " + id);
     }
@@ -337,35 +406,41 @@ upnp::ItemPtr MusicDb::getItem(const std::string& id)
 std::vector<upnp::ItemPtr> MusicDb::getItems(const std::string& parentId, uint32_t offset, uint32_t count)
 {
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    sqlite3_stmt* pStmt = createStatement(
+    auto stmt = createStatement(
         "SELECT o.ObjectId, o.Name, o.ParentId, o.RefId, o.Class, "
-        "m.Artist, m.Title, m.FileSize "
+        "m.Artist, m.Title, m.FileSize, m.MimeType "
         "FROM objects AS o "
         "LEFT OUTER JOIN metadata AS m ON o.MetaData = m.Id "
         "WHERE o.ParentId = ? LIMIT ? OFFSET ?");
 
-    std::vector<upnp::ItemPtr> items;
-    bindValue(pStmt, parentId, 1);
-    bindValue(pStmt, count == 0 ? -1 : count, 2);
-    bindValue(pStmt, offset, 3);
+    bindValue(stmt, parentId, 1);
+    bindValue(stmt, count == 0 ? -1 : count, 2);
+    bindValue(stmt, offset, 3);
 
-    performQuery(pStmt, getItemsCb, &items);
+    std::vector<upnp::ItemPtr> items;
+    performQuery(stmt, true, [&] () {
+        items.push_back(getItemCb(stmt));
+    });
     return items;
 }
 
 std::string MusicDb::getItemPath(const std::string& id)
 {
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    sqlite3_stmt* pStmt = createStatement(
+    auto stmt = createStatement(
         "SELECT metadata.FilePath "
         "FROM objects "
         "LEFT OUTER JOIN metadata ON objects.MetaData = metadata.Id "
         "WHERE objects.ObjectId = ?");
 
-    bindValue(pStmt, id, 1);
+    bindValue(stmt, id, 1);
 
     std::string path;
-    if (0 == performQuery(pStmt, getStringCb, &path))
+    auto count = performQuery(stmt, true, [&] () {
+        path = getStringCb(stmt);
+    });
+
+    if (0 == count)
     {
         throw std::runtime_error("No item in database with id: " + id);
     }
@@ -393,12 +468,22 @@ void MusicDb::removeMetaData(const std::string& id)
 void MusicDb::removeNonExistingFiles()
 {
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    std::vector<std::pair<uint32_t, uint32_t>> files;
-    performQuery(createStatement(
+    auto stmt = createStatement(
         "SELECT objects.Id, objects.MetaData, metadata.FilePath "
         "FROM objects "
         "LEFT OUTER JOIN metadata ON objects.MetaData = metadata.Id"
-        ), removeNonExistingFilesCb, &files);
+    );
+
+    std::vector<std::pair<uint32_t, uint32_t>> files;
+    performQuery(stmt, true, [&] () {
+        string path = getStringFromColumn(stmt, 2);
+        if (!path.empty() && !fileops::pathExists(path))
+        {
+            uint32_t objectsId = sqlite3_column_int(stmt, 0);
+            uint32_t metaDataId = sqlite3_column_int(stmt, 1);
+            files.push_back(std::make_pair(objectsId, metaDataId));
+        }
+    });
 
     for (size_t i = 0; i < files.size(); ++i)
     {
@@ -407,22 +492,6 @@ void MusicDb::removeNonExistingFiles()
         removeMetaData(numericops::toString(files[i].second));
     }
 }
-
-void MusicDb::removeNonExistingFilesCb(sqlite3_stmt* pStmt, void* pData)
-{
-    assert(sqlite3_column_count(pStmt) == 3);
-
-    auto& ids = *reinterpret_cast<std::vector<std::pair<uint32_t, uint32_t>>*>(pData);
-
-    string path = getStringFromColumn(pStmt, 2);
-    if (!path.empty() && !fileops::pathExists(path))
-    {
-        uint32_t objectsId = sqlite3_column_int(pStmt, 0);
-        uint32_t metaDataId = sqlite3_column_int(pStmt, 1);
-        ids.push_back(std::make_pair(objectsId, metaDataId));
-    }
-}
-
 
 //class SearchTrackData
 //{
@@ -538,15 +607,15 @@ void MusicDb::createInitialDatabase()
         "FileSize INTEGER,"
         "DateAdded INTEGER,"
         "ModifiedTime INTEGER,"
-        "FilePath TEXT,"
+        "FilePath TEXT UNIQUE NOT NULL,"
         "CoverImage BLOB);"));
 
-    performQuery(createStatement("CREATE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);"));
+    performQuery(createStatement("CREATE UNIQUE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);"));
 }
 
-uint32_t MusicDb::performQuery(sqlite3_stmt* pStmt, QueryCallback cb, void* pData, bool finalize)
+uint64_t MusicDb::performQuery(sqlite3_stmt* pStmt, bool finalize, std::function<void()> cb)
 {
-    uint32_t rowCount = 0;
+    uint64_t rowCount = 0;
 
     int32_t rc;
     while ((rc = sqlite3_step(pStmt)) != SQLITE_DONE)
@@ -563,7 +632,7 @@ uint32_t MusicDb::performQuery(sqlite3_stmt* pStmt, QueryCallback cb, void* pDat
             sqlite3_finalize(pStmt);
             throw runtime_error(string("Sqlite constraint violated: ") + sqlite3_errmsg(m_pDb));
         case SQLITE_ROW:
-            if (cb != nullptr) cb(pStmt, pData);
+            if (cb) cb();
             ++rowCount;
             break;
         default:
@@ -647,73 +716,34 @@ void MusicDb::bindValue(sqlite3_stmt* pStmt, const void* pData, size_t dataSize,
     }
 }
 
-void MusicDb::getIdFromTable(const string& table, const string& name, string& id)
+std::string MusicDb::getIdFromTableAsString(const string& table, const string& name)
 {
-    stringstream query;
+    std::stringstream query;
     query << "SELECT Id FROM " << table << " WHERE Name = ?;";
-    sqlite3_stmt* pStmt = createStatement(("SELECT Id FROM " + table + " WHERE Name = ?;").c_str());
-    bindValue(pStmt, name, 1);
+    auto stmt = createStatement(("SELECT Id FROM " + table + " WHERE Name = ?;").c_str());
+    bindValue(stmt, name, 1);
 
-    id.clear();
-    performQuery(pStmt, getStringCb, &id);
-}
+    std::string id;
+    performQuery(stmt, true, [&] () {
+        id = getStringCb(stmt);
+    });
 
-uint32_t MusicDb::getIdFromTable(const string& table, const string& name)
-{
-    stringstream query;
-    query << "SELECT Id FROM " << table << " WHERE ObjectId = ?;";
-    sqlite3_stmt* pStmt = createStatement(query.str().c_str());
-    bindValue(pStmt, name, 1);
-
-    uint32_t id = 0;
-    performQuery(pStmt, getIdIntCb, &id);
     return id;
 }
 
-void MusicDb::getStringCb(sqlite3_stmt* pStmt, void* pData)
+uint64_t MusicDb::getIdFromTable(const string& table, const string& name)
 {
-    assert(sqlite3_column_count(pStmt) == 1);
-    assert(sqlite3_column_text(pStmt, 0));
+    stringstream query;
+    query << "SELECT Id FROM " << table << " WHERE ObjectId = ?;";
+    auto stmt = createStatement(query.str().c_str());
+    bindValue(stmt, name, 1);
 
-    string* pStr = reinterpret_cast<string*>(pData);
-    *pStr = reinterpret_cast<const char*>(sqlite3_column_text(pStmt, 0));
-}
+    uint64_t id = 0;
+    performQuery(stmt, true, [&] () {
+        id = sqlite3_column_int64(stmt, 0);
+    });
 
-void MusicDb::getIdIntCb(sqlite3_stmt* pStmt, void* pData)
-{
-    assert(sqlite3_column_count(pStmt) == 1);
-    assert(sqlite3_column_text(pStmt, 0));
-
-    uint32_t* pId = reinterpret_cast<uint32_t*>(pData);
-    *pId = sqlite3_column_int(pStmt, 0);
-}
-
-static std::string getStringFromColumn(sqlite3_stmt* pStmt, int column)
-{
-    const char* pString = reinterpret_cast<const char*>(sqlite3_column_text(pStmt, column));
-    if (pString != nullptr)
-    {
-        return pString;
-    }
-    
-    return std::string();
-}
-
-void MusicDb::getItemsCb(sqlite3_stmt *pStmt, void *pData)
-{
-    auto& items = *reinterpret_cast<std::vector<upnp::ItemPtr>*>(pData);
-    
-    auto item = std::make_shared<upnp::Item>();
-    getItemCb(pStmt, &item);
-    items.push_back(item);
-}
-
-void MusicDb::getTrackModificationTimeCb(sqlite3_stmt* pStmt, void* pData)
-{
-    assert(sqlite3_column_count(pStmt) == 1);
-
-    uint64_t* pModifiedTime = reinterpret_cast<uint64_t*>(pData);
-    *pModifiedTime = sqlite3_column_int64(pStmt, 0);
+    return id;
 }
 
 //void MusicDb::getTracksCb(sqlite3_stmt* pStmt, void* pData)
@@ -752,13 +782,7 @@ static void getDataFromColumn(sqlite3_stmt* pStmt, int column, vector<uint8_t>& 
 	}
 }
 
-void MusicDb::countCb(sqlite3_stmt* pStmt, void* pData)
-{
-    assert(sqlite3_column_count(pStmt) == 1);
 
-    uint32_t* pCount = reinterpret_cast<uint32_t*>(pData);
-    *pCount = sqlite3_column_int(pStmt, 0);
-}
 
 void MusicDb::addResultCb(sqlite3_stmt* pStmt, void* pData)
 {

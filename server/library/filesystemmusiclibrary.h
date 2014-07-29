@@ -35,7 +35,7 @@ class Scanner;
 class FilesystemMusicLibrary : public IMusicLibrary
 {
 public:
-    FilesystemMusicLibrary(const ServerSettings& settings);
+    FilesystemMusicLibrary(const ServerSettings& settings, const std::string& webRoot);
     ~FilesystemMusicLibrary();
 
     uint32_t getObjectCount() override;

@@ -35,6 +35,7 @@ struct LibraryItem
     std::string     date;
     std::string     upnpClass;
     std::string     path;
+    std::string     mimeType;
     uint32_t        trackNumber;
     uint32_t        discNumber;
     uint64_t        fileSize = 0;

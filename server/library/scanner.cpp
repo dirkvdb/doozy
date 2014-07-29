@@ -47,14 +47,14 @@ static const std::string g_unknownTitle = "Unknown Title";
 static const std::string g_variousArtists = "Various Artists";
 
 static const std::string g_rootId = "0";
-static const std::string g_browseFileSystemId = "@1";
+static const std::string g_browseFileSystemId = "0@1";
 
 Scanner::Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames)
-: m_LibraryDb(db)
-, m_ScannedFiles(0)
-, m_AlbumArtFilenames(albumArtFilenames)
-, m_InitialScan(false)
-, m_Stop(false)
+: m_libraryDb(db)
+, m_scannedFiles(0)
+, m_albumArtFilenames(albumArtFilenames)
+, m_initialScan(false)
+, m_stop(false)
 {
 }
 
@@ -65,21 +65,21 @@ Scanner::~Scanner()
 
 void Scanner::performScan(const std::string& libraryPath)
 {
-    m_Stop = false;
+    m_stop = false;
 
     time_t startTime = time(nullptr);
-    log::debug("Starting library scan in: %s", libraryPath);
+    log::info("Starting library scan in: %s", libraryPath);
 
-    m_InitialScan = m_LibraryDb.getObjectCount() == 0;
-    m_ScannedFiles = 0;
+    m_initialScan = m_libraryDb.getObjectCount() == 0;
+    m_scannedFiles = 0;
     
-    if (m_InitialScan)
+    if (m_initialScan)
     {
         createInitialLayout();
     }
 
     scan(libraryPath, g_browseFileSystemId);
-    log::debug("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_ScannedFiles);
+    log::info("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_scannedFiles);
 }
 
 void Scanner::createInitialLayout()
@@ -91,7 +91,7 @@ void Scanner::createInitialLayout()
     root.title = PACKAGE_NAME;
     root.parentId = "-1";
     root.upnpClass = toString(upnp::Class::Container);
-    m_LibraryDb.addItem(root);
+    m_libraryDb.addItem(root);
     
     // Browse folders
     LibraryItem browse;
@@ -100,31 +100,31 @@ void Scanner::createInitialLayout()
     browse.title = "Browse filesystem";
     browse.parentId = g_rootId;
     browse.upnpClass = toString(upnp::Class::StorageFolder);
-    m_LibraryDb.addItem(browse);
+    m_libraryDb.addItem(browse);
 }
 
 void Scanner::scan(const std::string& dir, const std::string& parentId)
 {
     std::vector<LibraryItem> items;
 
-    uint32_t index = 0;
+    auto id = m_libraryDb.getUniqueIdInContainer(parentId);
+
     for (auto& entry : Directory(dir))
     {
-        if (m_Stop)
+        if (m_stop)
         {
             break;
         }
-        
+
         auto type = entry.type();
         if (type == FileSystemEntryType::Directory)
         {
             auto path = entry.path();
             std::string objectId;
-            if (!m_LibraryDb.itemExists(entry.path(), objectId))
+            if (!m_libraryDb.itemExists(entry.path(), objectId))
             {
-                // TODO: make sure this id is unique!!
-                objectId = stringops::format("%s@%d", parentId, index++);
-            
+                objectId = stringops::format("%s@%d", parentId, id++);
+
                 LibraryItem item;
                 item.path = entry.path();
                 item.name = fileops::getFileName(item.path);
@@ -133,7 +133,7 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
                 item.parentId = parentId;
                 item.upnpClass = toString(upnp::Class::Container);
 
-                m_LibraryDb.addItem(item);
+                m_libraryDb.addItem(item);
                 log::debug("Add container: %s (%s) parent: %s", entry.path(), objectId, parentId);
             }
 
@@ -144,11 +144,11 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
             try
             {
                 auto path = entry.path();
-                onFile(path, index, parentId, items);
-                ++index;
+                onFile(path, id++, parentId, items);
             }
             catch (std::exception& e)
             {
+                --id;
                 log::error(e.what());
             }
         }
@@ -156,18 +156,18 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
 
     if (!items.empty())
     {
-        m_LibraryDb.addItems(items);
+        m_libraryDb.addItems(items);
     }
 }
 
 void Scanner::cancel()
 {
-    m_Stop = true;
+    m_stop = true;
 }
 
-void Scanner::onFile(const std::string& filepath, uint32_t index, const std::string& parentId, std::vector<LibraryItem>& items)
+void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string& parentId, std::vector<LibraryItem>& items)
 {
-    ++m_ScannedFiles;
+    ++m_scannedFiles;
 
     auto type = mime::groupFromFile(filepath);
     if (type == mime::Group::Other)
@@ -176,22 +176,21 @@ void Scanner::onFile(const std::string& filepath, uint32_t index, const std::str
     }
 
     auto info = getFileInfo(filepath);
-    auto status = m_LibraryDb.getItemStatus(filepath, info.modifyTime);
+    auto status = m_libraryDb.getItemStatus(filepath, info.modifyTime);
 
     if (status == ItemStatus::UpToDate)
     {
         return;
     }
 
-    auto id = stringops::format("%s@%d", parentId, index);
-
     LibraryItem item;
     item.path = filepath;
     item.name = fileops::getFileName(item.path);
     item.modifiedTime = info.modifyTime;
     item.fileSize = info.sizeInBytes;
+    item.mimeType = toString(mime::typeFromFile(item.path));
     
-    item.objectId = id;
+    item.objectId = stringops::format("%s@%d", parentId, id);
     item.parentId = parentId;
 
     switch (type)
@@ -319,7 +318,7 @@ void Scanner::onFile(const std::string& filepath, uint32_t index, const std::str
 //    }
 
     items.push_back(item);
-    log::debug("Add Item: %s parent: %s (%d)", filepath, parentId, index);
+    log::debug("Add Item: %s (%s parent: %s)", filepath, item.objectId, parentId);
 }
 
 void Scanner::processAlbumArt(const std::string& filepath, AlbumArt& art)
