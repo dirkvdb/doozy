@@ -31,80 +31,69 @@ using namespace utils;
 namespace doozy
 {
 
-FilesystemMusicLibrary::FilesystemMusicLibrary(const ServerSettings& settings, const std::string& webRoot)
-: m_Db(settings.getDatabaseFilePath())
-, m_WebRoot(webRoot)
-, m_Destroy(false)
-, m_Settings(settings)
+FilesystemMusicLibrary::FilesystemMusicLibrary(const ServerSettings& settings)
+: m_db(settings.getDatabaseFilePath())
+, m_destroy(false)
+, m_settings(settings)
 {
     utils::trace("Create FilesystemMusicLibrary");
 }
 
 FilesystemMusicLibrary::~FilesystemMusicLibrary()
 {
-    m_Destroy = true;
+    m_destroy = true;
     cancelScanThread();
 }
 
 void FilesystemMusicLibrary::cancelScanThread()
 {
-    if (m_ScannerThread.joinable())
+    if (m_scannerThread.joinable())
     {
         {
-            std::lock_guard<std::mutex> lock(m_ScanMutex);
-            if (m_Scanner.get())
+            std::lock_guard<std::mutex> lock(m_scanMutex);
+            if (m_scanner.get())
             {
-                m_Scanner->cancel();
+                m_scanner->cancel();
             }
         }
 
-        m_ScannerThread.join();
+        m_scannerThread.join();
     }
 }
 
 uint32_t FilesystemMusicLibrary::getObjectCount()
 {
-    return m_Db.getObjectCount();
+    return m_db.getObjectCount();
 }
 
 uint32_t FilesystemMusicLibrary::getObjectCountInContainer(const std::string& id)
 {
-    return m_Db.getChildCount(id);
+    return m_db.getChildCount(id);
 }
 
 upnp::ItemPtr FilesystemMusicLibrary::getItem(const std::string& id)
 {
-    return m_Db.getItem(id);
+    return m_db.getItem(id);
 }
 
 std::vector<upnp::ItemPtr> FilesystemMusicLibrary::getItems(const std::string& parentId, uint32_t count, uint32_t offset)
 {
-    auto items = m_Db.getItems(parentId, count, offset);
-    for (auto& item : items)
-    {
-        // add the resource urls
-        upnp::Resource res;
-        res.setUrl(m_WebRoot + item->getObjectId());
-        res.setProtocolInfo(upnp::ProtocolInfo("http-get:*:audio/mpeg:*"));
-        item->addResource(res);
-    }
-    
-    return items;
+    return m_db.getItems(parentId, count, offset);
 }
 
 void FilesystemMusicLibrary::scan(bool startFresh)
 {
-    auto libraryPath = m_Settings.getLibraryPath();
+    auto libraryPath = m_settings.getLibraryPath();
 
-    if (startFresh || (m_LibraryPath != libraryPath && !m_LibraryPath.empty()))
+    if (startFresh || (m_libraryPath != libraryPath && !m_libraryPath.empty()))
     {
-        m_Db.clearDatabase();
+        m_db.clearDatabase();
     }
 
-    m_LibraryPath = libraryPath;
+    m_libraryPath = libraryPath;
 
     cancelScanThread();
-    m_ScannerThread = std::thread(&FilesystemMusicLibrary::scannerThread, this);
+    m_scannerThread = std::thread(&FilesystemMusicLibrary::scannerThread, this);
 }
 
 //void FilesystemMusicLibrary::search(const std::string& searchString, utils::ISubscriber<const Track&>& trackSubscriber, utils::ISubscriber<const Album&>& albumSubscriber)
@@ -116,17 +105,17 @@ void FilesystemMusicLibrary::scannerThread()
 {
     try
     {
-        auto filenames = m_Settings.getAlbumArtFilenames();
+        auto filenames = m_settings.getAlbumArtFilenames();
 
         {
-            std::lock_guard<std::mutex> lock(m_ScanMutex);
-            m_Scanner.reset(new Scanner(m_Db, filenames));
+            std::lock_guard<std::mutex> lock(m_scanMutex);
+            m_scanner.reset(new Scanner(m_db, filenames));
         }
-        m_Scanner->performScan(m_LibraryPath);
+        m_scanner->performScan(m_libraryPath);
 
-        if (!m_Destroy)
+        if (!m_destroy)
         {
-            m_Db.removeNonExistingFiles();
+            m_db.removeNonExistingFiles();
         }
     }
     catch (std::exception& e)

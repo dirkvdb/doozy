@@ -80,7 +80,7 @@ MusicDb::~MusicDb()
 
 uint32_t MusicDb::getObjectCount()
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     uint32_t count;
     performQuery(createStatement("SELECT COUNT(Id) FROM objects;"), countCb, &count);
 
@@ -89,7 +89,7 @@ uint32_t MusicDb::getObjectCount()
 
 uint32_t MusicDb::getChildCount(const std::string& id)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     auto statement = createStatement(
         "SELECT Id FROM objects "
         "WHERE objects.ParentId=?");
@@ -100,7 +100,7 @@ uint32_t MusicDb::getChildCount(const std::string& id)
 
 void MusicDb::addItem(const LibraryItem& item)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     auto metaId = addMetadata(item);
     
     sqlite3_stmt* pStmt = createStatement(
@@ -120,12 +120,12 @@ void MusicDb::addItem(const LibraryItem& item)
 
 void MusicDb::addItems(const std::vector<LibraryItem>& items)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     
     sqlite3_stmt* pMetaStmt = createStatement(
         "INSERT INTO metadata "
-        "(Id, ModifiedTime, FilePath, Title, Artist) "
-        "VALUES (NULL, ?, ?, ?, ?)");
+        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist) "
+        "VALUES (NULL, ?, ?, ?, ?, ?)");
     
     sqlite3_stmt* pStmt = createStatement(
         "INSERT INTO objects "
@@ -137,8 +137,9 @@ void MusicDb::addItems(const std::vector<LibraryItem>& items)
     {
         bindValue(pMetaStmt, item.modifiedTime, 1);
         bindValue(pMetaStmt, item.path, 2);
-        bindValue(pMetaStmt, item.title, 3);
-        bindValue(pMetaStmt, item.artist, 4);
+        bindValue(pMetaStmt, item.fileSize, 3);
+        bindValue(pMetaStmt, item.title, 4);
+        bindValue(pMetaStmt, item.artist, 5);
         performQuery(pMetaStmt, nullptr, nullptr, false);
         
         bindValue(pStmt, item.objectId, 1);
@@ -174,7 +175,7 @@ int64_t MusicDb::addMetadata(const LibraryItem& item)
 
 void MusicDb::updateItem(const LibraryItem& item)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     sqlite3_stmt* pStmt = createStatement(
         "UPDATE objects "
         "SET ParentId=?, RefId=?, Name=?, Class=? "
@@ -205,7 +206,7 @@ void MusicDb::updateItem(const LibraryItem& item)
 //void MusicDb::addAlbum(Album& album, AlbumArt& art)
 //{
 //    {
-//        std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+//        std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
 //        if (album.title.empty()) return;
 //
 //		sqlite3_stmt* pStmt = createStatement(
@@ -234,7 +235,7 @@ void MusicDb::updateItem(const LibraryItem& item)
 
 bool MusicDb::itemExists(const string& filepath, string& objectId)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     sqlite3_stmt* pStmt = createStatement(
         "SELECT objects.ObjectId "
         "FROM metadata "
@@ -254,7 +255,7 @@ bool MusicDb::itemExists(const string& filepath, string& objectId)
 
 ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modifiedTime)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     sqlite3_stmt* pStmt = createStatement("SELECT ModifiedTime FROM metadata WHERE metadata.FilePath = ?");
     if (sqlite3_bind_text(pStmt, 1, filepath.c_str(), static_cast<int>(filepath.size()), SQLITE_STATIC) != SQLITE_OK)
     {
@@ -279,12 +280,45 @@ ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modified
     }
 }
 
+static void getItemCb(sqlite3_stmt *pStmt, void *pData)
+{
+    assert(sqlite3_column_count(pStmt) == 8);
+
+    auto& item = *reinterpret_cast<upnp::ItemPtr*>(pData);
+
+    item->setObjectId(getStringFromColumn(pStmt, 0));
+    item->setTitle(getStringFromColumn(pStmt, 1));
+    item->setParentId(getStringFromColumn(pStmt, 2));
+    item->setRefId(getStringFromColumn(pStmt, 3));
+    item->setClass(getStringFromColumn(pStmt, 4));
+    item->addMetaData(upnp::Property::Artist, getStringFromColumn(pStmt, 5));
+
+    auto title = getStringFromColumn(pStmt, 6);
+    if (!title.empty())
+    {
+        item->setTitle(getStringFromColumn(pStmt, 6));
+    }
+
+    if (!item->isContainer())
+    {
+        // add the resource urls
+        upnp::Resource res;
+        res.setProtocolInfo(upnp::ProtocolInfo("http-get:*:audio/mpeg:*"));
+        res.setSize(sqlite3_column_int64(pStmt, 7));
+        item->addResource(res);
+    }
+    else
+    {
+        item->addMetaData(upnp::Property::StorageUsed, "-1");
+    }
+}
+
 upnp::ItemPtr MusicDb::getItem(const std::string& id)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     sqlite3_stmt* pStmt = createStatement(
         "SELECT o.ObjectId, o.Name, o.ParentId, o.RefId, o.Class, "
-        "m.Artist, m.Title "
+        "m.Artist, m.Title, m.FileSize "
         "FROM objects AS o "
         "LEFT OUTER JOIN metadata AS m ON o.MetaData = m.Id "
         "WHERE o.ObjectId = ? ");
@@ -302,10 +336,10 @@ upnp::ItemPtr MusicDb::getItem(const std::string& id)
 
 std::vector<upnp::ItemPtr> MusicDb::getItems(const std::string& parentId, uint32_t offset, uint32_t count)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     sqlite3_stmt* pStmt = createStatement(
         "SELECT o.ObjectId, o.Name, o.ParentId, o.RefId, o.Class, "
-        "m.Artist, m.Title "
+        "m.Artist, m.Title, m.FileSize "
         "FROM objects AS o "
         "LEFT OUTER JOIN metadata AS m ON o.MetaData = m.Id "
         "WHERE o.ParentId = ? LIMIT ? OFFSET ?");
@@ -321,7 +355,7 @@ std::vector<upnp::ItemPtr> MusicDb::getItems(const std::string& parentId, uint32
 
 std::string MusicDb::getItemPath(const std::string& id)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     sqlite3_stmt* pStmt = createStatement(
         "SELECT metadata.FilePath "
         "FROM objects "
@@ -341,7 +375,7 @@ std::string MusicDb::getItemPath(const std::string& id)
 
 void MusicDb::removeItem(const std::string& id)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     sqlite3_stmt* pStmt = createStatement("DELETE from objects WHERE Id = ?");
     bindValue(pStmt, id, 1);
     performQuery(pStmt);
@@ -349,7 +383,7 @@ void MusicDb::removeItem(const std::string& id)
 
 void MusicDb::removeMetaData(const std::string& id)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     sqlite3_stmt* pStmt = createStatement("DELETE from metadata WHERE Id = ?");
     bindValue(pStmt, id, 1);
     performQuery(pStmt);
@@ -358,7 +392,7 @@ void MusicDb::removeMetaData(const std::string& id)
 
 void MusicDb::removeNonExistingFiles()
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     std::vector<std::pair<uint32_t, uint32_t>> files;
     performQuery(createStatement(
         "SELECT objects.Id, objects.MetaData, metadata.FilePath "
@@ -405,7 +439,7 @@ void MusicDb::removeNonExistingFilesCb(sqlite3_stmt* pStmt, void* pData)
 //
 //void MusicDb::searchLibrary(const std::string& search, utils::ISubscriber<const Track&>& trackSubscriber, utils::ISubscriber<const Album&>& albumSubscriber)
 //{
-//    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+//    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
 //
 //    set<uint32_t> albumIds;
 //    sqlite3_stmt* pStmt = createStatement(
@@ -463,7 +497,7 @@ void MusicDb::removeNonExistingFilesCb(sqlite3_stmt* pStmt, void* pData)
 
 void MusicDb::clearDatabase()
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     performQuery(createStatement("DROP INDEX IF EXISTS metadata.pathIndex;"));
     performQuery(createStatement("DROP TABLE IF EXISTS objects;"));
     performQuery(createStatement("DROP TABLE IF EXISTS metadata;"));
@@ -473,7 +507,7 @@ void MusicDb::clearDatabase()
 
 void MusicDb::createInitialDatabase()
 {
-    std::lock_guard<std::recursive_mutex> lock(m_DbMutex);
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     performQuery(createStatement("CREATE TABLE IF NOT EXISTS objects("
         "Id INTEGER PRIMARY KEY,"
         "ObjectId TEXT UNIQUE,"
@@ -663,26 +697,6 @@ static std::string getStringFromColumn(sqlite3_stmt* pStmt, int column)
     }
     
     return std::string();
-}
-
-void MusicDb::getItemCb(sqlite3_stmt *pStmt, void *pData)
-{
-    assert(sqlite3_column_count(pStmt) == 7);
-
-    auto& item = *reinterpret_cast<upnp::ItemPtr*>(pData);
-
-    item->setObjectId(getStringFromColumn(pStmt, 0));
-    item->setTitle(getStringFromColumn(pStmt, 1));
-    item->setParentId(getStringFromColumn(pStmt, 2));
-    item->setRefId(getStringFromColumn(pStmt, 3));
-    item->setClass(getStringFromColumn(pStmt, 4));
-    item->addMetaData(upnp::Property::Artist, getStringFromColumn(pStmt, 5));
-    
-    auto title = getStringFromColumn(pStmt, 6);
-    if (!title.empty())
-    {
-        item->setTitle(getStringFromColumn(pStmt, 6));
-    }
 }
 
 void MusicDb::getItemsCb(sqlite3_stmt *pStmt, void *pData)

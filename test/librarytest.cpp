@@ -40,7 +40,7 @@ class LibraryTest : public testing::Test
         ON_CALL(m_settings, getLibraryPath()).WillByDefault(Return(TEST_DATA_DIR));
         ON_CALL(m_settings, getAlbumArtFilenames()).WillByDefault(Return(artFilenames));
 
-        m_library.reset(new FilesystemMusicLibrary(m_settings, "http://127.0.0.1/Media/"));
+        m_library.reset(new FilesystemMusicLibrary(m_settings));
         m_library->OnScanComplete = [this] {
             m_notification.triggerEvent();
         };

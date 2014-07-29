@@ -69,7 +69,6 @@ private:
     typedef void (*QueryCallback)(sqlite3_stmt*, void*);
     static void getStringCb(sqlite3_stmt* pStmt, void* pData);
     static void getIdIntCb(sqlite3_stmt* pStmt, void* pData);
-    static void getItemCb(sqlite3_stmt *pStmt, void *pData);
     static void getItemsCb(sqlite3_stmt* pStmt, void* pData);
     static void getTrackModificationTimeCb(sqlite3_stmt* pStmt, void* pData);
     static void removeNonExistingFilesCb(sqlite3_stmt* pStmt, void* pData);
@@ -96,7 +95,7 @@ private:
     sqlite3*                m_pDb;
     sqlite3_stmt*           m_pBeginStatement;
     sqlite3_stmt*           m_pCommitStatement;
-    std::recursive_mutex    m_DbMutex;
+    std::recursive_mutex    m_dbMutex;
 };
 
 }

@@ -72,7 +72,7 @@ void Server::start()
         addServiceFileToWebserver(webserver, "ContentDirectoryDesc.xml", g_contentDirectoryService);
         addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
         //addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
-        
+
         auto getInfoCb = [this] (const std::string& path) -> fileops::FileSystemEntryInfo {
             MusicDb musicDb(m_settings.getDatabaseFilePath());
             return fileops::getFileInfo(musicDb.getItemPath(path.substr(g_mediaDir.size() + 2)));
@@ -84,7 +84,7 @@ void Server::start()
         
         webserver.addVirtualDirectory(g_mediaDir, getInfoCb, requestCb);
 
-        auto library = std::unique_ptr<IMusicLibrary>(new FilesystemMusicLibrary(m_settings, webserver.getWebRootUrl() + g_mediaDir + "/"));
+        auto library = std::unique_ptr<IMusicLibrary>(new FilesystemMusicLibrary(m_settings));
         MediaServerDevice dev(udn, description, advertiseInterval, webserver, std::move(library));
         dev.start();
 

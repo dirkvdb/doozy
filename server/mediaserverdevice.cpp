@@ -55,7 +55,7 @@ void MediaServerDevice::start()
     m_RootDevice.initialize();
     setInitialValues();
 
-    m_Lib->scan(true);
+    m_Lib->scan(false);
 }
 
 void MediaServerDevice::stop()
@@ -193,12 +193,23 @@ ContentDirectory::ActionResult MediaServerDevice::Browse(const std::string& id, 
 {
     ContentDirectory::ActionResult result;
 
-    log::debug("Browse: %s (%d - %d)", id, startIndex, count);
+    log::debug("Browse%s: %s (%d - %d)", flag == ContentDirectory::BrowseFlag::Metadata ? "Metadata" : "DirectChildren", id, startIndex, count);
 
-    result.result = m_Lib->getItems(id, startIndex, count);
-    result.updateId = 1;
-    result.totalMatches = m_Lib->getObjectCountInContainer(id);
-    result.numberReturned = static_cast<uint32_t>(result.result.size());
+    if (flag == ContentDirectory::BrowseFlag::DirectChildren)
+    {
+        result.result = m_Lib->getItems(id, startIndex, count);
+        result.updateId = 1;
+        result.totalMatches = m_Lib->getObjectCountInContainer(id);
+        result.numberReturned = static_cast<uint32_t>(result.result.size());
+    }
+    else
+    {
+        // BrowseMetaData
+        result.result.push_back(m_Lib->getItem(id));
+        result.updateId = 1;
+        result.totalMatches = 1;
+        result.numberReturned = 1;
+    }
 
     log::debug("Browse result: Update id %d (ret %d - #matches %d)", result.updateId, result.numberReturned, result.totalMatches);
     for (auto& item : result.result)
@@ -207,6 +218,10 @@ ContentDirectory::ActionResult MediaServerDevice::Browse(const std::string& id, 
         if (item->isContainer())
         {
             item->setChildCount(m_Lib->getObjectCountInContainer(item->getObjectId()));
+        }
+        else
+        {
+            item->setResourceUrl(stringops::format("%sMedia/%s", m_WebServer.getWebRootUrl(), item->getObjectId()));
         }
     }
     

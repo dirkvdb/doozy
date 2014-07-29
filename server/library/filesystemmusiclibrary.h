@@ -35,7 +35,7 @@ class Scanner;
 class FilesystemMusicLibrary : public IMusicLibrary
 {
 public:
-    FilesystemMusicLibrary(const ServerSettings& settings, const std::string& webRoot);
+    FilesystemMusicLibrary(const ServerSettings& settings);
     ~FilesystemMusicLibrary();
 
     uint32_t getObjectCount() override;
@@ -51,14 +51,13 @@ private:
     void cancelScanThread();
     void scannerThread();
 
-    MusicDb                         m_Db;
-    std::string                     m_LibraryPath;
-    std::string                     m_WebRoot;
-    std::thread                     m_ScannerThread;
-    std::mutex                      m_ScanMutex;
-    std::unique_ptr<Scanner>        m_Scanner;
-    bool                            m_Destroy;
-    const ServerSettings&           m_Settings;
+    MusicDb                         m_db;
+    std::string                     m_libraryPath;
+    std::thread                     m_scannerThread;
+    std::mutex                      m_scanMutex;
+    std::unique_ptr<Scanner>        m_scanner;
+    bool                            m_destroy;
+    const ServerSettings&           m_settings;
 };
 
 }
