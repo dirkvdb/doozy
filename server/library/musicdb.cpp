@@ -607,7 +607,7 @@ void MusicDb::createInitialDatabase()
         "FileSize INTEGER,"
         "DateAdded INTEGER,"
         "ModifiedTime INTEGER,"
-        "FilePath TEXT UNIQUE NOT NULL,"
+        "FilePath TEXT UNIQUE,"
         "CoverImage BLOB);"));
 
     performQuery(createStatement("CREATE UNIQUE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);"));

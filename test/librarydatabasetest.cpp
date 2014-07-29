@@ -51,7 +51,7 @@ protected:
     LibraryItem createItem(const std::string& id, const std::string& parent, const std::string& title)
     {
         LibraryItem item;
-        item.path = "/the/path";
+        item.path = "/the/path_" + title;
         item.name = "path";
         item.objectId = id;
         item.title = title;
