@@ -366,7 +366,7 @@ upnp::ItemPtr MusicDb::getItemCb(sqlite3_stmt* stmt)
     auto thumbnail = getStringFromColumn(stmt, 14);
     if (!thumbnail.empty())
     {
-        item->addMetaData(upnp::Property::AlbumArt, stringops::format("%sArtCache/%s", m_webRoot, thumbnail));
+        item->addMetaData(upnp::Property::AlbumArt, fileops::combinePath(m_webRoot, thumbnail));
     }
 
     return item;

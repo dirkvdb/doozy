@@ -64,9 +64,11 @@ void Server::start()
         auto description        = format(g_mediaServerDevice.c_str(), m_client.getIpAddress(), m_client.getPort(), friendlyName, udn);
         auto advertiseInterval  = 180;
 
+
         log::info("FriendlyName = %s", friendlyName);
 
-        upnp::WebServer webserver("/opt/");
+        fileops::createDirectoryIfNotExists(m_settings.getCachePath());
+        upnp::WebServer webserver(m_settings.getCachePath());
         
         webserver.addVirtualDirectory("Doozy");
         addServiceFileToWebserver(webserver, "ContentDirectoryDesc.xml", g_contentDirectoryService);

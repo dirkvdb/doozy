@@ -44,7 +44,7 @@ struct LibraryItem;
 class Scanner
 {
 public:
-    Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames);
+    Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames, const std::string& cacheDir);
     ~Scanner();
 
     void performScan(const std::string& libraryPath);
@@ -54,9 +54,11 @@ private:
     void createInitialLayout();
     void scan(const std::string& dir, const std::string& parentId);
     void onFile(const std::string& filepath, uint64_t id, const std::string& parentId, std::vector<LibraryItem>& items);
+    bool checkAlbumArt(const std::string& directoryPath, const std::string& id);
     bool processAlbumArt(const std::string& filepath, const std::string& id, const audio::AlbumArt& art);
 
     MusicDb&                            m_libraryDb;
+    std::string                         m_cacheDir;
     int32_t                             m_scannedFiles;
     std::vector<std::string>            m_albumArtFilenames;
     std::unique_ptr<image::ILoadStore>  m_jpgLoadStore;

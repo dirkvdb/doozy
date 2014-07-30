@@ -35,6 +35,8 @@ public:
     virtual std::string getUdn() const;
     virtual std::string getDatabaseFilePath() const;
     virtual std::string getLibraryPath() const;
+    virtual std::string getDataPath() const;
+    virtual std::string getCachePath() const;
     virtual std::vector<std::string> getAlbumArtFilenames() const;
 
 private:

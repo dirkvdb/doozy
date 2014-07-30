@@ -50,10 +50,10 @@ static const std::string g_variousArtists = "Various Artists";
 
 static const std::string g_rootId = "0";
 static const std::string g_browseFileSystemId = "0@1";
-static const std::string g_cacheDir = "/tmp/doozycache";
 
-Scanner::Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames)
+Scanner::Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames, const std::string& cacheDir)
 : m_libraryDb(db)
+, m_cacheDir(cacheDir)
 , m_scannedFiles(0)
 , m_albumArtFilenames(albumArtFilenames)
 , m_jpgLoadStore(image::Factory::createLoadStore(image::Type::Jpeg))
@@ -83,8 +83,6 @@ void Scanner::performScan(const std::string& libraryPath)
         createInitialLayout();
     }
     
-    fileops::createDirectoryIfNotExists(g_cacheDir);
-
     scan(libraryPath, g_browseFileSystemId);
     log::info("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_scannedFiles);
 }
@@ -139,6 +137,11 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
                 item.title = item.name;
                 item.parentId = parentId;
                 item.upnpClass = toString(upnp::Class::Container);
+
+                if (checkAlbumArt(item.path, item.objectId))
+                {
+                    item.thumbnail = item.objectId + "_thumb.jpg";
+                }
 
                 m_libraryDb.addItem(item);
                 log::debug("Add container: %s (%s) parent: %s", entry.path(), objectId, parentId);
@@ -333,6 +336,27 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
     log::debug("Add Item: %s (%s parent: %s)", filepath, item.objectId, parentId);
 }
 
+bool Scanner::checkAlbumArt(const std::string& directoryPath, const std::string& id)
+{
+    for (auto& artName : m_albumArtFilenames)
+    {
+        try
+        {
+            auto possibleAlbumArt = fileops::combinePath(directoryPath, artName);
+            if (fileops::pathExists(possibleAlbumArt))
+            {
+                auto image = image::Factory::createFromUri(possibleAlbumArt);
+                image->resize(ALBUM_ART_CACHE_SIZE, ALBUM_ART_CACHE_SIZE, image::ResizeAlgorithm::Bilinear);
+                m_jpgLoadStore->storeToFile(*image, fileops::combinePath(m_cacheDir, id + "_thumb.jpg"));
+                return true;
+            }
+        }
+        catch (std::exception&) {}
+    }
+
+    return false;
+}
+
 bool Scanner::processAlbumArt(const std::string& filepath, const std::string& id, const audio::AlbumArt& art)
 {
     // resize the album art if it is present
@@ -342,7 +366,7 @@ bool Scanner::processAlbumArt(const std::string& filepath, const std::string& id
         {
             auto image = image::Factory::createFromData(art.data); // TODO: hint the proper image type from image.format
             image->resize(ALBUM_ART_CACHE_SIZE, ALBUM_ART_CACHE_SIZE, image::ResizeAlgorithm::Bilinear);
-            m_jpgLoadStore->storeToFile(*image, fileops::combinePath(g_cacheDir, id + "_thumb.jpg"));
+            m_jpgLoadStore->storeToFile(*image, fileops::combinePath(m_cacheDir, id + "_thumb.jpg"));
             return true;
         }
         catch (std::exception& e)
@@ -353,23 +377,7 @@ bool Scanner::processAlbumArt(const std::string& filepath, const std::string& id
     else
     {
         //no embedded album art found, see if we can find a cover.jpg, ... file
-        auto dir = fileops::getPathFromFilepath(filepath);
-
-        for (auto& artName : m_albumArtFilenames)
-        {
-            try
-            {
-                auto possibleAlbumArt = fileops::combinePath(dir, artName);
-                if (fileops::pathExists(possibleAlbumArt))
-                {
-                    auto image = image::Factory::createFromUri(possibleAlbumArt);
-                    image->resize(ALBUM_ART_CACHE_SIZE, ALBUM_ART_CACHE_SIZE, image::ResizeAlgorithm::Bilinear);
-                    m_jpgLoadStore->storeToFile(*image, fileops::combinePath(g_cacheDir, id + "_thumb.jpg"));
-                    return true;
-                }
-            }
-            catch (std::exception&) {}
-        }
+        return checkAlbumArt(fileops::getPathFromFilepath(filepath), id);
     }
     
     return false;

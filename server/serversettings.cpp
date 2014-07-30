@@ -15,14 +15,18 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "serversettings.h"
+#include "utils/fileoperations.h"
 
 namespace doozy
 {
+
+using namespace utils;
 
 static const std::string g_friendlyName = "FriendlyName";
 static const std::string g_udn          = "UDN";
 static const std::string g_dbFilePath   = "DBFile";
 static const std::string g_libraryPath  = "MusicLibrary";
+static const std::string g_dataPath     = "DataDirectory";
 static const std::string g_artNames     = "AlbumArtFilenames";
 
 void ServerSettings::loadFromFile(const std::string& filepath)
@@ -42,12 +46,23 @@ std::string  ServerSettings::getUdn() const
 
 std::string  ServerSettings::getDatabaseFilePath() const
 {
-    return m_settings.get(g_dbFilePath, "./doozyserver.db");
+    return m_settings.get(g_dbFilePath, fileops::combinePath(getDataPath(), "doozyserver.db"));
 }
 
 std::string  ServerSettings::getLibraryPath() const
 {
     return m_settings.get(g_libraryPath, "/Volumes/Data/Music");
+}
+
+std::string  ServerSettings::getDataPath() const
+{
+    auto configDir = fileops::getDataDirectory();
+    return m_settings.get(g_dataPath, configDir);
+}
+
+std::string  ServerSettings::getCachePath() const
+{
+    return fileops::combinePath(getDataPath(), "ArtCache");
 }
 
 std::vector<std::string> ServerSettings::getAlbumArtFilenames() const
