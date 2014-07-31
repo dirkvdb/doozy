@@ -49,7 +49,8 @@ static const std::string g_unknownTitle = "Unknown Title";
 static const std::string g_variousArtists = "Various Artists";
 
 static const std::string g_rootId = "0";
-static const std::string g_browseFileSystemId = "0@1";
+static const std::string g_musicId = "0@1";
+static const std::string g_browseFileSystemId = "0@2";
 
 Scanner::Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames, const std::string& cacheDir)
 : m_libraryDb(db)
@@ -97,7 +98,25 @@ void Scanner::createInitialLayout()
     root.parentId = "-1";
     root.upnpClass = toString(upnp::Class::Container);
     m_libraryDb.addItem(root);
-    
+
+    // Music
+    LibraryItem music;
+    music.name = "Music";
+    music.objectId = g_musicId;
+    music.title = "Music";
+    music.parentId = g_rootId;
+    music.upnpClass = toString(upnp::Class::Container);
+    m_libraryDb.addItem(music);
+
+    // Music -> Albums
+    LibraryItem albums;
+    albums.name = "Albums";
+    albums.objectId = g_musicId + "@1";
+    albums.title = "Albums";
+    albums.parentId = music.objectId;
+    albums.upnpClass = toString(upnp::Class::Container);
+    m_libraryDb.addItem(albums);
+
     // Browse folders
     LibraryItem browse;
     browse.name = "Browse filesystem";
@@ -243,7 +262,6 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
         {
             log::warn(e.what());
         }
-        
     }
     
 //    track.albumArtist   = md.getAlbumArtist();
