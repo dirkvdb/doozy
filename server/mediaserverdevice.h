@@ -43,7 +43,7 @@ class MediaServerDevice : public upnp::IConnectionManager
                         //, public upnp::IAVTransport
 {
 public:
-    MediaServerDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, upnp::WebServer& webServer, std::unique_ptr<IMusicLibrary> library);
+    MediaServerDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, std::unique_ptr<IMusicLibrary> library);
     MediaServerDevice(const MediaServerDevice&) = delete;
     
     void start();
@@ -85,7 +85,6 @@ private:
     upnp::ConnectionManager::Service            m_ConnectionManager;
     upnp::ContentDirectory::Service             m_ContentDirectory;
     //upnp::AVTransport::Service                  m_AVTransport;
-    upnp::WebServer&                            m_WebServer;
 
     std::unique_ptr<IMusicLibrary>              m_Lib;
     

@@ -87,7 +87,7 @@ void Server::start()
         webserver.addVirtualDirectory(g_mediaDir, getInfoCb, requestCb);
 
         auto library = std::unique_ptr<IMusicLibrary>(new FilesystemMusicLibrary(m_settings, webserver.getWebRootUrl()));
-        MediaServerDevice dev(udn, description, advertiseInterval, webserver, std::move(library));
+        MediaServerDevice dev(udn, description, advertiseInterval, std::move(library));
         dev.start();
 
         std::unique_lock<std::mutex> lock(m_mutex);

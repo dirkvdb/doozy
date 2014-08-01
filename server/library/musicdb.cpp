@@ -277,21 +277,40 @@ void MusicDb::updateItem(const LibraryItem& item)
 bool MusicDb::itemExists(const string& filepath, string& objectId)
 {
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    sqlite3_stmt* pStmt = createStatement(
+    auto stmt = createStatement(
         "SELECT objects.ObjectId "
         "FROM metadata "
         "LEFT OUTER JOIN objects ON objects.MetaData = metadata.Id "
         "WHERE metadata.FilePath=?"
     );
     
-    if (sqlite3_bind_text(pStmt, 1, filepath.c_str(), static_cast<int>(filepath.size()), SQLITE_STATIC) != SQLITE_OK)
-    {
-        throw runtime_error(string("Failed to bind value: ") + sqlite3_errmsg(m_pDb));
-    }
+    bindValue(stmt, filepath, 1);
 
-    auto numObjects = performQuery(pStmt, true, [&] () {
-        objectId = getStringCb(pStmt);
+    auto numObjects = performQuery(stmt, true, [&] () {
+        objectId = getStringCb(stmt);
     });
+    assert(numObjects <= 1);
+    return numObjects == 1;
+}
+
+bool MusicDb::albumExists(const std::string& title, const std::string& artist)
+{
+    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
+    auto stmt = createStatement(
+        "SELECT COUNT(objects.Id) "
+        "FROM metadata "
+        "LEFT OUTER JOIN objects ON objects.MetaData = metadata.Id "
+        "WHERE objects.Class='container.album.musicAlbum' AND objects.Name=? AND metadata.Artist=?"
+    );
+    
+    bindValue(stmt, title, 1);
+    bindValue(stmt, artist, 2);
+
+    uint64_t numObjects = 0;
+    performQuery(stmt, true, [&] () {
+        numObjects = getCountCb(stmt);
+    });
+
     assert(numObjects <= 1);
     return numObjects == 1;
 }
@@ -602,7 +621,7 @@ void MusicDb::createInitialDatabase()
         "DateAdded INTEGER,"
         "ModifiedTime INTEGER,"
         "Thumbnail TEXT,"
-        "FilePath TEXT UNIQUE);"));
+        "FilePath TEXT);"));
 
     performQuery(createStatement("CREATE UNIQUE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);"));
 }

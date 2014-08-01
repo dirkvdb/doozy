@@ -35,12 +35,11 @@ using namespace std::placeholders;
 namespace doozy
 {
 
-MediaServerDevice::MediaServerDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, upnp::WebServer& webServer, std::unique_ptr<IMusicLibrary> library)
+MediaServerDevice::MediaServerDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds, std::unique_ptr<IMusicLibrary> library)
 : m_RootDevice(udn, descriptionXml, advertiseIntervalInSeconds)
 , m_ConnectionManager(m_RootDevice, *this)
 , m_ContentDirectory(m_RootDevice, *this)
 //, m_AVTransport(m_RootDevice, *this)
-, m_WebServer(webServer)
 , m_Lib(std::move(library))
 {
 }

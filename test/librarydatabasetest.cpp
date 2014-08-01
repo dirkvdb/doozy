@@ -60,6 +60,20 @@ protected:
 
         return item;
     }
+    
+    LibraryItem createAlbum(const std::string& index, const std::string& title, const std::string& artist)
+    {
+        LibraryItem item;
+        item.path = "/the/path_" + title;
+        item.name = title;
+        item.objectId = "0@1@1" + index;
+        item.title = title;
+        item.artist = artist;
+        item.parentId = "0@1@1";
+        item.upnpClass = "container.album.musicAlbum";
+
+        return item;
+    }
 
     std::unique_ptr<MusicDb>    m_db;
     LibraryItem                 m_item;
@@ -90,6 +104,19 @@ TEST_F(LibraryDatabaseTest, ItemExists)
     m_db->addItem(m_item);
     EXPECT_TRUE(m_db->itemExists(m_item.path, id));
     EXPECT_EQ(m_item.objectId, id);
+}
+
+TEST_F(LibraryDatabaseTest, AlbumExists)
+{
+    const std::string title = "MyTitle";
+    const std::string artist = "MyArtist";
+    
+    EXPECT_FALSE(m_db->albumExists(title, artist));
+
+    auto album = createAlbum("1", title, artist);
+    m_db->addItem(album);
+
+    EXPECT_TRUE(m_db->albumExists(title, artist));
 }
 
 TEST_F(LibraryDatabaseTest, ItemStatus)
