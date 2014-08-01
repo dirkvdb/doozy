@@ -4,6 +4,10 @@
 		"selected_items":
 		[
 			[
+				"server",
+				"serverpath"
+			],
+			[
 				"itemc",
 				"itemClass"
 			],
@@ -22,10 +26,6 @@
 			[
 				"cl",
 				"clearitems"
-			],
-			[
-				"server",
-				"serverUdn"
 			],
 			[
 				"req",
@@ -127,7 +127,7 @@
 			"file": "index.html",
 			"settings":
 			{
-				"buffer_size": 4728,
+				"buffer_size": 5068,
 				"line_ending": "Unix"
 			}
 		},
@@ -135,32 +135,18 @@
 			"file": "doozycp.js",
 			"settings":
 			{
-				"buffer_size": 5170,
+				"buffer_size": 5655,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "/Volumes/Data/Dirk/Downloads/inkness/header.php",
+			"contents": "Package Control Messages\n========================\n\nSublimeLinter:\n-------------\n\n  SublimeLinter 3.4.0\n  --------------------\n  Setting values may now contain tokens:\n  \n  - ${project}: the project's base directory, if available.\n  - ${directory}: the dirname of the current view's file.\n  - ${env:<x>}: the environment variable 'x'.\n  - ${home}: the user's $HOME directory.\n  \n  ${project} and ${directory} expansion are dependent on having a window.\n  \n  For example, here are project settings that use a project-relative path:\n  \n  {\n      \"SublimeLinter\": {\n          \"linters\": {\n              \"pylint\": {\n                  \"paths\":\n                  [\n                      \"${project}/source/\"\n                  ]\n              }\n          }\n      }\n  }\n  \n",
 			"settings":
 			{
-				"buffer_size": 5965,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gen-js/controlpoint_types.js",
-			"settings":
-			{
-				"buffer_size": 9352,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "controlpoint.thrift",
-			"settings":
-			{
-				"buffer_size": 767,
-				"line_ending": "Unix"
+				"buffer_size": 764,
+				"line_ending": "Unix",
+				"name": "Package Control Messages",
+				"scratch": true
 			}
 		}
 	],
@@ -204,7 +190,9 @@
 	},
 	"file_history":
 	[
+		"/Users/dirk/Projects/doozy/controlpoint/controlpoint.thrift",
 		"/Users/dirk/Projects/doozy/controlpoint/gen-js/controlpoint_types.js",
+		"/Volumes/Data/Dirk/Downloads/inkness/header.php",
 		"/Users/dirk/Projects/doozy/controlpoint/thrift.js",
 		"/Users/dirk/Projects/doozy/controlpoint/doozycp.js",
 		"/Users/dirk/Projects/doozy/controlpoint/index.html",
@@ -247,7 +235,7 @@
 	],
 	"find":
 	{
-		"height": 23.0
+		"height": 35.0
 	},
 	"find_in_files":
 	{
@@ -261,6 +249,8 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"web",
+			"webm",
 			"height",
 			"lg",
 			"Transport",
@@ -296,7 +286,7 @@
 			"usedComponentClassName",
 			"topLevelClassName"
 		],
-		"reverse": true,
+		"reverse": false,
 		"show_context": true,
 		"use_buffer2": true,
 		"whole_word": false,
@@ -305,7 +295,7 @@
 	"groups":
 	[
 		{
-			"selected": 3,
+			"selected": 2,
 			"sheets":
 			[
 				{
@@ -431,7 +421,9 @@
 							},
 							"codeintel_tooltips": "popup",
 							"sublime_auto_complete": true,
-							"syntax": "Packages/CSS/CSS.tmLanguage"
+							"syntax": "Packages/CSS/CSS.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -446,15 +438,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 4728,
+						"buffer_size": 5068,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3933,
-								3933
+								4402,
+								4402
 							]
 						],
 						"settings":
@@ -568,7 +560,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 669.0,
+						"translation.y": 1004.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 2,
@@ -580,15 +572,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 5170,
+						"buffer_size": 5655,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								874,
-								874
+								618,
+								618
 							]
 						],
 						"settings":
@@ -700,34 +692,6 @@
 							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 166.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "/Volumes/Data/Dirk/Downloads/inkness/header.php",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 5965,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/PHP/PHP.tmLanguage"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -737,12 +701,11 @@
 					"type": "text"
 				},
 				{
-					"buffer": 4,
-					"file": "gen-js/controlpoint_types.js",
+					"buffer": 3,
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 9352,
+						"buffer_size": 764,
 						"regions":
 						{
 						},
@@ -751,36 +714,6 @@
 							[
 								0,
 								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "controlpoint.thrift",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 767,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								229,
-								229
 							]
 						],
 						"settings":
@@ -889,15 +822,14 @@
 							},
 							"codeintel_tooltips": "popup",
 							"sublime_auto_complete": true,
-							"syntax": "Packages/ThriftSyntax/Thrift.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"word_wrap": true
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 5,
+					"stack_index": 1,
 					"type": "text"
 				}
 			]
@@ -972,7 +904,7 @@
 	{
 	},
 	"show_minimap": true,
-	"show_open_files": false,
+	"show_open_files": true,
 	"show_tabs": true,
 	"side_bar_visible": true,
 	"side_bar_width": 150.0,
