@@ -33,8 +33,6 @@ using namespace utils;
 
 std::unique_ptr<IDevice> createDevice(const std::string& deviceType, const std::string& configFile)
 {
-    log::info("Using config file: %s", configFile);
-
     if (deviceType == "server")
     {
         ServerSettings settings;

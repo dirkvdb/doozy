@@ -55,7 +55,7 @@ public:
     void updateItem(const LibraryItem& item);
 
     bool itemExists(const std::string& filepath, std::string& objectId);
-    bool albumExists(const std::string& title, const std::string& artist);
+    bool albumExists(const std::string& title, const std::string& artist, std::string& objectId);
     ItemStatus getItemStatus(const std::string& filepath, uint64_t modifiedTime);
 
     upnp::ItemPtr getItem(const std::string& id);

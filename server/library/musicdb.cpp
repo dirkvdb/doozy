@@ -293,22 +293,26 @@ bool MusicDb::itemExists(const string& filepath, string& objectId)
     return numObjects == 1;
 }
 
-bool MusicDb::albumExists(const std::string& title, const std::string& artist)
+bool MusicDb::albumExists(const std::string& title, const std::string& artist, string& objectId)
 {
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    auto stmt = createStatement(
-        "SELECT COUNT(objects.Id) "
-        "FROM metadata "
-        "LEFT OUTER JOIN objects ON objects.MetaData = metadata.Id "
-        "WHERE objects.Class='container.album.musicAlbum' AND objects.Name=? AND metadata.Artist=?"
-    );
+    std::stringstream ss;
+    ss << "SELECT objects.ObjectId "
+          "FROM metadata "
+          "LEFT OUTER JOIN objects ON objects.MetaData = metadata.Id "
+          "WHERE objects.Class='object.container.album.musicAlbum' AND objects.Name=? AND ";
+    ss << (artist.empty() ? "metadata.Artist IS NULL" : "metadata.Artist=?");
+
+    auto stmt = createStatement(ss.str().c_str());
     
     bindValue(stmt, title, 1);
-    bindValue(stmt, artist, 2);
+    if (!artist.empty())
+    {
+        bindValue(stmt, artist, 2);
+    }
 
-    uint64_t numObjects = 0;
-    performQuery(stmt, true, [&] () {
-        numObjects = getCountCb(stmt);
+    auto numObjects = performQuery(stmt, true, [&] () {
+        objectId = getStringCb(stmt);
     });
 
     assert(numObjects <= 1);
@@ -623,7 +627,7 @@ void MusicDb::createInitialDatabase()
         "Thumbnail TEXT,"
         "FilePath TEXT);"));
 
-    performQuery(createStatement("CREATE UNIQUE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);"));
+    performQuery(createStatement("CREATE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);"));
 }
 
 uint64_t MusicDb::performQuery(sqlite3_stmt* pStmt, bool finalize, std::function<void()> cb)

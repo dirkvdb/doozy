@@ -15,6 +15,7 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "serversettings.h"
+#include "utils/log.h"
 #include "utils/fileoperations.h"
 
 namespace doozy
@@ -31,7 +32,14 @@ static const std::string g_artNames     = "AlbumArtFilenames";
 
 void ServerSettings::loadFromFile(const std::string& filepath)
 {
-    m_settings.loadFromFile(filepath);
+    auto path = filepath;
+    if (path.empty())
+    {
+        path = fileops::combinePath(fileops::getConfigDirectory(), "doozyserver.cfg");
+    }
+    
+    log::info("Using config file: %s", path);
+    m_settings.loadFromFile(path);
 }
 
 std::string  ServerSettings::getFriendlyName() const

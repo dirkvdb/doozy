@@ -50,6 +50,7 @@ static const std::string g_variousArtists = "Various Artists";
 
 static const std::string g_rootId = "0";
 static const std::string g_musicId = "0@1";
+static const std::string g_albumsId = g_musicId + "@1";
 static const std::string g_browseFileSystemId = "0@2";
 
 Scanner::Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames, const std::string& cacheDir)
@@ -111,7 +112,7 @@ void Scanner::createInitialLayout()
     // Music -> Albums
     LibraryItem albums;
     albums.name = "Albums";
-    albums.objectId = g_musicId + "@1";
+    albums.objectId = g_albumsId;
     albums.title = "Albums";
     albums.parentId = music.objectId;
     albums.upnpClass = toString(upnp::Class::Container);
@@ -253,9 +254,36 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
             item.sampleRate     = md.getSampleRate();
             item.bitrate        = md.getBitRate();
             
-            if (processAlbumArt(filepath, item.objectId, md.getAlbumArt()))
+            auto art = md.getAlbumArt();
+            if (processAlbumArt(filepath, item.objectId, art))
             {
                 item.thumbnail = item.objectId + "_thumb.jpg";
+            }
+            
+            auto albumArtist = md.getAlbumArtist();            
+            if (!item.album.empty())
+            {
+                std::string albumId;
+                if (!m_libraryDb.albumExists(item.album, albumArtist, albumId))
+                {
+                    // first song we encounter of this album, add the album to the database
+                    LibraryItem album;
+                    album.objectId = stringops::format("%s@%d", g_albumsId, m_libraryDb.getUniqueIdInContainer(g_albumsId));
+                    album.parentId = g_albumsId;
+                    album.name = item.album;
+                    album.title = item.album;
+                    album.artist = albumArtist;
+                    album.date = item.date;
+                    album.upnpClass = "object.container.album.musicAlbum";
+                    
+                    if (processAlbumArt(filepath, album.objectId, art))
+                    {
+                        album.thumbnail = album.objectId + "_thumb.jpg";
+                    }
+                    
+                    m_libraryDb.addItem(album);
+                    log::debug("Add Album: %s - %s (%s)", album.artist, album.title, album.objectId);
+                }
             }
         }
         catch (std::exception& e)

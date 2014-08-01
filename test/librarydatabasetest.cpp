@@ -70,7 +70,7 @@ protected:
         item.title = title;
         item.artist = artist;
         item.parentId = "0@1@1";
-        item.upnpClass = "container.album.musicAlbum";
+        item.upnpClass = "object.container.album.musicAlbum";
 
         return item;
     }
@@ -111,13 +111,31 @@ TEST_F(LibraryDatabaseTest, AlbumExists)
     const std::string title = "MyTitle";
     const std::string artist = "MyArtist";
     
-    EXPECT_FALSE(m_db->albumExists(title, artist));
+    std::string albumId;
+    EXPECT_FALSE(m_db->albumExists(title, artist, albumId));
 
     auto album = createAlbum("1", title, artist);
     m_db->addItem(album);
 
-    EXPECT_TRUE(m_db->albumExists(title, artist));
+    EXPECT_TRUE(m_db->albumExists(title, artist, albumId));
+    EXPECT_EQ(album.objectId, albumId);
 }
+
+TEST_F(LibraryDatabaseTest, AlbumExistsNoArtist)
+{
+    const std::string title = "MyTitle";
+    const std::string artist;
+    
+    std::string albumId;
+    EXPECT_FALSE(m_db->albumExists(title, artist, albumId));
+
+    auto album = createAlbum("1", title, artist);
+    m_db->addItem(album);
+
+    EXPECT_TRUE(m_db->albumExists(title, artist, albumId));
+    EXPECT_EQ(album.objectId, albumId);
+}
+
 
 TEST_F(LibraryDatabaseTest, ItemStatus)
 {
@@ -159,7 +177,6 @@ TEST_F(LibraryDatabaseTest, AddItems)
     auto item = m_db->getItem("0");
     EXPECT_EQ("root", item->getTitle());
 }
-
 
 TEST_F(LibraryDatabaseTest, AddGetItemAmpersand)
 {
