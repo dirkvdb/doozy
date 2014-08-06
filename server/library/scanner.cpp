@@ -260,35 +260,44 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
                 item.thumbnail = item.objectId + "_thumb.jpg";
             }
             
-            auto albumArtist = md.getAlbumArtist();            
+            // Add the album for this song if it is not already added
             if (!item.album.empty())
             {
-                std::string albumId;
-                if (!m_libraryDb.albumExists(item.album, albumArtist, albumId))
+                try
                 {
-                    // first song we encounter of this album, add the album to the database
-                    LibraryItem album;
-                    album.objectId = stringops::format("%s@%d", g_albumsId, m_libraryDb.getUniqueIdInContainer(g_albumsId));
-                    album.parentId = g_albumsId;
-                    album.name = item.album;
-                    album.title = item.album;
-                    album.artist = albumArtist;
-                    album.date = item.date;
-                    album.upnpClass = "object.container.album.musicAlbum";
-                    
-                    if (processAlbumArt(filepath, album.objectId, art))
+                    auto albumArtist = md.getAlbumArtist();
+                
+                    std::string albumId;
+                    if (!m_libraryDb.albumExists(item.album, albumArtist, albumId))
                     {
-                        album.thumbnail = album.objectId + "_thumb.jpg";
+                        // first song we encounter of this album, add the album to the database
+                        LibraryItem album;
+                        album.objectId  = stringops::format("%s@%d", g_albumsId, m_libraryDb.getUniqueIdInContainer(g_albumsId));
+                        album.parentId  = g_albumsId;
+                        album.name      = item.album;
+                        album.title     = item.album;
+                        album.artist    = albumArtist;
+                        album.date      = item.date;
+                        album.upnpClass = "object.container.album.musicAlbum";
+                        
+                        if (processAlbumArt(filepath, album.objectId, art))
+                        {
+                            album.thumbnail = album.objectId + "_thumb.jpg";
+                        }
+                        
+                        m_libraryDb.addItem(album);
+                        log::debug("Add Album: %s - %s (%s)", album.artist, album.title, album.objectId);
                     }
-                    
-                    m_libraryDb.addItem(album);
-                    log::debug("Add Album: %s - %s (%s)", album.artist, album.title, album.objectId);
+                }
+                catch (std::exception& e)
+                {
+                    log::warn("Failed to add album: %s", e.what());
                 }
             }
         }
         catch (std::exception& e)
         {
-            log::warn(e.what());
+            log::warn("Failed to add item: %s", e.what());
         }
     }
     
