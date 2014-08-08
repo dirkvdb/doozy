@@ -10,6 +10,8 @@ SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Wall -Wfatal-errors")
 INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11-connector-sqlite3/include
     ${CMAKE_CURRENT_BINARY_DIR}
     ${IMAGE_INCLUDE_DIRS}
     ${AUDIO_INCLUDE_DIRS}
@@ -17,6 +19,12 @@ INCLUDE_DIRECTORIES(
     ${SQLITE_INCLUDE_DIRS}
     ${UPNPFRAMEWORK_INCLUDE_DIRS}
 )
+
+LINK_DIRECTORIES(
+    ${SQLITE_LINK_DIRECTORIES}
+)
+
+SET (SERVER_LIBRARIES doozyserver sqlpp11-connector-sqlite3 ${SQLITE_LIBRARIES})
 
 ADD_LIBRARY(doozyserver
     filerequesthandler.h				filerequesthandler.cpp

@@ -28,6 +28,16 @@
 struct sqlite3;
 struct sqlite3_stmt;
 
+namespace sqlpp
+{
+namespace sqlite3
+{
+
+class connection;
+
+}
+}
+
 namespace doozy
 {
 
@@ -60,7 +70,6 @@ public:
 
     upnp::ItemPtr getItem(const std::string& id);
     std::vector<upnp::ItemPtr> getItems(const std::string& parentId, uint32_t offset, uint32_t count);
-    //Track getTrackWithPath(const std::string& filepath);
     std::string getItemPath(const std::string& id);
 
     void removeItem(const std::string& id);
@@ -72,7 +81,8 @@ public:
 private:
     typedef void (*QueryCallback)(sqlite3_stmt*, void*);
 
-    upnp::ItemPtr getItemCb(sqlite3_stmt *pStmt);
+    template <typename T>
+    upnp::ItemPtr parseItem(const T& row);
     uint64_t performQuery(sqlite3_stmt* pStmt, bool finalize = true, std::function<void()> cb = nullptr);
 
     static void addResultCb(sqlite3_stmt* pStmt, void* pData);
@@ -81,7 +91,7 @@ private:
     static int32_t busyCb(void* pData, int32_t retries);
 
     int64_t addMetadata(const LibraryItem& item);
-    void removeMetaData(const std::string& id);
+    void removeMetaData(int64_t id);
     
     std::string getIdFromTableAsString(const std::string& table, const std::string& name);
     uint64_t getIdFromTable(const std::string& table, const std::string& name);
@@ -93,6 +103,8 @@ private:
     void bindValue(sqlite3_stmt* pStmt, int64_t value, int32_t index);
     void bindValue(sqlite3_stmt* pStmt, uint64_t value, int32_t index);
     void bindValue(sqlite3_stmt* pStmt, const void* pData, size_t dataSize, int32_t index);
+
+    std::unique_ptr<sqlpp::sqlite3::connection> m_db;
 
     sqlite3*                m_pDb;
     sqlite3_stmt*           m_pBeginStatement;

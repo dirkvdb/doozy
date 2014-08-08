@@ -24,15 +24,18 @@
 #include <set>
 #include <map>
 
-#include "subscribers.h"
 #include "utils/fileoperations.h"
 #include "utils/stringoperations.h"
 #include "utils/numericoperations.h"
 #include "utils/log.h"
 #include "utils/trace.h"
 
+#include <sqlpp11/sqlpp11.h>
+#include <sqlpp11/sqlite3/sqlite3.h>
+
 #include "upnp/upnpitem.h"
 #include "mimetypes.h"
+#include "doozyscheme.h"
 
 using namespace std;
 using namespace utils;
@@ -42,8 +45,15 @@ using namespace utils;
 namespace doozy
 {
 
+namespace sql = sqlpp::sqlite3;
+
 namespace
 {
+
+doozy::Objects objects;
+doozy::Metadata metadata;
+
+SQLPP_ALIAS_PROVIDER(numObjects);
 
 std::string getStringFromColumn(sqlite3_stmt* pStmt, int column)
 {
@@ -64,10 +74,16 @@ std::string getStringCb(sqlite3_stmt* pStmt)
     return getStringFromColumn(pStmt, 0);
 }
 
-uint64_t getCountCb(sqlite3_stmt* pStmt)
+template <typename T>
+bool getIdFromResultIfExists(const T& result, std::string& id)
 {
-    assert(sqlite3_column_count(pStmt) == 1);
-    return sqlite3_column_int64(pStmt, 0);
+    bool hasResults = !result.empty();
+    if (hasResults)
+    {
+        id = result.front().ObjectId;
+    }
+    
+    return hasResults;
 }
 
 }
@@ -76,6 +92,13 @@ MusicDb::MusicDb(const string& dbFilepath)
 : m_pDb(nullptr)
 {
     utils::trace("Create Music database");
+    
+    auto config = std::make_shared<sql::connection_config>();
+    config->path_to_database = dbFilepath;
+    config->flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    config->debug = true;
+    
+    m_db.reset(new sql::connection(config));
 
     if (sqlite3_open(dbFilepath.c_str(), &m_pDb) != SQLITE_OK)
     {
@@ -113,271 +136,231 @@ void MusicDb::setWebRoot(const std::string& webRoot)
 
 uint64_t MusicDb::getObjectCount()
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-
-    auto stmt = createStatement("SELECT COUNT(Id) FROM objects");
-
-    uint64_t count;
-    performQuery(stmt, true, [&] () {
-        count = getCountCb(stmt);
-    });
-
-    return count;
+    return m_db->run(
+        select(count(objects.Id).as(numObjects))
+        .from(objects)
+        .where(true)
+    ).front().numObjects;
 }
 
 uint64_t MusicDb::getChildCount(const std::string& id)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    auto stmt = createStatement(
-        "SELECT Id FROM objects "
-        "WHERE objects.ParentId=?");
-
-    bindValue(stmt, id, 1);
-    return performQuery(stmt);
+    return m_db->run(
+        select(count(objects.Id).as(numObjects))
+        .from(objects)
+        .where(objects.ParentId == id)
+    ).front().numObjects;
 }
 
 uint64_t MusicDb::getUniqueIdInContainer(const std::string& containerId)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    auto stmt = createStatement(
-        "SELECT COUNT(Id) FROM objects "
-        "WHERE objects.ParentId=?"
-    );
-
-    bindValue(stmt, containerId, 1);
-
-    uint64_t id;
-    performQuery(stmt, true, [&] () {
-        id = getCountCb(stmt);
-    });
-
-    return id;
+    return m_db->run(
+        select(count(objects.Id).as(numObjects))
+        .from(objects)
+        .where(objects.ParentId == containerId)
+    ).front().numObjects;
 }
 
 void MusicDb::addItem(const LibraryItem& item)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     auto metaId = addMetadata(item);
-    
-    sqlite3_stmt* pStmt = createStatement(
-        "INSERT INTO objects "
-        "(Id, ObjectId, ParentId, RefId, Name, Class, MetaData) "
-        "VALUES (NULL, ?, ?, ?, ?, ?, ?)");
 
-    // create copies of temporary values, the query keeps a pointer to it
-    bindValue(pStmt, item.objectId, 1);
-    bindValue(pStmt, item.parentId, 2);
-    bindValue(pStmt, item.refId, 3);
-    bindValue(pStmt, item.name, 4);
-    bindValue(pStmt, item.upnpClass, 5);
-    bindValue(pStmt, metaId, 6);
-    performQuery(pStmt);
+    auto insertion = insert_into(objects).columns(objects.ObjectId, objects.ParentId, objects.RefId, objects.Name, objects.Class, objects.MetaData);
+    insertion.values.add(objects.ObjectId   = item.objectId,
+                         objects.ParentId   = sqlpp::tvin(item.parentId),
+                         objects.RefId      = sqlpp::tvin(item.refId),
+                         objects.Name       = item.name,
+                         objects.Class      = sqlpp::tvin(item.upnpClass),
+                         objects.MetaData   = metaId);
+    
+    m_db->run(insertion);
 }
 
 void MusicDb::addItems(const std::vector<LibraryItem>& items)
 {
     std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
     
-    sqlite3_stmt* pMetaStmt = createStatement(
-        "INSERT INTO metadata "
-        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist, Genre, MimeType, Duration, Channels, BitRate, SampleRate, Thumbnail) "
-        "VALUES (NULL, ?,   ?,        ?,        ?,     ?,      ?,     ?,        ?,        ?,        ?,       ?,          ?)");
+//    sqlite3_stmt* pMetaStmt = createStatement(
+//        "INSERT INTO metadata "
+//        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist, Genre, MimeType, Duration, Channels, BitRate, SampleRate, Thumbnail) "
+//        "VALUES (NULL, ?,   ?,        ?,        ?,     ?,      ?,     ?,        ?,        ?,        ?,       ?,          ?)");
+//    
+//    sqlite3_stmt* pStmt = createStatement(
+//        "INSERT INTO objects "
+//        "(Id, ObjectId, ParentId, RefId, Name, Class, MetaData) "
+//        "VALUES (NULL, ?, ?, ?, ?, ?, last_insert_rowid())");
     
-    sqlite3_stmt* pStmt = createStatement(
-        "INSERT INTO objects "
-        "(Id, ObjectId, ParentId, RefId, Name, Class, MetaData) "
-        "VALUES (NULL, ?, ?, ?, ?, ?, last_insert_rowid())");
+    auto preparedItemAdd = m_db->prepare(
+        insert_into(objects).set(
+            objects.ObjectId    = parameter(objects.ObjectId),
+            objects.ParentId    = parameter(objects.ParentId),
+            objects.RefId       = parameter(objects.RefId),
+            objects.Name        = parameter(objects.Name),
+            objects.Class       = parameter(objects.Class),
+            objects.MetaData    = sqlpp::verbatim<sqlpp::integer>("last_insert_rowid()")
+        )
+    );
 
-    performQuery(m_pBeginStatement, false);
+    //m_db->execute("BEGIN");
+    //performQuery(m_pBeginStatement, false);
     for (auto& item : items)
     {
-        bindValue(pMetaStmt, item.modifiedTime, 1);
-        bindValue(pMetaStmt, item.path, 2);
-        bindValue(pMetaStmt, item.fileSize, 3);
-        bindValue(pMetaStmt, item.title, 4);
-        bindValue(pMetaStmt, item.artist, 5);
-        bindValue(pMetaStmt, item.genre, 6);
-        bindValue(pMetaStmt, item.mimeType, 7);
-        bindValue(pMetaStmt, item.duration, 8);
-        bindValue(pMetaStmt, item.nrChannels, 9);
-        bindValue(pMetaStmt, item.bitrate, 10);
-        bindValue(pMetaStmt, item.sampleRate, 11);
-        bindValue(pMetaStmt, item.thumbnail, 12);
-        performQuery(pMetaStmt, false);
-        
-        bindValue(pStmt, item.objectId, 1);
-        bindValue(pStmt, item.parentId, 2);
-        bindValue(pStmt, item.refId, 3);
-        bindValue(pStmt, item.name, 4);
-        bindValue(pStmt, item.upnpClass, 5);
-        performQuery(pStmt, false);
+        addMetadata(item);
+
+        preparedItemAdd.params.ObjectId = item.objectId;
+        preparedItemAdd.params.ParentId = item.parentId;
+        preparedItemAdd.params.RefId    = item.refId;
+        preparedItemAdd.params.Name     = item.name;
+        preparedItemAdd.params.Class    = item.upnpClass;
+        m_db->run(preparedItemAdd);
     }
     
-    performQuery(m_pCommitStatement, false);
+    //performQuery(m_pCommitStatement, false);
+    //m_db->execute("END");
     
-    sqlite3_finalize(pStmt);
-    sqlite3_finalize(pMetaStmt);
+    //sqlite3_finalize(pStmt);
+    //sqlite3_finalize(pMetaStmt);
 }
 
 int64_t MusicDb::addMetadata(const LibraryItem& item)
 {
-    sqlite3_stmt* pStmt = createStatement(
-        "INSERT INTO metadata "
-        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist, Genre, MimeType, Duration, Channels, BitRate, SampleRate, Thumbnail) "
-        "VALUES (NULL, ?,   ?,        ?,        ?,     ?,      ?,     ?,        ?,        ?,        ?,       ?,          ?)"
-    );
+    auto insertion = insert_into(metadata).columns(metadata.ModifiedTime,
+                                                   metadata.FilePath,
+                                                   metadata.FileSize,
+                                                   metadata.Title,
+                                                   metadata.Artist,
+                                                   metadata.Genre,
+                                                   metadata.MimeType,
+                                                   metadata.Duration,
+                                                   metadata.Channels,
+                                                   metadata.BitRate,
+                                                   metadata.SampleRate,
+                                                   metadata.Thumbnail);
     
-    bindValue(pStmt, item.modifiedTime, 1);
-    bindValue(pStmt, item.path, 2);
-    bindValue(pStmt, item.fileSize, 3);
-    bindValue(pStmt, item.title, 4);
-    bindValue(pStmt, item.artist, 5);
-    bindValue(pStmt, item.genre, 6);
-    bindValue(pStmt, item.mimeType, 7);
-    bindValue(pStmt, item.duration, 8);
-    bindValue(pStmt, item.nrChannels, 9);
-    bindValue(pStmt, item.bitrate, 10);
-    bindValue(pStmt, item.sampleRate, 11);
-    bindValue(pStmt, item.thumbnail, 12);
-    performQuery(pStmt);
+    insertion.values.add(metadata.ModifiedTime  = static_cast<int64_t>(item.modifiedTime),
+                         metadata.FilePath      = sqlpp::tvin(item.path),
+                         metadata.FileSize      = static_cast<int64_t>(item.fileSize),
+                         metadata.Title         = sqlpp::tvin(item.title),
+                         metadata.Artist        = sqlpp::tvin(item.artist),
+                         metadata.Genre         = sqlpp::tvin(item.genre),
+                         metadata.MimeType      = sqlpp::tvin(item.mimeType),
+                         metadata.Duration      = item.duration,
+                         metadata.Channels      = item.nrChannels,
+                         metadata.BitRate       = item.bitrate,
+                         metadata.SampleRate    = item.sampleRate,
+                         metadata.Thumbnail     = sqlpp::tvin(item.thumbnail));
     
-    return sqlite3_last_insert_rowid(m_pDb);
+    return m_db->run(insertion);
 }
 
 void MusicDb::updateItem(const LibraryItem& item)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    sqlite3_stmt* pStmt = createStatement(
-        "UPDATE objects "
-        "SET ParentId=?, RefId=?, Name=?, Class=? "
-        "WHERE ObjectId=?"
-    );
-
-    bindValue(pStmt, item.parentId, 1);
-    bindValue(pStmt, item.refId, 2);
-    bindValue(pStmt, item.name, 3);
-    bindValue(pStmt, item.upnpClass, 4);
-    bindValue(pStmt, item.objectId, 5);
-    performQuery(pStmt);
+    m_db->run(update(objects).set(
+        objects.ObjectId   = item.objectId,
+        objects.ParentId   = sqlpp::tvin(item.parentId),
+        objects.RefId      = sqlpp::tvin(item.refId),
+        objects.Name       = item.name,
+        objects.Class      = sqlpp::tvin(item.upnpClass)
+    ).where(true));
     
-    pStmt = createStatement(
-        "UPDATE metadata "
-        "SET ModifiedTime=?, Title=?, Artist=?"
-        "WHERE FilePath=?"
-    );
-
-    bindValue(pStmt, item.modifiedTime, 1);
-    bindValue(pStmt, item.title, 2);
-    bindValue(pStmt, item.artist, 3);
-    bindValue(pStmt, item.path, 4);
-    
-    performQuery(pStmt);
+    m_db->run(update(metadata).set(
+        metadata.ModifiedTime  = static_cast<int64_t>(item.modifiedTime),
+        metadata.FilePath      = sqlpp::tvin(item.path),
+        metadata.FileSize      = static_cast<int64_t>(item.fileSize),
+        metadata.Title         = sqlpp::tvin(item.title),
+        metadata.Artist        = sqlpp::tvin(item.artist),
+        metadata.Genre         = sqlpp::tvin(item.genre),
+        metadata.MimeType      = sqlpp::tvin(item.mimeType),
+        metadata.Duration      = item.duration,
+        metadata.Channels      = item.nrChannels,
+        metadata.BitRate       = item.bitrate,
+        metadata.SampleRate    = item.sampleRate,
+        metadata.Thumbnail     = sqlpp::tvin(item.thumbnail)
+    ).where(true));
 }
 
 bool MusicDb::itemExists(const string& filepath, string& objectId)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    auto stmt = createStatement(
-        "SELECT objects.ObjectId "
-        "FROM metadata "
-        "LEFT OUTER JOIN objects ON objects.MetaData = metadata.Id "
-        "WHERE metadata.FilePath=?"
+    const auto& result = m_db->run(
+        select(objects.ObjectId)
+        .from(metadata.left_outer_join(objects).on(objects.MetaData == metadata.Id))
+        .where(metadata.FilePath == filepath)
     );
     
-    bindValue(stmt, filepath, 1);
-
-    auto numObjects = performQuery(stmt, true, [&] () {
-        objectId = getStringCb(stmt);
-    });
-    assert(numObjects <= 1);
-    return numObjects == 1;
+    return getIdFromResultIfExists(result, objectId);
 }
 
 bool MusicDb::albumExists(const std::string& title, const std::string& artist, string& objectId)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    std::stringstream ss;
-    ss << "SELECT objects.ObjectId "
-          "FROM metadata "
-          "LEFT OUTER JOIN objects ON objects.MetaData = metadata.Id "
-          "WHERE objects.Class='object.container.album.musicAlbum' AND objects.Name=? AND ";
-    ss << (artist.empty() ? "metadata.Artist IS NULL" : "metadata.Artist=?");
+    auto selectFrom = select(objects.ObjectId)
+                      .from(metadata.left_outer_join(objects).on(objects.MetaData == metadata.Id));
 
-    auto stmt = createStatement(ss.str().c_str());
-    
-    bindValue(stmt, title, 1);
-    if (!artist.empty())
+    if (artist.empty())
     {
-        bindValue(stmt, artist, 2);
+        const auto& result = m_db->run(
+            selectFrom.where(objects.Class == "object.container.album.musicAlbum" and objects.Name == title and metadata.Artist.is_null())
+        );
+        
+        return getIdFromResultIfExists(result, objectId);
     }
-
-    auto numObjects = performQuery(stmt, true, [&] () {
-        objectId = getStringCb(stmt);
-    });
-
-    assert(numObjects <= 1);
-    return numObjects == 1;
+    else
+    {
+        const auto& result = m_db->run(
+            selectFrom.where(objects.Class == "object.container.album.musicAlbum" and objects.Name == title and metadata.Artist == artist)
+        );
+        
+        return getIdFromResultIfExists(result, objectId);
+    }
 }
 
 ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modifiedTime)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    auto stmt = createStatement("SELECT ModifiedTime FROM metadata WHERE metadata.FilePath = ?");
-    bindValue(stmt, filepath, 1);
-
-    uint64_t dbModifiedTime;
-    auto numTracks = performQuery(stmt, true, [&] () {
-        dbModifiedTime = sqlite3_column_int64(stmt, 0);
-    });
-
-    assert(numTracks <= 1);
-    if (numTracks == 0)
+    const auto& result = m_db->run(
+        select(metadata.ModifiedTime)
+        .from(metadata)
+        .where(metadata.FilePath == filepath)
+    );
+    
+    if (result.empty())
     {
         return ItemStatus::DoesntExist;
     }
-    else if (dbModifiedTime < modifiedTime)
-    {
-        return ItemStatus::NeedsUpdate;
-    }
-    else
-    {
-        return ItemStatus::UpToDate;
-    }
+    
+    return result.front().ModifiedTime < modifiedTime ? ItemStatus::NeedsUpdate : ItemStatus::UpToDate;
 }
 
-upnp::ItemPtr MusicDb::getItemCb(sqlite3_stmt* stmt)
+template <typename T>
+upnp::ItemPtr MusicDb::parseItem(const T& row)
 {
-    assert(sqlite3_column_count(stmt) == 15);
     assert(!m_webRoot.empty());
 
     auto item = std::make_shared<upnp::Item>();
-    item->setObjectId(getStringFromColumn(stmt, 0));
-    item->setTitle(getStringFromColumn(stmt, 1));
-    item->setParentId(getStringFromColumn(stmt, 2));
-    item->setRefId(getStringFromColumn(stmt, 3));
-    item->setClass(getStringFromColumn(stmt, 4));
-    item->addMetaData(upnp::Property::Artist, getStringFromColumn(stmt, 5));
+    item->setObjectId(row.ObjectId);
+    item->setTitle(row.Name);
+    item->setParentId(row.ParentId);
+    item->setRefId(row.RefId);
+    item->setClass(row.Class);
+    item->addMetaData(upnp::Property::Artist, row.Artist);
 
-    auto title = getStringFromColumn(stmt, 6);
-    if (!title.empty())
+    if (!row.Title.is_null())
     {
-        item->setTitle(getStringFromColumn(stmt, 6));
+        item->setTitle(row.Title);
     }
 
-    item->addMetaData(upnp::Property::Genre, getStringFromColumn(stmt, 7));
+    item->addMetaData(upnp::Property::Genre, row.Genre);
 
     if (!item->isContainer())
     {
         // add the resource urls
         upnp::Resource res;
-        auto mimeType = getStringFromColumn(stmt, 8);
+        auto mimeType = row.MimeType;
         res.setProtocolInfo(upnp::ProtocolInfo(stringops::format("http-get:*:%s:*", mimeType)));
         res.setUrl(stringops::format("%sMedia/%s.%s", m_webRoot, item->getObjectId(), mime::extensionFromType(mime::typeFromString(mimeType))));
-        res.setSize(sqlite3_column_int64(stmt, 9));
-        res.setDuration(sqlite3_column_int(stmt, 10));
-        res.setNrAudioChannels(sqlite3_column_int(stmt, 11));
-        res.setBitRate(sqlite3_column_int(stmt, 12));
-        res.setSampleRate(sqlite3_column_int(stmt, 13));
+        res.setSize(row.FileSize);
+        res.setDuration(static_cast<uint32_t>(row.Duration));
+        res.setNrAudioChannels(static_cast<uint32_t>(row.Channels));
+        res.setBitRate(static_cast<uint32_t>(row.BitRate));
+        res.setSampleRate(static_cast<uint32_t>(row.SampleRate));
 
         item->addResource(res);
     }
@@ -386,8 +369,8 @@ upnp::ItemPtr MusicDb::getItemCb(sqlite3_stmt* stmt)
         item->addMetaData(upnp::Property::StorageUsed, "-1");
     }
     
-    auto thumbnail = getStringFromColumn(stmt, 14);
-    if (!thumbnail.empty())
+    auto thumbnail = row.Thumbnail;
+    if (!thumbnail.is_null())
     {
         item->addMetaData(upnp::Property::AlbumArt, fileops::combinePath(m_webRoot, thumbnail));
     }
@@ -397,116 +380,91 @@ upnp::ItemPtr MusicDb::getItemCb(sqlite3_stmt* stmt)
 
 upnp::ItemPtr MusicDb::getItem(const std::string& id)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    auto stmt = createStatement(
-        "SELECT o.ObjectId, o.Name, o.ParentId, o.RefId, o.Class, "
-        "m.Artist, m.Title, m.Genre, m.MimeType, m.FileSize, m.Duration, m.Channels, m.BitRate, m.SampleRate, m.Thumbnail "
-        "FROM objects AS o "
-        "LEFT OUTER JOIN metadata AS m ON o.MetaData = m.Id "
-        "WHERE o.ObjectId = ? ");
+    const auto& result = m_db->run(
+        select(objects.ObjectId, objects.Name, objects.ParentId, objects.RefId, objects.Class, all_of(metadata))
+        .from(objects.left_outer_join(metadata).on(objects.MetaData == metadata.Id))
+        .where(objects.ObjectId == id)
+    );
 
-    bindValue(stmt, id, 1);
-
-    upnp::ItemPtr item;
-    auto count = performQuery(stmt, true, [&] () {
-        item = getItemCb(stmt);
-    });
-
-    if (count == 0 || item->getObjectId().empty())
+    if (result.empty())
     {
         throw std::runtime_error("No track found in db with id: " + id);
     }
 
-    return item;
+    return parseItem(result.front());
 }
 
 std::vector<upnp::ItemPtr> MusicDb::getItems(const std::string& parentId, uint32_t offset, uint32_t count)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    auto stmt = createStatement(
-        "SELECT o.ObjectId, o.Name, o.ParentId, o.RefId, o.Class, "
-        "m.Artist, m.Title, m.Genre, m.MimeType, m.FileSize, m.Duration, m.Channels, m.BitRate, m.SampleRate, m.Thumbnail "
-        "FROM objects AS o "
-        "LEFT OUTER JOIN metadata AS m ON o.MetaData = m.Id "
-        "WHERE o.ParentId = ? LIMIT ? OFFSET ?");
-
-    bindValue(stmt, parentId, 1);
-    bindValue(stmt, count == 0 ? -1 : count, 2);
-    bindValue(stmt, offset, 3);
-
     std::vector<upnp::ItemPtr> items;
-    performQuery(stmt, true, [&] () {
-        items.push_back(getItemCb(stmt));
-    });
+
+    for (const auto& row : m_db->run(
+        select(objects.ObjectId, objects.Name, objects.ParentId, objects.RefId, objects.Class, all_of(metadata))
+        .from(objects.left_outer_join(metadata).on(objects.MetaData == metadata.Id))
+        .where(objects.ParentId == parentId)
+        .limit(count == 0 ? -1 : count)
+        .offset(offset)
+    ))
+    {
+        items.emplace_back(parseItem(row));
+    }
+
     return items;
 }
 
 std::string MusicDb::getItemPath(const std::string& id)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    auto stmt = createStatement(
-        "SELECT metadata.FilePath "
-        "FROM objects "
-        "LEFT OUTER JOIN metadata ON objects.MetaData = metadata.Id "
-        "WHERE objects.ObjectId = ?");
-
-    bindValue(stmt, id, 1);
-
-    std::string path;
-    auto count = performQuery(stmt, true, [&] () {
-        path = getStringCb(stmt);
-    });
-
-    if (0 == count)
+    const auto& result = m_db->run(
+        select(metadata.FilePath)
+        .from(objects.left_outer_join(metadata).on(objects.MetaData == metadata.Id))
+        .where(objects.ObjectId == id)
+    );
+    
+    if (result.empty())
     {
         throw std::runtime_error("No item in database with id: " + id);
     }
-    
-    return path;
+
+    return result.front().FilePath;
 }
 
 void MusicDb::removeItem(const std::string& id)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    sqlite3_stmt* pStmt = createStatement("DELETE from objects WHERE Id = ?");
-    bindValue(pStmt, id, 1);
-    performQuery(pStmt);
+    m_db->run(
+        remove_from(objects)
+        .where(objects.ObjectId == id)
+    );
 }
 
-void MusicDb::removeMetaData(const std::string& id)
+void MusicDb::removeMetaData(int64_t id)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    sqlite3_stmt* pStmt = createStatement("DELETE from metadata WHERE Id = ?");
-    bindValue(pStmt, id, 1);
-    performQuery(pStmt);
+    m_db->run(
+        remove_from(metadata)
+        .where(metadata.Id == static_cast<int64_t>(id))
+    );
 }
 
 
 void MusicDb::removeNonExistingFiles()
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    auto stmt = createStatement(
-        "SELECT objects.Id, objects.MetaData, metadata.FilePath "
-        "FROM objects "
-        "LEFT OUTER JOIN metadata ON objects.MetaData = metadata.Id"
-    );
+    std::vector<std::pair<std::string, int64_t>> files;
 
-    std::vector<std::pair<uint32_t, uint32_t>> files;
-    performQuery(stmt, true, [&] () {
-        string path = getStringFromColumn(stmt, 2);
+    for (const auto& row : m_db->run(select(objects.ObjectId, objects.MetaData, metadata.FilePath)
+                                     .from(objects.left_outer_join(metadata).on(objects.MetaData == metadata.Id))
+                                     .where(true)))
+    {
+        std::string path = row.FilePath;
         if (!path.empty() && !fileops::pathExists(path))
         {
-            uint32_t objectsId = sqlite3_column_int(stmt, 0);
-            uint32_t metaDataId = sqlite3_column_int(stmt, 1);
-            files.push_back(std::make_pair(objectsId, metaDataId));
+            files.emplace_back(row.ObjectId, row.MetaData);
         }
-    });
-
-    for (size_t i = 0; i < files.size(); ++i)
+    }
+    
+    for (auto& iter : files)
     {
-        log::debug("Removed deleted file from database: %d", files[i].first);
-        removeItem(numericops::toString(files[i].first));
-        removeMetaData(numericops::toString(files[i].second));
+        log::debug("Removed deleted file from database: %d", iter.first);
+        removeItem(iter.first);
+        removeMetaData(iter.second);
     }
 }
 
@@ -583,18 +541,16 @@ void MusicDb::removeNonExistingFiles()
 
 void MusicDb::clearDatabase()
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    performQuery(createStatement("DROP INDEX IF EXISTS metadata.pathIndex;"));
-    performQuery(createStatement("DROP TABLE IF EXISTS objects;"));
-    performQuery(createStatement("DROP TABLE IF EXISTS metadata;"));
+    m_db->execute("DROP INDEX IF EXISTS metadata.pathIndex;");
+    m_db->execute("DROP TABLE IF EXISTS objects;");
+    m_db->execute("DROP TABLE IF EXISTS metadata;");
 
     createInitialDatabase();
 }
 
 void MusicDb::createInitialDatabase()
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    performQuery(createStatement("CREATE TABLE IF NOT EXISTS objects("
+    m_db->execute("CREATE TABLE IF NOT EXISTS objects("
         "Id INTEGER PRIMARY KEY,"
         "ObjectId TEXT UNIQUE,"
         "ParentId TEXT,"
@@ -602,9 +558,9 @@ void MusicDb::createInitialDatabase()
         "Name TEXT NOT NULL,"
         "Class TEXT,"
         "MetaData INTEGER,"
-        "FOREIGN KEY (MetaData) REFERENCES metadata(id));"));
+        "FOREIGN KEY (MetaData) REFERENCES metadata(id));");
 
-    performQuery(createStatement("CREATE TABLE IF NOT EXISTS metadata("
+    m_db->execute("CREATE TABLE IF NOT EXISTS metadata("
         "Id INTEGER PRIMARY KEY,"
         "Album TEXT,"
         "Artist TEXT,"
@@ -625,9 +581,9 @@ void MusicDb::createInitialDatabase()
         "DateAdded INTEGER,"
         "ModifiedTime INTEGER,"
         "Thumbnail TEXT,"
-        "FilePath TEXT);"));
+        "FilePath TEXT);");
 
-    performQuery(createStatement("CREATE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);"));
+    m_db->execute("CREATE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);");
 }
 
 uint64_t MusicDb::performQuery(sqlite3_stmt* pStmt, bool finalize, std::function<void()> cb)
