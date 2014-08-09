@@ -25,9 +25,6 @@
 #include "library/libraryitem.h"
 
 
-struct sqlite3;
-struct sqlite3_stmt;
-
 namespace sqlpp
 {
 namespace sqlite3
@@ -79,38 +76,17 @@ public:
     void clearDatabase();
 
 private:
-    typedef void (*QueryCallback)(sqlite3_stmt*, void*);
-
     template <typename T>
     upnp::ItemPtr parseItem(const T& row);
-    uint64_t performQuery(sqlite3_stmt* pStmt, bool finalize = true, std::function<void()> cb = nullptr);
 
-    static void addResultCb(sqlite3_stmt* pStmt, void* pData);
     //static void searchTracksCb(sqlite3_stmt* pStmt, void* pData);
-
-    static int32_t busyCb(void* pData, int32_t retries);
 
     int64_t addMetadata(const LibraryItem& item);
     void removeMetaData(int64_t id);
-    
-    std::string getIdFromTableAsString(const std::string& table, const std::string& name);
-    uint64_t getIdFromTable(const std::string& table, const std::string& name);
     void createInitialDatabase();
-    sqlite3_stmt* createStatement(const char* query);
-
-    void bindValue(sqlite3_stmt* pStmt, const std::string& value, int32_t index, bool copy = false);
-    void bindValue(sqlite3_stmt* pStmt, uint32_t value, int32_t index);
-    void bindValue(sqlite3_stmt* pStmt, int64_t value, int32_t index);
-    void bindValue(sqlite3_stmt* pStmt, uint64_t value, int32_t index);
-    void bindValue(sqlite3_stmt* pStmt, const void* pData, size_t dataSize, int32_t index);
 
     std::unique_ptr<sqlpp::sqlite3::connection> m_db;
-
-    sqlite3*                m_pDb;
-    sqlite3_stmt*           m_pBeginStatement;
-    sqlite3_stmt*           m_pCommitStatement;
-    std::recursive_mutex    m_dbMutex;
-    std::string             m_webRoot;
+    std::string                                 m_webRoot;
 };
 
 }

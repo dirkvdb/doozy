@@ -166,9 +166,9 @@ TEST_F(LibraryDatabaseTest, AddGetItem)
 TEST_F(LibraryDatabaseTest, AddItems)
 {
     std::vector<LibraryItem> items = {
-        createItem("0", "-1", "root"),
-        createItem("0#1", "0", "item1"),
-        createItem("0#2", "0", "item2")
+        createItem("0@1", "0", "item1"),
+        createItem("0@2", "0", "item2"),
+        createItem("0", "-1", "root")
     };
 
     m_db->addItems(items);
@@ -176,6 +176,16 @@ TEST_F(LibraryDatabaseTest, AddItems)
     
     auto item = m_db->getItem("0");
     EXPECT_EQ("root", item->getTitle());
+    
+    item = m_db->getItem("0@1");
+    EXPECT_EQ("item1", item->getTitle());
+    EXPECT_EQ("0", item->getParentId());
+    EXPECT_EQ("", item->getRefId());
+    
+    item = m_db->getItem("0@2");
+    EXPECT_EQ("item2", item->getTitle());
+    EXPECT_EQ("0", item->getParentId());
+    EXPECT_EQ("", item->getRefId());
 }
 
 TEST_F(LibraryDatabaseTest, AddGetItemAmpersand)

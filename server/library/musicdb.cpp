@@ -55,25 +55,6 @@ doozy::Metadata metadata;
 
 SQLPP_ALIAS_PROVIDER(numObjects);
 
-std::string getStringFromColumn(sqlite3_stmt* pStmt, int column)
-{
-    const char* pString = reinterpret_cast<const char*>(sqlite3_column_text(pStmt, column));
-    if (pString != nullptr)
-    {
-        return pString;
-    }
-
-    return std::string();
-}
-
-std::string getStringCb(sqlite3_stmt* pStmt)
-{
-    assert(sqlite3_column_count(pStmt) == 1);
-    assert(sqlite3_column_text(pStmt, 0));
-
-    return getStringFromColumn(pStmt, 0);
-}
-
 template <typename T>
 bool getIdFromResultIfExists(const T& result, std::string& id)
 {
@@ -89,7 +70,6 @@ bool getIdFromResultIfExists(const T& result, std::string& id)
 }
 
 MusicDb::MusicDb(const string& dbFilepath)
-: m_pDb(nullptr)
 {
     utils::trace("Create Music database");
     
@@ -99,20 +79,6 @@ MusicDb::MusicDb(const string& dbFilepath)
     config->debug = true;
     
     m_db.reset(new sql::connection(config));
-
-    if (sqlite3_open(dbFilepath.c_str(), &m_pDb) != SQLITE_OK)
-    {
-        throw runtime_error("Failed to open database: " + dbFilepath);
-    }
-
-    if (sqlite3_busy_handler(m_pDb, MusicDb::busyCb, nullptr) != SQLITE_OK)
-    {
-        throw runtime_error("Failed to set busy handler");
-    }
-    
-    m_pBeginStatement = createStatement("BEGIN");
-    m_pCommitStatement = createStatement("COMMIT");
-
     createInitialDatabase();
 
     utils::trace("Music database loaded");
@@ -120,13 +86,6 @@ MusicDb::MusicDb(const string& dbFilepath)
 
 MusicDb::~MusicDb()
 {
-    sqlite3_finalize(m_pBeginStatement);
-    sqlite3_finalize(m_pCommitStatement);
-
-    if (sqlite3_close(m_pDb) != SQLITE_OK)
-    {
-        log::error("Failed to close database: " + std::string(sqlite3_errmsg(m_pDb)));
-    }
 }
 
 void MusicDb::setWebRoot(const std::string& webRoot)
@@ -145,11 +104,15 @@ uint64_t MusicDb::getObjectCount()
 
 uint64_t MusicDb::getChildCount(const std::string& id)
 {
-    return m_db->run(
+    auto prepared = m_db->prepare(
         select(count(objects.Id).as(numObjects))
         .from(objects)
-        .where(objects.ParentId == id)
-    ).front().numObjects;
+        .where(objects.ParentId == parameter(objects.ParentId)));
+    
+    prepared.params.ParentId = id;
+    
+    const auto& result = m_db->run(prepared);
+    return result.front().numObjects;
 }
 
 uint64_t MusicDb::getUniqueIdInContainer(const std::string& containerId)
@@ -178,18 +141,6 @@ void MusicDb::addItem(const LibraryItem& item)
 
 void MusicDb::addItems(const std::vector<LibraryItem>& items)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_dbMutex);
-    
-//    sqlite3_stmt* pMetaStmt = createStatement(
-//        "INSERT INTO metadata "
-//        "(Id, ModifiedTime, FilePath, FileSize, Title, Artist, Genre, MimeType, Duration, Channels, BitRate, SampleRate, Thumbnail) "
-//        "VALUES (NULL, ?,   ?,        ?,        ?,     ?,      ?,     ?,        ?,        ?,        ?,       ?,          ?)");
-//    
-//    sqlite3_stmt* pStmt = createStatement(
-//        "INSERT INTO objects "
-//        "(Id, ObjectId, ParentId, RefId, Name, Class, MetaData) "
-//        "VALUES (NULL, ?, ?, ?, ?, ?, last_insert_rowid())");
-    
     auto preparedItemAdd = m_db->prepare(
         insert_into(objects).set(
             objects.ObjectId    = parameter(objects.ObjectId),
@@ -201,8 +152,8 @@ void MusicDb::addItems(const std::vector<LibraryItem>& items)
         )
     );
 
-    //m_db->execute("BEGIN");
-    //performQuery(m_pBeginStatement, false);
+    m_db->start_transaction();
+    
     for (auto& item : items)
     {
         addMetadata(item);
@@ -215,11 +166,7 @@ void MusicDb::addItems(const std::vector<LibraryItem>& items)
         m_db->run(preparedItemAdd);
     }
     
-    //performQuery(m_pCommitStatement, false);
-    //m_db->execute("END");
-    
-    //sqlite3_finalize(pStmt);
-    //sqlite3_finalize(pMetaStmt);
+    m_db->commit_transaction();
 }
 
 int64_t MusicDb::addMetadata(const LibraryItem& item)
@@ -584,178 +531,6 @@ void MusicDb::createInitialDatabase()
         "FilePath TEXT);");
 
     m_db->execute("CREATE INDEX IF NOT EXISTS pathIndex ON metadata (FilePath);");
-}
-
-uint64_t MusicDb::performQuery(sqlite3_stmt* pStmt, bool finalize, std::function<void()> cb)
-{
-    uint64_t rowCount = 0;
-
-    int32_t rc;
-    while ((rc = sqlite3_step(pStmt)) != SQLITE_DONE)
-    {
-        switch(rc)
-        {
-        case SQLITE_BUSY:
-            sqlite3_finalize(pStmt);
-            throw runtime_error("Failed to execute statement: SQL is busy");
-        case SQLITE_ERROR:
-            sqlite3_finalize(pStmt);
-            throw runtime_error(string("Failed to execute statement: ") + sqlite3_errmsg(m_pDb));
-        case SQLITE_CONSTRAINT:
-            sqlite3_finalize(pStmt);
-            throw runtime_error(string("Sqlite constraint violated: ") + sqlite3_errmsg(m_pDb));
-        case SQLITE_ROW:
-            if (cb) cb();
-            ++rowCount;
-            break;
-        default:
-            sqlite3_finalize(pStmt);
-            throw runtime_error("FIXME: unhandled return value of sql statement: " + numericops::toString(rc));
-        }
-    }
-
-    if (finalize)
-    {
-        sqlite3_finalize(pStmt);
-    }
-    else
-    {
-        sqlite3_reset(pStmt);
-    }
-    
-    return rowCount;
-}
-
-sqlite3_stmt* MusicDb::createStatement(const char* query)
-{
-    sqlite3_stmt* pStmt;
-
-    if (sqlite3_prepare_v2(m_pDb, query, -1, &pStmt, 0) != SQLITE_OK)
-    {
-        throw runtime_error(string("Failed to prepare sql statement (") + sqlite3_errmsg(m_pDb) + "): " + query);
-    }
-
-    return pStmt;
-}
-
-void MusicDb::bindValue(sqlite3_stmt* pStmt, const string& value, int32_t index, bool copy)
-{
-    if (value.empty())
-    {
-        if (sqlite3_bind_null(pStmt, index) != SQLITE_OK)
-        {
-            throw runtime_error(string("Failed to bind string value as NULL: ") + sqlite3_errmsg(m_pDb));
-        }
-    }
-    else if (sqlite3_bind_text(pStmt, index, value.c_str(), static_cast<int>(value.size()), copy ? SQLITE_TRANSIENT : SQLITE_STATIC) != SQLITE_OK)
-    {
-        throw runtime_error(string("Failed to bind string value: ") + sqlite3_errmsg(m_pDb));
-    }
-}
-
-void MusicDb::bindValue(sqlite3_stmt* pStmt, uint32_t value, int32_t index)
-{
-    if (sqlite3_bind_int(pStmt, index, value) != SQLITE_OK)
-    {
-        throw runtime_error(string("Failed to bind int value: ") + sqlite3_errmsg(m_pDb));
-    }
-}
-
-void MusicDb::bindValue(sqlite3_stmt* pStmt, int64_t value, int32_t index)
-{
-    if (sqlite3_bind_int64(pStmt, index, value) != SQLITE_OK)
-    {
-        throw runtime_error(string("Failed to bind int64 value: ") + sqlite3_errmsg(m_pDb));
-    }
-}
-
-void MusicDb::bindValue(sqlite3_stmt* pStmt, uint64_t value, int32_t index)
-{
-    bindValue(pStmt, static_cast<int64_t>(value), index);
-}
-
-void MusicDb::bindValue(sqlite3_stmt* pStmt, const void* pData, size_t dataSize, int32_t index)
-{
-    if (pData == nullptr)
-    {
-        if (sqlite3_bind_null(pStmt, index) != SQLITE_OK)
-        {
-            throw runtime_error(string("Failed to bind blob value as NULL: ") + sqlite3_errmsg(m_pDb));
-        }
-    }
-    else if (sqlite3_bind_blob(pStmt, index, pData, static_cast<int>(dataSize), SQLITE_TRANSIENT) != SQLITE_OK)
-    {
-        throw runtime_error(string("Failed to bind int value: ") + sqlite3_errmsg(m_pDb));
-    }
-}
-
-std::string MusicDb::getIdFromTableAsString(const string& table, const string& name)
-{
-    std::stringstream query;
-    query << "SELECT Id FROM " << table << " WHERE Name = ?;";
-    auto stmt = createStatement(("SELECT Id FROM " + table + " WHERE Name = ?;").c_str());
-    bindValue(stmt, name, 1);
-
-    std::string id;
-    performQuery(stmt, true, [&] () {
-        id = getStringCb(stmt);
-    });
-
-    return id;
-}
-
-uint64_t MusicDb::getIdFromTable(const string& table, const string& name)
-{
-    stringstream query;
-    query << "SELECT Id FROM " << table << " WHERE ObjectId = ?;";
-    auto stmt = createStatement(query.str().c_str());
-    bindValue(stmt, name, 1);
-
-    uint64_t id = 0;
-    performQuery(stmt, true, [&] () {
-        id = sqlite3_column_int64(stmt, 0);
-    });
-
-    return id;
-}
-
-//void MusicDb::getTracksCb(sqlite3_stmt* pStmt, void* pData)
-//{
-//	auto pTracks = reinterpret_cast<std::vector<Track>*>(pData);
-//
-//    Track track;
-//    getItemCb(pStmt, &track);
-//    pTracks->push_back(std::move(track));
-//}
-
-//void MusicDb::searchTracksCb(sqlite3_stmt* pStmt, void* pData)
-//{
-//    SearchTrackData* pSearchData = reinterpret_cast<SearchTrackData*>(pData);
-//
-//    Track track;
-//    getItemCb(pStmt, &track);
-//    pSearchData->subscriber.onItem(track);
-//    pSearchData->ids.insert(stringops::toNumeric<uint32_t>(track.albumId));
-//}
-
-
-void MusicDb::addResultCb(sqlite3_stmt* pStmt, void* pData)
-{
-    assert(sqlite3_column_count(pStmt) == 1);
-
-    uint32_t* pSum = reinterpret_cast<uint32_t*>(pData);
-    *pSum += sqlite3_column_int(pStmt, 0);
-}
-
-int32_t MusicDb::busyCb(void* pData, int32_t retries)
-{
-    log::debug("DB busy: attempt %d", retries);
-    if (retries > BUSY_RETRIES)
-    {
-        return 0;
-    }
-
-    return 1;
 }
 
 }
