@@ -40,7 +40,7 @@
 using namespace std;
 using namespace utils;
 
-#define BUSY_RETRIES 50
+//#define DEBUG_QUERIES
 
 namespace doozy
 {
@@ -76,7 +76,10 @@ MusicDb::MusicDb(const string& dbFilepath)
     auto config = std::make_shared<sql::connection_config>();
     config->path_to_database = dbFilepath;
     config->flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    
+#ifdef DEBUG_QUERIES
     config->debug = true;
+#endif
     
     m_db.reset(new sql::connection(config));
     createInitialDatabase();
@@ -111,8 +114,7 @@ uint64_t MusicDb::getChildCount(const std::string& id)
     
     prepared.params.ParentId = id;
     
-    const auto& result = m_db->run(prepared);
-    return result.front().numObjects;
+    return m_db->run(prepared).front().numObjects;
 }
 
 uint64_t MusicDb::getUniqueIdInContainer(const std::string& containerId)
@@ -239,25 +241,20 @@ bool MusicDb::itemExists(const string& filepath, string& objectId)
 
 bool MusicDb::albumExists(const std::string& title, const std::string& artist, string& objectId)
 {
-    auto selectFrom = select(objects.ObjectId)
-                      .from(metadata.left_outer_join(objects).on(objects.MetaData == metadata.Id));
-
+    auto query = dynamic_select(*m_db, objects.ObjectId)
+                 .from(metadata.left_outer_join(objects).on(objects.MetaData == metadata.Id))
+                 .dynamic_where(objects.Class == "object.container.album.musicAlbum" and objects.Name == title);
+    
     if (artist.empty())
     {
-        const auto& result = m_db->run(
-            selectFrom.where(objects.Class == "object.container.album.musicAlbum" and objects.Name == title and metadata.Artist.is_null())
-        );
-        
-        return getIdFromResultIfExists(result, objectId);
+        query.where.add(metadata.Artist.is_null());
     }
     else
     {
-        const auto& result = m_db->run(
-            selectFrom.where(objects.Class == "object.container.album.musicAlbum" and objects.Name == title and metadata.Artist == artist)
-        );
-        
-        return getIdFromResultIfExists(result, objectId);
+        query.where.add(metadata.Artist == artist);
     }
+
+    return getIdFromResultIfExists(m_db->run(query), objectId);
 }
 
 ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modifiedTime)
