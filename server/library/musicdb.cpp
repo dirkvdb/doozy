@@ -67,9 +67,35 @@ bool getIdFromResultIfExists(const T& result, std::string& id)
     return hasResults;
 }
 
+// Queries
+auto objectCountQuery = [] () {
+    return select(count(objects.Id).as(numObjects))
+           .from(objects)
+           .where(true);
+};
+
+auto childCountQuery = [] () {
+    return select(count(objects.Id).as(numObjects))
+           .from(objects)
+           .where(objects.ParentId == parameter(objects.ParentId));
+};
+
+using ObjectCountQuery = decltype(objectCountQuery());
+using ChildCountQuery = decltype(childCountQuery());
+
+template <typename SelectType>
+using PreparedStatement = decltype(((sql::connection*)nullptr)->prepare(*((SelectType*)nullptr)));
+
 }
 
+struct MusicDb::PreparedStatements
+{
+    std::unique_ptr<PreparedStatement<ObjectCountQuery>> objectCount;
+    std::unique_ptr<PreparedStatement<ChildCountQuery>> childCount;
+};
+
 MusicDb::MusicDb(const string& dbFilepath)
+: m_statements(new PreparedStatements())
 {
     utils::trace("Create Music database");
     
@@ -83,12 +109,20 @@ MusicDb::MusicDb(const string& dbFilepath)
     
     m_db.reset(new sql::connection(config));
     createInitialDatabase();
+    
+    prepareStatements();
 
     utils::trace("Music database loaded");
 }
 
 MusicDb::~MusicDb()
 {
+}
+
+void MusicDb::prepareStatements()
+{
+    m_statements->objectCount.reset(new PreparedStatement<ObjectCountQuery>(m_db->prepare(objectCountQuery())));
+    m_statements->childCount.reset(new PreparedStatement<ChildCountQuery>(m_db->prepare(childCountQuery())));
 }
 
 void MusicDb::setWebRoot(const std::string& webRoot)
@@ -98,23 +132,13 @@ void MusicDb::setWebRoot(const std::string& webRoot)
 
 uint64_t MusicDb::getObjectCount()
 {
-    return m_db->run(
-        select(count(objects.Id).as(numObjects))
-        .from(objects)
-        .where(true)
-    ).front().numObjects;
+    return m_db->run(*m_statements->objectCount).front().numObjects;
 }
 
 uint64_t MusicDb::getChildCount(const std::string& id)
 {
-    auto prepared = m_db->prepare(
-        select(count(objects.Id).as(numObjects))
-        .from(objects)
-        .where(objects.ParentId == parameter(objects.ParentId)));
-    
-    prepared.params.ParentId = id;
-    
-    return m_db->run(prepared).front().numObjects;
+    m_statements->childCount->params.ParentId = id;
+    return m_db->run(*m_statements->childCount).front().numObjects;
 }
 
 uint64_t MusicDb::getUniqueIdInContainer(const std::string& containerId)

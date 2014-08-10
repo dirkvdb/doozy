@@ -85,7 +85,11 @@ private:
     void removeMetaData(int64_t id);
     void createInitialDatabase();
 
+    void prepareStatements();
+
     std::unique_ptr<sqlpp::sqlite3::connection> m_db;
+    struct PreparedStatements;
+    std::unique_ptr<PreparedStatements>         m_statements;
     std::string                                 m_webRoot;
 };
 
