@@ -90,8 +90,8 @@ using PreparedStatement = decltype(((sql::connection*)nullptr)->prepare(*((Selec
 
 struct MusicDb::PreparedStatements
 {
-    std::unique_ptr<PreparedStatement<ObjectCountQuery>> objectCount;
-    std::unique_ptr<PreparedStatement<ChildCountQuery>> childCount;
+    PreparedStatement<ObjectCountQuery> objectCount;
+    PreparedStatement<ChildCountQuery> childCount;
 };
 
 MusicDb::MusicDb(const string& dbFilepath)
@@ -121,8 +121,8 @@ MusicDb::~MusicDb()
 
 void MusicDb::prepareStatements()
 {
-    m_statements->objectCount.reset(new PreparedStatement<ObjectCountQuery>(m_db->prepare(objectCountQuery())));
-    m_statements->childCount.reset(new PreparedStatement<ChildCountQuery>(m_db->prepare(childCountQuery())));
+    m_statements->objectCount = m_db->prepare(objectCountQuery());
+    m_statements->childCount = m_db->prepare(childCountQuery());
 }
 
 void MusicDb::setWebRoot(const std::string& webRoot)
@@ -132,13 +132,13 @@ void MusicDb::setWebRoot(const std::string& webRoot)
 
 uint64_t MusicDb::getObjectCount()
 {
-    return m_db->run(*m_statements->objectCount).front().numObjects;
+    return m_db->run(m_statements->objectCount).front().numObjects;
 }
 
 uint64_t MusicDb::getChildCount(const std::string& id)
 {
-    m_statements->childCount->params.ParentId = id;
-    return m_db->run(*m_statements->childCount).front().numObjects;
+    m_statements->childCount.params.ParentId = id;
+    return m_db->run(m_statements->childCount).front().numObjects;
 }
 
 uint64_t MusicDb::getUniqueIdInContainer(const std::string& containerId)
