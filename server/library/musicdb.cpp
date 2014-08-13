@@ -120,10 +120,17 @@ auto addMetadataQuery = [] () {
     );
 };
 
-using ObjectCountQuery = decltype(objectCountQuery());
-using ChildCountQuery = decltype(childCountQuery());
-using AddItemQuery = decltype(addItemQuery());
-using AddMetadataQuery = decltype(addMetadataQuery());
+auto itemExistsQuery = [] () {
+    return select(objects.ObjectId)
+           .from(metadata.left_outer_join(objects).on(objects.MetaData == metadata.Id))
+           .where(metadata.FilePath == parameter(metadata.FilePath));
+};
+
+using ObjectCountQuery      = decltype(objectCountQuery());
+using ChildCountQuery       = decltype(childCountQuery());
+using AddItemQuery          = decltype(addItemQuery());
+using AddMetadataQuery      = decltype(addMetadataQuery());
+using ItemExistsQuery       = decltype(itemExistsQuery());
 
 template <typename SelectType>
 using PreparedStatement = decltype(((sql::connection*)nullptr)->prepare(*((SelectType*)nullptr)));
@@ -136,6 +143,7 @@ struct MusicDb::PreparedStatements
     PreparedStatement<ChildCountQuery> childCount;
     PreparedStatement<AddItemQuery> addItem;
     PreparedStatement<AddMetadataQuery> addMetadata;
+    PreparedStatement<ItemExistsQuery> itemExists;
 };
 
 MusicDb::MusicDb(const string& dbFilepath)
@@ -160,6 +168,7 @@ void MusicDb::prepareStatements()
     m_statements->childCount    = m_db.prepare(childCountQuery());
     m_statements->addItem       = m_db.prepare(addItemQuery());
     m_statements->addMetadata   = m_db.prepare(addMetadataQuery());
+    m_statements->itemExists    = m_db.prepare(itemExistsQuery());
 }
 
 void MusicDb::setWebRoot(const std::string& webRoot)
@@ -268,13 +277,16 @@ void MusicDb::updateItem(const LibraryItem& item)
 
 bool MusicDb::itemExists(const string& filepath, string& objectId)
 {
-    const auto& result = m_db.run(
-        select(objects.ObjectId)
-        .from(metadata.left_outer_join(objects).on(objects.MetaData == metadata.Id))
-        .where(metadata.FilePath == filepath)
-    );
+    m_statements->itemExists.params.FilePath = filepath;
+    auto result = m_db.run(m_statements->itemExists);
     
-    return getIdFromResultIfExists(result, objectId);
+    if (result.empty())
+    {
+        return false;
+    }
+    
+    objectId = result.front().ObjectId;
+    return true;
 }
 
 bool MusicDb::albumExists(const std::string& title, const std::string& artist, string& objectId)
