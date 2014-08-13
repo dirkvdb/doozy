@@ -64,10 +64,10 @@ public:
     bool itemExists(const std::string& filepath, std::string& objectId);
     bool albumExists(const std::string& title, const std::string& artist, std::string& objectId);
     ItemStatus getItemStatus(const std::string& filepath, uint64_t modifiedTime);
+    std::string getItemPath(const std::string& id);
 
     upnp::ItemPtr getItem(const std::string& id);
     std::vector<upnp::ItemPtr> getItems(const std::string& parentId, uint32_t offset, uint32_t count);
-    std::string getItemPath(const std::string& id);
 
     void removeItem(const std::string& id);
     void removeNonExistingFiles();

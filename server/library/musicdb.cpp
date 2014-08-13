@@ -126,11 +126,25 @@ auto itemExistsQuery = [] () {
            .where(metadata.FilePath == parameter(metadata.FilePath));
 };
 
+auto itemStatusQuery = [] () {
+    return select(metadata.ModifiedTime)
+           .from(metadata)
+           .where(metadata.FilePath == parameter(metadata.FilePath));
+};
+
+auto itemPathQuery = [] () {
+    return select(metadata.FilePath)
+           .from(objects.left_outer_join(metadata).on(objects.MetaData == metadata.Id))
+           .where(objects.ObjectId == parameter(objects.ObjectId));
+};
+
 using ObjectCountQuery      = decltype(objectCountQuery());
 using ChildCountQuery       = decltype(childCountQuery());
 using AddItemQuery          = decltype(addItemQuery());
 using AddMetadataQuery      = decltype(addMetadataQuery());
 using ItemExistsQuery       = decltype(itemExistsQuery());
+using ItemStatusQuery       = decltype(itemStatusQuery());
+using ItemPathQuery         = decltype(itemPathQuery());
 
 template <typename SelectType>
 using PreparedStatement = decltype(((sql::connection*)nullptr)->prepare(*((SelectType*)nullptr)));
@@ -144,6 +158,8 @@ struct MusicDb::PreparedStatements
     PreparedStatement<AddItemQuery> addItem;
     PreparedStatement<AddMetadataQuery> addMetadata;
     PreparedStatement<ItemExistsQuery> itemExists;
+    PreparedStatement<ItemStatusQuery> itemStatus;
+    PreparedStatement<ItemPathQuery> itemPath;
 };
 
 MusicDb::MusicDb(const string& dbFilepath)
@@ -169,6 +185,8 @@ void MusicDb::prepareStatements()
     m_statements->addItem       = m_db.prepare(addItemQuery());
     m_statements->addMetadata   = m_db.prepare(addMetadataQuery());
     m_statements->itemExists    = m_db.prepare(itemExistsQuery());
+    m_statements->itemStatus    = m_db.prepare(itemStatusQuery());
+    m_statements->itemPath      = m_db.prepare(itemPathQuery());
 }
 
 void MusicDb::setWebRoot(const std::string& webRoot)
@@ -309,11 +327,8 @@ bool MusicDb::albumExists(const std::string& title, const std::string& artist, s
 
 ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modifiedTime)
 {
-    const auto& result = m_db.run(
-        select(metadata.ModifiedTime)
-        .from(metadata)
-        .where(metadata.FilePath == filepath)
-    );
+    m_statements->itemStatus.params.FilePath = filepath;
+    auto result = m_db.run(m_statements->itemStatus);
     
     if (result.empty())
     {
@@ -321,6 +336,19 @@ ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modified
     }
     
     return result.front().ModifiedTime < modifiedTime ? ItemStatus::NeedsUpdate : ItemStatus::UpToDate;
+}
+
+std::string MusicDb::getItemPath(const std::string& objectId)
+{
+    m_statements->itemPath.params.ObjectId = objectId;
+    auto result = m_db.run(m_statements->itemPath);
+    
+    if (result.empty())
+    {
+        throw std::runtime_error("No item in database with id: " + objectId);
+    }
+
+    return result.front().FilePath;
 }
 
 template <typename T>
@@ -404,22 +432,6 @@ std::vector<upnp::ItemPtr> MusicDb::getItems(const std::string& parentId, uint32
     }
 
     return items;
-}
-
-std::string MusicDb::getItemPath(const std::string& id)
-{
-    const auto& result = m_db.run(
-        select(metadata.FilePath)
-        .from(objects.left_outer_join(metadata).on(objects.MetaData == metadata.Id))
-        .where(objects.ObjectId == id)
-    );
-    
-    if (result.empty())
-    {
-        throw std::runtime_error("No item in database with id: " + id);
-    }
-
-    return result.front().FilePath;
 }
 
 void MusicDb::removeItem(const std::string& id)
