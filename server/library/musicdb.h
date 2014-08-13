@@ -23,7 +23,7 @@
 
 #include "upnp/upnpfwd.h"
 #include "library/libraryitem.h"
-
+#include <sqlpp11/sqlite3/sqlite3.h>
 
 namespace sqlpp
 {
@@ -87,7 +87,7 @@ private:
 
     void prepareStatements();
 
-    std::unique_ptr<sqlpp::sqlite3::connection> m_db;
+    sqlpp::sqlite3::connection                  m_db;
     struct PreparedStatements;
     std::unique_ptr<PreparedStatements>         m_statements;
     std::string                                 m_webRoot;
