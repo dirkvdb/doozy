@@ -138,13 +138,20 @@ auto itemPathQuery = [] () {
            .where(objects.ObjectId == parameter(objects.ObjectId));
 };
 
-using ObjectCountQuery      = decltype(objectCountQuery());
-using ChildCountQuery       = decltype(childCountQuery());
-using AddItemQuery          = decltype(addItemQuery());
-using AddMetadataQuery      = decltype(addMetadataQuery());
-using ItemExistsQuery       = decltype(itemExistsQuery());
-using ItemStatusQuery       = decltype(itemStatusQuery());
-using ItemPathQuery         = decltype(itemPathQuery());
+auto uniqueContainerIdQuery = [] () {
+    return select(count(objects.Id).as(numObjects))
+           .from(objects)
+           .where(objects.ParentId == parameter(objects.ParentId));
+};
+
+using ObjectCountQuery       = decltype(objectCountQuery());
+using ChildCountQuery        = decltype(childCountQuery());
+using AddItemQuery           = decltype(addItemQuery());
+using AddMetadataQuery       = decltype(addMetadataQuery());
+using ItemExistsQuery        = decltype(itemExistsQuery());
+using ItemStatusQuery        = decltype(itemStatusQuery());
+using ItemPathQuery          = decltype(itemPathQuery());
+using UniqueContainerIdQuery = decltype(uniqueContainerIdQuery());
 
 template <typename SelectType>
 using PreparedStatement = decltype(((sql::connection*)nullptr)->prepare(*((SelectType*)nullptr)));
@@ -160,6 +167,7 @@ struct MusicDb::PreparedStatements
     PreparedStatement<ItemExistsQuery> itemExists;
     PreparedStatement<ItemStatusQuery> itemStatus;
     PreparedStatement<ItemPathQuery> itemPath;
+    PreparedStatement<UniqueContainerIdQuery> uniqueContainerId;
 };
 
 MusicDb::MusicDb(const string& dbFilepath)
@@ -180,13 +188,14 @@ MusicDb::~MusicDb()
 
 void MusicDb::prepareStatements()
 {
-    m_statements->objectCount   = m_db.prepare(objectCountQuery());
-    m_statements->childCount    = m_db.prepare(childCountQuery());
-    m_statements->addItem       = m_db.prepare(addItemQuery());
-    m_statements->addMetadata   = m_db.prepare(addMetadataQuery());
-    m_statements->itemExists    = m_db.prepare(itemExistsQuery());
-    m_statements->itemStatus    = m_db.prepare(itemStatusQuery());
-    m_statements->itemPath      = m_db.prepare(itemPathQuery());
+    m_statements->objectCount       = m_db.prepare(objectCountQuery());
+    m_statements->childCount        = m_db.prepare(childCountQuery());
+    m_statements->addItem           = m_db.prepare(addItemQuery());
+    m_statements->addMetadata       = m_db.prepare(addMetadataQuery());
+    m_statements->itemExists        = m_db.prepare(itemExistsQuery());
+    m_statements->itemStatus        = m_db.prepare(itemStatusQuery());
+    m_statements->itemPath          = m_db.prepare(itemPathQuery());
+    m_statements->uniqueContainerId = m_db.prepare(uniqueContainerIdQuery());
 }
 
 void MusicDb::setWebRoot(const std::string& webRoot)
@@ -207,11 +216,8 @@ uint64_t MusicDb::getChildCount(const std::string& id)
 
 uint64_t MusicDb::getUniqueIdInContainer(const std::string& containerId)
 {
-    return m_db.run(
-        select(count(objects.Id).as(numObjects))
-        .from(objects)
-        .where(objects.ParentId == containerId)
-    ).front().numObjects;
+    m_statements->uniqueContainerId.params.ParentId = containerId;
+    return m_db.run(m_statements->uniqueContainerId).front().numObjects;
 }
 
 void MusicDb::addItem(const LibraryItem& item)
