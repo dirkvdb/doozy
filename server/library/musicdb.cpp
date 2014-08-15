@@ -222,17 +222,13 @@ uint64_t MusicDb::getUniqueIdInContainer(const std::string& containerId)
 
 void MusicDb::addItem(const LibraryItem& item)
 {
-    auto metaId = addMetadata(item);
-
-    auto insertion = insert_into(objects).columns(objects.ObjectId, objects.ParentId, objects.RefId, objects.Name, objects.Class, objects.MetaData);
-    insertion.values.add(objects.ObjectId   = item.objectId,
-                         objects.ParentId   = sqlpp::tvin(item.parentId),
-                         objects.RefId      = sqlpp::tvin(item.refId),
-                         objects.Name       = item.name,
-                         objects.Class      = sqlpp::tvin(item.upnpClass),
-                         objects.MetaData   = metaId);
-    
-    m_db.run(insertion);
+    addMetadata(item);
+    m_statements->addItem.params.ObjectId = item.objectId;
+    m_statements->addItem.params.ParentId = sqlpp::tvin(item.parentId);
+    m_statements->addItem.params.RefId    = sqlpp::tvin(item.refId);
+    m_statements->addItem.params.Name     = item.name;
+    m_statements->addItem.params.Class    = sqlpp::tvin(item.upnpClass);
+    m_db.run(m_statements->addItem);
 }
 
 void MusicDb::addItems(const std::vector<LibraryItem>& items)
@@ -242,14 +238,7 @@ void MusicDb::addItems(const std::vector<LibraryItem>& items)
     
     for (auto& item : items)
     {
-        addMetadata(item);
-
-        m_statements->addItem.params.ObjectId = item.objectId;
-        m_statements->addItem.params.ParentId = sqlpp::tvin(item.parentId);
-        m_statements->addItem.params.RefId    = sqlpp::tvin(item.refId);
-        m_statements->addItem.params.Name     = item.name;
-        m_statements->addItem.params.Class    = sqlpp::tvin(item.upnpClass);
-        m_db.run(m_statements->addItem);
+        addItem(item);
     }
     
     m_db.commit_transaction();
