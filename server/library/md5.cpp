@@ -147,6 +147,7 @@ void Md5::finalize(uint8_t result[16])
 std::string Md5::toString(const uint8_t data[16])
 {
     char md5string[33];
+    md5string[32] = '\0';
     for(int i = 0; i < 16; ++i)
     {
         sprintf(&md5string[i*2], "%02x", data[i]);
@@ -262,5 +263,15 @@ const uint8_t* Md5::body(const uint8_t* data, uint64_t size)
     m_d = d;
 
     return ptr;
+}
+
+std::string createMd5String(const std::vector<uint8_t>& data)
+{
+    uint8_t hash[16];
+
+    Md5 md5;
+    md5.update(data.data(), data.size());
+    md5.finalize(hash);
+    return Md5::toString(hash);
 }
 

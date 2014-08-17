@@ -402,13 +402,8 @@ bool Scanner::checkAlbumArt(const std::string& directoryPath, const std::string&
             auto possibleAlbumArt = fileops::combinePath(directoryPath, artName);
             if (fileops::pathExists(possibleAlbumArt))
             {
-                uint8_t hash[16];
                 auto data = fileops::readFile(possibleAlbumArt);
-
-                Md5 md5;
-                md5.update(data.data(), data.size());
-                md5.finalize(hash);
-                hashString = Md5::toString(hash);
+                hashString = createMd5String(data);
 
                 auto image = image::Factory::createFromData(data);
                 image->resize(ALBUM_ART_CACHE_SIZE, ALBUM_ART_CACHE_SIZE, image::ResizeAlgorithm::Bilinear);
@@ -427,13 +422,8 @@ bool Scanner::processAlbumArt(const std::string& filepath, const std::string& id
     // resize the album art if it is present
     if (!art.data.empty())
     {
-        uint8_t hash[16];
+        hashString = createMd5String(art.data);
 
-        Md5 md5;
-        md5.update(art.data.data(), art.data.size());
-        md5.finalize(hash);
-
-        hashString = Md5::toString(hash);
         if (fileops::pathExists(fileops::combinePath(m_cacheDir, hashString + "_thumb.jpg")))
         {
             // already cached an image with this hash

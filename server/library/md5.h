@@ -27,6 +27,7 @@
 #define DOOZY_MD5_H
 
 #include <string>
+#include <vector>
 #include <cinttypes>
 
 class Md5
@@ -53,5 +54,8 @@ private:
     uint32_t    m_block[16];
 #endif
 };
+
+std::string createMd5String(const std::vector<uint8_t>& data);
+
 
 #endif
