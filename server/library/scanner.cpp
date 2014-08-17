@@ -24,7 +24,7 @@
 #include "utils/fileoperations.h"
 #include "utils/log.h"
 
-#include "subscribers.h"
+#include "md5.h"
 #include "doozyconfig.h"
 
 #include "audio/audiometadata.h"
@@ -158,9 +158,10 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
                 item.parentId = parentId;
                 item.upnpClass = toString(upnp::Class::Container);
 
-                if (checkAlbumArt(item.path, item.objectId))
+                std::string hash;
+                if (checkAlbumArt(item.path, item.objectId, hash))
                 {
-                    item.thumbnail = item.objectId + "_thumb.jpg";
+                    item.thumbnail = hash + "_thumb.jpg";
                 }
 
                 m_libraryDb.addItem(item);
@@ -253,11 +254,12 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
             item.nrChannels     = md.getChannels();
             item.sampleRate     = md.getSampleRate();
             item.bitrate        = md.getBitRate();
-            
+
+            std::string hash;
             auto art = md.getAlbumArt();
-            if (processAlbumArt(filepath, item.objectId, art))
+            if (processAlbumArt(filepath, item.objectId, art, hash))
             {
-                item.thumbnail = item.objectId + "_thumb.jpg";
+                item.thumbnail = hash + "_thumb.jpg";
             }
             
             // Add the album for this song if it is not already added
@@ -280,9 +282,9 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
                         album.date      = item.date;
                         album.upnpClass = "object.container.album.musicAlbum";
                         
-                        if (processAlbumArt(filepath, album.objectId, art))
+                        if (processAlbumArt(filepath, album.objectId, art, hash))
                         {
-                            album.thumbnail = album.objectId + "_thumb.jpg";
+                            album.thumbnail = hash + "_thumb.jpg";
                         }
                         
                         m_libraryDb.addItem(album);
@@ -391,7 +393,7 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
     log::debug("Add Item: %s (%s parent: %s)", filepath, item.objectId, parentId);
 }
 
-bool Scanner::checkAlbumArt(const std::string& directoryPath, const std::string& id)
+bool Scanner::checkAlbumArt(const std::string& directoryPath, const std::string& id, std::string& hashString)
 {
     for (auto& artName : m_albumArtFilenames)
     {
@@ -400,9 +402,17 @@ bool Scanner::checkAlbumArt(const std::string& directoryPath, const std::string&
             auto possibleAlbumArt = fileops::combinePath(directoryPath, artName);
             if (fileops::pathExists(possibleAlbumArt))
             {
-                auto image = image::Factory::createFromUri(possibleAlbumArt);
+                uint8_t hash[16];
+                auto data = fileops::readFile(possibleAlbumArt);
+
+                Md5 md5;
+                md5.update(data.data(), data.size());
+                md5.finalize(hash);
+                hashString = Md5::toString(hash);
+
+                auto image = image::Factory::createFromData(data);
                 image->resize(ALBUM_ART_CACHE_SIZE, ALBUM_ART_CACHE_SIZE, image::ResizeAlgorithm::Bilinear);
-                m_jpgLoadStore->storeToFile(*image, fileops::combinePath(m_cacheDir, id + "_thumb.jpg"));
+                m_jpgLoadStore->storeToFile(*image, fileops::combinePath(m_cacheDir, hashString + "_thumb.jpg"));
                 return true;
             }
         }
@@ -412,11 +422,24 @@ bool Scanner::checkAlbumArt(const std::string& directoryPath, const std::string&
     return false;
 }
 
-bool Scanner::processAlbumArt(const std::string& filepath, const std::string& id, const audio::AlbumArt& art)
+bool Scanner::processAlbumArt(const std::string& filepath, const std::string& id, const audio::AlbumArt& art, std::string& hashString)
 {
     // resize the album art if it is present
     if (!art.data.empty())
     {
+        uint8_t hash[16];
+
+        Md5 md5;
+        md5.update(art.data.data(), art.data.size());
+        md5.finalize(hash);
+
+        hashString = Md5::toString(hash);
+        if (fileops::pathExists(fileops::combinePath(m_cacheDir, hashString + "_thumb.jpg")))
+        {
+            // already cached an image with this hash
+            return true;
+        }
+
         try
         {
             auto image = image::Factory::createFromData(art.data); // TODO: hint the proper image type from image.format
@@ -432,7 +455,7 @@ bool Scanner::processAlbumArt(const std::string& filepath, const std::string& id
     else
     {
         //no embedded album art found, see if we can find a cover.jpg, ... file
-        return checkAlbumArt(fileops::getPathFromFilepath(filepath), id);
+        return checkAlbumArt(fileops::getPathFromFilepath(filepath), id, hashString);
     }
     
     return false;

@@ -34,7 +34,7 @@ class LibraryTest : public testing::Test
 
     virtual void SetUp()
     {
-        std::vector<std::string> artFilenames = { "cover.jpg" };
+        std::vector<std::string> artFilenames = { "cover.jpg", "cover.png" };
 
         ON_CALL(m_settings, getDatabaseFilePath()).WillByDefault(Return(TEST_DB));
         ON_CALL(m_settings, getLibraryPath()).WillByDefault(Return(TEST_DATA_DIR));

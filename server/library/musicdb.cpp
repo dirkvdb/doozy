@@ -66,14 +66,14 @@ bool getIdFromResultIfExists(const T& result, std::string& id)
     return hasResults;
 }
 
-std::shared_ptr<sql::connection_config> createConfig(const std::string filename)
+sql::connection_config createConfig(const std::string& filename)
 {
-    auto config = std::make_shared<sql::connection_config>();
-    config->path_to_database = filename;
-    config->flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    sql::connection_config config;
+    config.path_to_database = filename;
+    config.flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
     
 #ifdef DEBUG_QUERIES
-    config->debug = true;
+    config.debug = true;
 #endif
 
     return config;
