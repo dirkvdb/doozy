@@ -40,8 +40,8 @@ class LibraryTest : public testing::Test
         ON_CALL(m_settings, getLibraryPath()).WillByDefault(Return(TEST_DATA_DIR));
         ON_CALL(m_settings, getAlbumArtFilenames()).WillByDefault(Return(artFilenames));
 
-        m_library.reset(new FilesystemMusicLibrary(m_settings, "http://localhost:8080/Media/"));
-        m_library->OnScanComplete = [this] {
+        m_library = std::make_unique<FilesystemMusicLibrary>(m_settings, "http://localhost:8080/Media/");
+        m_library->OnScanComplete = [this] () {
             m_notification.triggerEvent();
         };
         

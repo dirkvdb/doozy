@@ -24,7 +24,7 @@ protected:
     virtual void SetUp()
     {
         try { utils::fileops::deleteFile(TEST_DB); } catch (...) {}
-        m_db.reset(new MusicDb(TEST_DB));
+        m_db = std::make_unique<MusicDb>(TEST_DB);
         m_db->setWebRoot("http://localhost:8080/Media/");
 
         m_item.objectId = "#1";

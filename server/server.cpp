@@ -44,7 +44,7 @@ Server::Server(ServerSettings& settings)
 , m_stop(false)
 {
     // make sure we can read http urls
-    ReaderFactory::registerBuilder(std::unique_ptr<IReaderBuilder>(new upnp::HttpReaderBuilder()));
+    ReaderFactory::registerBuilder(std::make_unique<upnp::HttpReaderBuilder>());
 }
 
 Server::~Server()
@@ -86,7 +86,7 @@ void Server::start()
         
         webserver.addVirtualDirectory(g_mediaDir, getInfoCb, requestCb);
 
-        auto library = std::unique_ptr<IMusicLibrary>(new FilesystemMusicLibrary(m_settings, webserver.getWebRootUrl()));
+        auto library = std::make_unique<FilesystemMusicLibrary>(m_settings, webserver.getWebRootUrl());
         MediaServerDevice dev(udn, description, advertiseInterval, std::move(library));
         dev.start();
 

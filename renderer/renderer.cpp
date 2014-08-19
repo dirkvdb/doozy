@@ -38,7 +38,7 @@ Renderer::Renderer(RendererSettings& settings)
 , m_stop(false)
 {
     // make sure we can read http urls
-    ReaderFactory::registerBuilder(std::unique_ptr<IReaderBuilder>(new upnp::HttpReaderBuilder()));
+    ReaderFactory::registerBuilder(std::make_unique<upnp::HttpReaderBuilder>());
 }
 
 void Renderer::start()

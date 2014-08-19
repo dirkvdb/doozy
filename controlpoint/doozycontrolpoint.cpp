@@ -40,7 +40,7 @@ void ControlPoint::run()
         m_ServerScanner.refresh();
         m_RendererScanner.start();
         m_RendererScanner.refresh();
-        m_Webserver.reset(new upnp::WebServer("/Users/dirk/Projects/doozy/controlpoint"));
+        m_Webserver = std::make_unique<upnp::WebServer>("/Users/dirk/Projects/doozy/controlpoint");
 
         m_Cp.setWebserver(*m_Webserver);
         m_Cp.activate();

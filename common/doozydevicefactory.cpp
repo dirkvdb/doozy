@@ -37,13 +37,13 @@ std::unique_ptr<IDevice> createDevice(const std::string& deviceType, const std::
     {
         ServerSettings settings;
         settings.loadFromFile(configFile);
-        return std::unique_ptr<IDevice>(new Server(settings));
+        return std::make_unique<Server>(settings);
     }
     else if (deviceType == "renderer")
     {
         RendererSettings settings;
         settings.loadFromFile(configFile);
-        return std::unique_ptr<IDevice>(new Renderer(settings));
+        return std::make_unique<Renderer>(settings);
     }
 
     throw std::runtime_error("Unsupported device type: " + deviceType);
