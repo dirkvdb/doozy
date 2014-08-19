@@ -31,6 +31,7 @@ struct LibraryItem
     std::string     artist;
     std::string     title;
     std::string     album;
+    std::string     albumArtist;
     std::string     genre;
     std::string     date;
     std::string     upnpClass;
