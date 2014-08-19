@@ -57,8 +57,8 @@ public:
     uint64_t getChildCount(const std::string& id);
     uint64_t getUniqueIdInContainer(const std::string& containerId);
 
-    void addItem(const LibraryItem& item);
-    void addItems(const std::vector<LibraryItem>& items);
+    void addItemWithMetadata(const LibraryItem& item);
+    void addItemsWithMetadata(const std::vector<LibraryItem>& items);
     void updateItem(const LibraryItem& item);
 
     bool itemExists(const std::string& filepath, std::string& objectId);

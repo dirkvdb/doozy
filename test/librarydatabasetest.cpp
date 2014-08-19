@@ -45,7 +45,7 @@ protected:
     
     void addItem(const std::string& id, const std::string& parent, const std::string& title)
     {
-        m_db->addItem(createItem(id, parent, title));
+        m_db->addItemWithMetadata(createItem(id, parent, title));
     }
     
     LibraryItem createItem(const std::string& id, const std::string& parent, const std::string& title)
@@ -82,7 +82,7 @@ protected:
 TEST_F(LibraryDatabaseTest, GetObjectCount)
 {
     EXPECT_EQ(0, m_db->getObjectCount());
-    m_db->addItem(m_item);
+    m_db->addItemWithMetadata(m_item);
     EXPECT_EQ(1, m_db->getObjectCount());
 }
 
@@ -101,7 +101,7 @@ TEST_F(LibraryDatabaseTest, ItemExists)
 {
     std::string id;
     EXPECT_FALSE(m_db->itemExists(m_item.path, id));
-    m_db->addItem(m_item);
+    m_db->addItemWithMetadata(m_item);
     EXPECT_TRUE(m_db->itemExists(m_item.path, id));
     EXPECT_EQ(m_item.objectId, id);
 }
@@ -115,7 +115,7 @@ TEST_F(LibraryDatabaseTest, AlbumExists)
     EXPECT_FALSE(m_db->albumExists(title, artist, albumId));
 
     auto album = createAlbum("1", title, artist);
-    m_db->addItem(album);
+    m_db->addItemWithMetadata(album);
 
     EXPECT_TRUE(m_db->albumExists(title, artist, albumId));
     EXPECT_EQ(album.objectId, albumId);
@@ -130,7 +130,7 @@ TEST_F(LibraryDatabaseTest, AlbumExistsNoArtist)
     EXPECT_FALSE(m_db->albumExists(title, artist, albumId));
 
     auto album = createAlbum("1", title, artist);
-    m_db->addItem(album);
+    m_db->addItemWithMetadata(album);
 
     EXPECT_TRUE(m_db->albumExists(title, artist, albumId));
     EXPECT_EQ(album.objectId, albumId);
@@ -139,7 +139,7 @@ TEST_F(LibraryDatabaseTest, AlbumExistsNoArtist)
 
 TEST_F(LibraryDatabaseTest, ItemStatus)
 {
-    m_db->addItem(m_item);
+    m_db->addItemWithMetadata(m_item);
     EXPECT_EQ(ItemStatus::DoesntExist, m_db->getItemStatus("/bad/path", 100));
     EXPECT_EQ(ItemStatus::UpToDate, m_db->getItemStatus(m_item.path, m_item.modifiedTime));
     EXPECT_EQ(ItemStatus::NeedsUpdate, m_db->getItemStatus(m_item.path, m_item.modifiedTime + 1));
@@ -147,13 +147,13 @@ TEST_F(LibraryDatabaseTest, ItemStatus)
 
 TEST_F(LibraryDatabaseTest, GetItemPath)
 {
-    m_db->addItem(m_item);
+    m_db->addItemWithMetadata(m_item);
     EXPECT_EQ(m_item.path, m_db->getItemPath(m_item.objectId));
 }
 
 TEST_F(LibraryDatabaseTest, AddGetItem)
 {
-    m_db->addItem(m_item);
+    m_db->addItemWithMetadata(m_item);
     auto item = m_db->getItem(m_item.objectId);
 
     EXPECT_EQ(m_item.objectId,      item->getObjectId());
@@ -171,7 +171,7 @@ TEST_F(LibraryDatabaseTest, AddItems)
         createItem("0", "-1", "root")
     };
 
-    m_db->addItems(items);
+    m_db->addItemsWithMetadata(items);
     EXPECT_EQ(3, m_db->getObjectCount());
     
     auto item = m_db->getItem("0");
@@ -192,7 +192,7 @@ TEST_F(LibraryDatabaseTest, AddGetItemAmpersand)
 {
     m_item.title = "Me & my title";
 
-    m_db->addItem(m_item);
+    m_db->addItemWithMetadata(m_item);
     auto item = m_db->getItem(m_item.objectId);
 
     EXPECT_EQ(m_item.objectId,   item->getObjectId());
@@ -206,7 +206,7 @@ TEST_F(LibraryDatabaseTest, AddGetItemLongPath)
 {
     m_item.title = "----------------------------------------------------------------";
 
-    m_db->addItem(m_item);
+    m_db->addItemWithMetadata(m_item);
     auto item = m_db->getItem(m_item.objectId);
 
     EXPECT_EQ(m_item.objectId,   item->getObjectId());
@@ -218,7 +218,7 @@ TEST_F(LibraryDatabaseTest, AddGetItemLongPath)
 
 TEST_F(LibraryDatabaseTest, UpdateItem)
 {
-    m_db->addItem(m_item);
+    m_db->addItemWithMetadata(m_item);
 
     m_item.parentId     = "NewParent";
     m_item.refId        = "NewRefId";

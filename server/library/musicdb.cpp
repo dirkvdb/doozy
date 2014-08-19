@@ -110,6 +110,8 @@ auto addMetadataQuery = [] () {
         metadata.FileSize       = parameter(metadata.FileSize),
         metadata.Title          = parameter(metadata.Title),
         metadata.Artist         = parameter(metadata.Artist),
+        metadata.Album          = parameter(metadata.Album),
+        metadata.AlbumArtist    = parameter(metadata.AlbumArtist),
         metadata.Genre          = parameter(metadata.Genre),
         metadata.MimeType       = parameter(metadata.MimeType),
         metadata.Duration       = parameter(metadata.Duration),
@@ -220,7 +222,7 @@ uint64_t MusicDb::getUniqueIdInContainer(const std::string& containerId)
     return m_db.run(m_statements->uniqueContainerId).front().numObjects;
 }
 
-void MusicDb::addItem(const LibraryItem& item)
+void MusicDb::addItemWithMetadata(const LibraryItem& item)
 {
     addMetadata(item);
     m_statements->addItem.params.ObjectId = item.objectId;
@@ -231,14 +233,14 @@ void MusicDb::addItem(const LibraryItem& item)
     m_db.run(m_statements->addItem);
 }
 
-void MusicDb::addItems(const std::vector<LibraryItem>& items)
+void MusicDb::addItemsWithMetadata(const std::vector<LibraryItem>& items)
 {
     
     m_db.start_transaction();
     
     for (auto& item : items)
     {
-        addItem(item);
+        addItemWithMetadata(item);
     }
     
     m_db.commit_transaction();
@@ -251,6 +253,8 @@ int64_t MusicDb::addMetadata(const LibraryItem& item)
     m_statements->addMetadata.params.FileSize      = static_cast<int64_t>(item.fileSize);
     m_statements->addMetadata.params.Title         = sqlpp::tvin(item.title);
     m_statements->addMetadata.params.Artist        = sqlpp::tvin(item.artist);
+    m_statements->addMetadata.params.Album         = sqlpp::tvin(item.album);
+    m_statements->addMetadata.params.AlbumArtist   = sqlpp::tvin(item.albumArtist);
     m_statements->addMetadata.params.Genre         = sqlpp::tvin(item.genre);
     m_statements->addMetadata.params.MimeType      = sqlpp::tvin(item.mimeType);
     m_statements->addMetadata.params.Duration      = item.duration;
