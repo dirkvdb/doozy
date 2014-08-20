@@ -28,13 +28,13 @@ protected:
         m_db->setWebRoot("http://localhost:8080/Media/");
 
         m_item.objectId = "#1";
-        m_item.title = "TestItem";
         m_item.parentId = "0";
         m_item.refId = "#88";
         m_item.upnpClass = "object.container";
-        m_item.modifiedTime = 100;
-        m_item.path = "/the/path";
         m_item.name = "path";
+        m_meta.title = "TestItem";
+        m_meta.modifiedTime = 100;
+        m_meta.path = "/the/path";
     }
 
     virtual void TearDown()
@@ -45,44 +45,50 @@ protected:
     
     void addItem(const std::string& id, const std::string& parent, const std::string& title)
     {
-        m_db->addItemWithMetadata(createItem(id, parent, title));
+        auto item = createItem(id, parent, title);
+        m_db->addItem(item.first, item.second);
     }
     
-    LibraryItem createItem(const std::string& id, const std::string& parent, const std::string& title)
+    std::pair<LibraryItem, LibraryMetadata> createItem(const std::string& id, const std::string& parent, const std::string& title)
     {
         LibraryItem item;
-        item.path = "/the/path_" + title;
         item.name = "path";
         item.objectId = id;
-        item.title = title;
         item.parentId = parent;
         item.upnpClass = "object.container";
 
-        return item;
+        LibraryMetadata meta;
+        meta.path = "/the/path_" + title;
+        meta.title = title;
+
+        return {item, meta};
     }
     
-    LibraryItem createAlbum(const std::string& index, const std::string& title, const std::string& artist)
+    std::pair<LibraryItem, LibraryMetadata> createAlbum(const std::string& index, const std::string& title, const std::string& artist)
     {
         LibraryItem item;
-        item.path = "/the/path_" + title;
         item.name = title;
         item.objectId = "0@1@1" + index;
-        item.title = title;
-        item.artist = artist;
         item.parentId = "0@1@1";
         item.upnpClass = "object.container.album.musicAlbum";
 
-        return item;
+        LibraryMetadata meta;
+        meta.path = "/the/path_" + title;
+        meta.title = title;
+        meta.artist = artist;
+
+        return {item, meta};
     }
 
     std::unique_ptr<MusicDb>    m_db;
     LibraryItem                 m_item;
+    LibraryMetadata             m_meta;
 };
 
 TEST_F(LibraryDatabaseTest, GetObjectCount)
 {
     EXPECT_EQ(0, m_db->getObjectCount());
-    m_db->addItemWithMetadata(m_item);
+    m_db->addItem(m_item, m_meta);
     EXPECT_EQ(1, m_db->getObjectCount());
 }
 
@@ -100,9 +106,9 @@ TEST_F(LibraryDatabaseTest, GetChildCount)
 TEST_F(LibraryDatabaseTest, ItemExists)
 {
     std::string id;
-    EXPECT_FALSE(m_db->itemExists(m_item.path, id));
-    m_db->addItemWithMetadata(m_item);
-    EXPECT_TRUE(m_db->itemExists(m_item.path, id));
+    EXPECT_FALSE(m_db->itemExists(m_meta.path, id));
+    m_db->addItem(m_item, m_meta);
+    EXPECT_TRUE(m_db->itemExists(m_meta.path, id));
     EXPECT_EQ(m_item.objectId, id);
 }
 
@@ -115,10 +121,10 @@ TEST_F(LibraryDatabaseTest, AlbumExists)
     EXPECT_FALSE(m_db->albumExists(title, artist, albumId));
 
     auto album = createAlbum("1", title, artist);
-    m_db->addItemWithMetadata(album);
+    m_db->addItem(album.first, album.second);
 
     EXPECT_TRUE(m_db->albumExists(title, artist, albumId));
-    EXPECT_EQ(album.objectId, albumId);
+    EXPECT_EQ(album.first.objectId, albumId);
 }
 
 TEST_F(LibraryDatabaseTest, AlbumExistsNoArtist)
@@ -130,48 +136,48 @@ TEST_F(LibraryDatabaseTest, AlbumExistsNoArtist)
     EXPECT_FALSE(m_db->albumExists(title, artist, albumId));
 
     auto album = createAlbum("1", title, artist);
-    m_db->addItemWithMetadata(album);
+    m_db->addItem(album.first, album.second);
 
     EXPECT_TRUE(m_db->albumExists(title, artist, albumId));
-    EXPECT_EQ(album.objectId, albumId);
+    EXPECT_EQ(album.first.objectId, albumId);
 }
 
 
 TEST_F(LibraryDatabaseTest, ItemStatus)
 {
-    m_db->addItemWithMetadata(m_item);
+    m_db->addItem(m_item, m_meta);
     EXPECT_EQ(ItemStatus::DoesntExist, m_db->getItemStatus("/bad/path", 100));
-    EXPECT_EQ(ItemStatus::UpToDate, m_db->getItemStatus(m_item.path, m_item.modifiedTime));
-    EXPECT_EQ(ItemStatus::NeedsUpdate, m_db->getItemStatus(m_item.path, m_item.modifiedTime + 1));
+    EXPECT_EQ(ItemStatus::UpToDate, m_db->getItemStatus(m_meta.path, m_meta.modifiedTime));
+    EXPECT_EQ(ItemStatus::NeedsUpdate, m_db->getItemStatus(m_meta.path, m_meta.modifiedTime + 1));
 }
 
 TEST_F(LibraryDatabaseTest, GetItemPath)
 {
-    m_db->addItemWithMetadata(m_item);
-    EXPECT_EQ(m_item.path, m_db->getItemPath(m_item.objectId));
+    m_db->addItem(m_item, m_meta);
+    EXPECT_EQ(m_meta.path, m_db->getItemPath(m_item.objectId));
 }
 
 TEST_F(LibraryDatabaseTest, AddGetItem)
 {
-    m_db->addItemWithMetadata(m_item);
+    m_db->addItem(m_item, m_meta);
     auto item = m_db->getItem(m_item.objectId);
 
     EXPECT_EQ(m_item.objectId,      item->getObjectId());
     EXPECT_EQ(m_item.refId,         item->getRefId());
     EXPECT_EQ(m_item.parentId,      item->getParentId());
-    EXPECT_EQ(m_item.title,         item->getTitle());
     EXPECT_EQ(m_item.upnpClass,     item->getClassString());
+    EXPECT_EQ(m_meta.title,         item->getTitle());
 }
 
 TEST_F(LibraryDatabaseTest, AddItems)
 {
-    std::vector<LibraryItem> items = {
+    std::vector<std::pair<LibraryItem, LibraryMetadata>> items = {
         createItem("0@1", "0", "item1"),
         createItem("0@2", "0", "item2"),
         createItem("0", "-1", "root")
     };
 
-    m_db->addItemsWithMetadata(items);
+    m_db->addItems(items);
     EXPECT_EQ(3, m_db->getObjectCount());
     
     auto item = m_db->getItem("0");
@@ -190,50 +196,50 @@ TEST_F(LibraryDatabaseTest, AddItems)
 
 TEST_F(LibraryDatabaseTest, AddGetItemAmpersand)
 {
-    m_item.title = "Me & my title";
+    m_meta.title = "Me & my title";
 
-    m_db->addItemWithMetadata(m_item);
+    m_db->addItem(m_item, m_meta);
     auto item = m_db->getItem(m_item.objectId);
 
     EXPECT_EQ(m_item.objectId,   item->getObjectId());
     EXPECT_EQ(m_item.refId,      item->getRefId());
     EXPECT_EQ(m_item.parentId,   item->getParentId());
-    EXPECT_EQ(m_item.title,      item->getTitle());
     EXPECT_EQ(m_item.upnpClass,  item->getClassString());
+    EXPECT_EQ(m_meta.title,      item->getTitle());
 }
 
 TEST_F(LibraryDatabaseTest, AddGetItemLongPath)
 {
-    m_item.title = "----------------------------------------------------------------";
+    m_meta.title = "----------------------------------------------------------------";
 
-    m_db->addItemWithMetadata(m_item);
+    m_db->addItem(m_item, m_meta);
     auto item = m_db->getItem(m_item.objectId);
 
     EXPECT_EQ(m_item.objectId,   item->getObjectId());
     EXPECT_EQ(m_item.refId,      item->getRefId());
     EXPECT_EQ(m_item.parentId,   item->getParentId());
-    EXPECT_EQ(m_item.title,      item->getTitle());
     EXPECT_EQ(m_item.upnpClass,  item->getClassString());
+    EXPECT_EQ(m_meta.title,      item->getTitle());
 }
 
 TEST_F(LibraryDatabaseTest, UpdateItem)
 {
-    m_db->addItemWithMetadata(m_item);
+    m_db->addItem(m_item, m_meta);
 
     m_item.parentId     = "NewParent";
     m_item.refId        = "NewRefId";
-    m_item.title        = "NewTitle";
     m_item.upnpClass    = "object.container.album.musicAlbum";
-    m_item.modifiedTime = 200;
+    m_meta.title        = "NewTitle";
+    m_meta.modifiedTime = 200;
 
-    m_db->updateItem(m_item);
+    m_db->updateItem(m_item, m_meta);
     auto item = m_db->getItem(m_item.objectId);
 
     EXPECT_EQ(m_item.objectId,   item->getObjectId());
     EXPECT_EQ(m_item.refId,      item->getRefId());
     EXPECT_EQ(m_item.parentId,   item->getParentId());
-    EXPECT_EQ(m_item.title,      item->getTitle());
     EXPECT_EQ(m_item.upnpClass,  item->getClassString());
+    EXPECT_EQ(m_meta.title,      item->getTitle());
 }
 
 TEST_F(LibraryDatabaseTest, GetItems)

@@ -91,46 +91,48 @@ void Scanner::performScan(const std::string& libraryPath)
 
 void Scanner::createInitialLayout()
 {
+    LibraryMetadata meta;
+
     // Root Item
     LibraryItem root;
     root.name = PACKAGE_NAME;
     root.objectId = g_rootId;
-    root.title = PACKAGE_NAME;
     root.parentId = "-1";
     root.upnpClass = toString(upnp::Class::Container);
-    m_libraryDb.addItemWithMetadata(root);
+    meta.title = root.name;
+    m_libraryDb.addItem(root, meta);
 
     // Music
     LibraryItem music;
     music.name = "Music";
     music.objectId = g_musicId;
-    music.title = "Music";
     music.parentId = g_rootId;
     music.upnpClass = toString(upnp::Class::Container);
-    m_libraryDb.addItemWithMetadata(music);
+    meta.title = music.name;
+    m_libraryDb.addItem(music, meta);
 
     // Music -> Albums
     LibraryItem albums;
     albums.name = "Albums";
     albums.objectId = g_albumsId;
-    albums.title = "Albums";
     albums.parentId = music.objectId;
     albums.upnpClass = toString(upnp::Class::Container);
-    m_libraryDb.addItemWithMetadata(albums);
+    meta.title = albums.name;
+    m_libraryDb.addItem(albums, meta);
 
     // Browse folders
     LibraryItem browse;
     browse.name = "Browse filesystem";
     browse.objectId = g_browseFileSystemId;
-    browse.title = "Browse filesystem";
     browse.parentId = g_rootId;
     browse.upnpClass = toString(upnp::Class::StorageFolder);
-    m_libraryDb.addItemWithMetadata(browse);
+    meta.title = browse.name;
+    m_libraryDb.addItem(browse, meta);
 }
 
 void Scanner::scan(const std::string& dir, const std::string& parentId)
 {
-    std::vector<LibraryItem> items;
+    std::vector<std::pair<LibraryItem, LibraryMetadata>> items;
 
     auto id = m_libraryDb.getUniqueIdInContainer(parentId);
 
@@ -151,20 +153,22 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
                 objectId = stringops::format("%s@%d", parentId, id++);
 
                 LibraryItem item;
-                item.path = entry.path();
-                item.name = fileops::getFileName(item.path);
+                item.name = fileops::getFileName(path);
                 item.objectId = objectId;
-                item.title = item.name;
                 item.parentId = parentId;
                 item.upnpClass = toString(upnp::Class::Container);
 
+                LibraryMetadata meta;
+                meta.title = item.name;
+                meta.path = path;
+
                 std::string hash;
-                if (checkAlbumArt(item.path, item.objectId, hash))
+                if (checkAlbumArt(meta.path, item.objectId, hash))
                 {
-                    item.thumbnail = hash + "_thumb.jpg";
+                    meta.thumbnail = hash + "_thumb.jpg";
                 }
 
-                m_libraryDb.addItemWithMetadata(item);
+                m_libraryDb.addItem(item, meta);
                 log::debug("Add container: %s (%s) parent: %s", entry.path(), objectId, parentId);
             }
 
@@ -187,7 +191,7 @@ void Scanner::scan(const std::string& dir, const std::string& parentId)
 
     if (!items.empty())
     {
-        m_libraryDb.addItemsWithMetadata(items);
+        m_libraryDb.addItems(items);
     }
 }
 
@@ -196,7 +200,7 @@ void Scanner::cancel()
     m_stop = true;
 }
 
-void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string& parentId, std::vector<LibraryItem>& items)
+void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string& parentId, std::vector<std::pair<LibraryItem, LibraryMetadata>>& items)
 {
     ++m_scannedFiles;
 
@@ -215,12 +219,7 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
     }
 
     LibraryItem item;
-    item.path = filepath;
-    item.name = fileops::getFileName(item.path);
-    item.modifiedTime = info.modifyTime;
-    item.fileSize = info.sizeInBytes;
-    item.mimeType = toString(mime::typeFromFile(item.path));
-    
+    item.name = fileops::getFileName(filepath);
     item.objectId = stringops::format("%s@%d", parentId, id);
     item.parentId = parentId;
 
@@ -239,36 +238,42 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
             throw std::runtime_error("Unexpected mime type");
     }
 
+    LibraryMetadata meta;
+    meta.path = filepath;
+    meta.modifiedTime = info.modifyTime;
+    meta.fileSize = info.sizeInBytes;
+    meta.mimeType = toString(mime::typeFromFile(filepath));
+    
     if (type == mime::Group::Audio)
     {
         try
         {
             audio::Metadata md(filepath, audio::Metadata::ReadAudioProperties::Yes);
-            item.artist         = md.getArtist();
-            item.title          = md.getTitle();
-            item.album          = md.getAlbum();
-            item.albumArtist    = md.getAlbumArtist();
-            item.genre          = md.getGenre();
-            item.date           = std::to_string(md.getYear());
-            item.trackNumber    = md.getTrackNr();
-            item.duration       = md.getDuration();
-            item.nrChannels     = md.getChannels();
-            item.sampleRate     = md.getSampleRate();
-            item.bitrate        = md.getBitRate();
+            meta.artist         = md.getArtist();
+            meta.title          = md.getTitle();
+            meta.album          = md.getAlbum();
+            meta.albumArtist    = md.getAlbumArtist();
+            meta.genre          = md.getGenre();
+            meta.date           = std::to_string(md.getYear());
+            meta.trackNumber    = md.getTrackNr();
+            meta.duration       = md.getDuration();
+            meta.nrChannels     = md.getChannels();
+            meta.sampleRate     = md.getSampleRate();
+            meta.bitrate        = md.getBitRate();
 
             std::string hash;
             auto art = md.getAlbumArt();
             if (processAlbumArt(filepath, item.objectId, art, hash))
             {
-                item.thumbnail = hash + "_thumb.jpg";
+                meta.thumbnail = hash + "_thumb.jpg";
             }
             
             // Add the album for this song if it is not already added
-            if (!item.album.empty())
+            if (!meta.album.empty())
             {
                 try
                 {
-                    auto albumArtist = md.getAlbumArtist();
+//                    auto albumArtist = md.getAlbumArtist();
                 
 //                    std::string albumId;
 //                    if (!m_libraryDb.albumExists(item.album, albumArtist, albumId))
@@ -390,7 +395,7 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
 //        //m_LibraryDb.updateTrack(track);
 //    }
 
-    items.push_back(item);
+    items.emplace_back(item, meta);
     log::debug("Add Item: %s (%s parent: %s)", filepath, item.objectId, parentId);
 }
 

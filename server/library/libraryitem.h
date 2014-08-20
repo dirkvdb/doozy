@@ -28,13 +28,17 @@ struct LibraryItem
     std::string     parentId;
     std::string     refId;
     std::string     name;
+    std::string     upnpClass;
+};
+
+struct LibraryMetadata
+{
     std::string     artist;
     std::string     title;
     std::string     album;
     std::string     albumArtist;
     std::string     genre;
     std::string     date;
-    std::string     upnpClass;
     std::string     path;
     std::string     mimeType;
     std::string     thumbnail;

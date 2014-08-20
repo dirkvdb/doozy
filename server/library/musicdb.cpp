@@ -99,7 +99,7 @@ auto addItemQuery = [] () {
         objects.RefId       = parameter(objects.RefId),
         objects.Name        = parameter(objects.Name),
         objects.Class       = parameter(objects.Class),
-        objects.MetaData    = sqlpp::verbatim<sqlpp::integer>("last_insert_rowid()")
+        objects.MetaData    = parameter(objects.MetaData)
     );
 };
 
@@ -222,51 +222,62 @@ uint64_t MusicDb::getUniqueIdInContainer(const std::string& containerId)
     return m_db.run(m_statements->uniqueContainerId).front().numObjects;
 }
 
-void MusicDb::addItemWithMetadata(const LibraryItem& item)
+void MusicDb::addItem(const LibraryItem& item)
 {
-    addMetadata(item);
     m_statements->addItem.params.ObjectId = item.objectId;
     m_statements->addItem.params.ParentId = sqlpp::tvin(item.parentId);
     m_statements->addItem.params.RefId    = sqlpp::tvin(item.refId);
     m_statements->addItem.params.Name     = item.name;
     m_statements->addItem.params.Class    = sqlpp::tvin(item.upnpClass);
+    m_statements->addItem.params.MetaData = -1;
     m_db.run(m_statements->addItem);
 }
 
-void MusicDb::addItemsWithMetadata(const std::vector<LibraryItem>& items)
+void MusicDb::addItem(const LibraryItem& item, const LibraryMetadata& meta)
 {
-    
+    addMetadata(meta);
+    m_statements->addItem.params.ObjectId = item.objectId;
+    m_statements->addItem.params.ParentId = sqlpp::tvin(item.parentId);
+    m_statements->addItem.params.RefId    = sqlpp::tvin(item.refId);
+    m_statements->addItem.params.Name     = item.name;
+    m_statements->addItem.params.Class    = sqlpp::tvin(item.upnpClass);
+    m_statements->addItem.params.MetaData = sqlpp::eval<sqlpp::integer>(m_db, "last_insert_rowid()");
+    m_db.run(m_statements->addItem);
+}
+
+void MusicDb::addItems(const std::vector<std::pair<LibraryItem, LibraryMetadata>>& items)
+{
     m_db.start_transaction();
     
     for (auto& item : items)
     {
-        addItemWithMetadata(item);
+        addItem(item.first, item.second);
     }
     
     m_db.commit_transaction();
 }
 
-int64_t MusicDb::addMetadata(const LibraryItem& item)
+int64_t MusicDb::addMetadata(const LibraryMetadata& meta)
 {
-    m_statements->addMetadata.params.ModifiedTime  = static_cast<int64_t>(item.modifiedTime);
-    m_statements->addMetadata.params.FilePath      = sqlpp::tvin(item.path);
-    m_statements->addMetadata.params.FileSize      = static_cast<int64_t>(item.fileSize);
-    m_statements->addMetadata.params.Title         = sqlpp::tvin(item.title);
-    m_statements->addMetadata.params.Artist        = sqlpp::tvin(item.artist);
-    m_statements->addMetadata.params.Album         = sqlpp::tvin(item.album);
-    m_statements->addMetadata.params.AlbumArtist   = sqlpp::tvin(item.albumArtist);
-    m_statements->addMetadata.params.Genre         = sqlpp::tvin(item.genre);
-    m_statements->addMetadata.params.MimeType      = sqlpp::tvin(item.mimeType);
-    m_statements->addMetadata.params.Duration      = item.duration;
-    m_statements->addMetadata.params.Channels      = item.nrChannels;
-    m_statements->addMetadata.params.BitRate       = item.bitrate;
-    m_statements->addMetadata.params.SampleRate    = item.sampleRate;
-    m_statements->addMetadata.params.Thumbnail     = sqlpp::tvin(item.thumbnail);
+    m_statements->addMetadata.params.ModifiedTime  = static_cast<int64_t>(meta.modifiedTime);
+    m_statements->addMetadata.params.FilePath      = sqlpp::tvin(meta.path);
+    m_statements->addMetadata.params.FileSize      = static_cast<int64_t>(meta.fileSize);
+    m_statements->addMetadata.params.Title         = sqlpp::tvin(meta.title);
+    m_statements->addMetadata.params.Artist        = sqlpp::tvin(meta.artist);
+    m_statements->addMetadata.params.Album         = sqlpp::tvin(meta.album);
+    m_statements->addMetadata.params.AlbumArtist   = sqlpp::tvin(meta.albumArtist);
+    m_statements->addMetadata.params.Genre         = sqlpp::tvin(meta.genre);
+    m_statements->addMetadata.params.MimeType      = sqlpp::tvin(meta.mimeType);
+    m_statements->addMetadata.params.Duration      = meta.duration;
+    m_statements->addMetadata.params.Channels      = meta.nrChannels;
+    m_statements->addMetadata.params.BitRate       = meta.bitrate;
+    m_statements->addMetadata.params.SampleRate    = meta.sampleRate;
+    m_statements->addMetadata.params.Thumbnail     = sqlpp::tvin(meta.thumbnail);
     
     return m_db.run(m_statements->addMetadata);
 }
 
-void MusicDb::updateItem(const LibraryItem& item)
+void MusicDb::updateItem(const LibraryItem& item, const LibraryMetadata& meta)
 {
     m_db.run(update(objects).set(
         objects.ObjectId   = item.objectId,
@@ -277,18 +288,18 @@ void MusicDb::updateItem(const LibraryItem& item)
     ).where(true));
     
     m_db.run(update(metadata).set(
-        metadata.ModifiedTime  = static_cast<int64_t>(item.modifiedTime),
-        metadata.FilePath      = sqlpp::tvin(item.path),
-        metadata.FileSize      = static_cast<int64_t>(item.fileSize),
-        metadata.Title         = sqlpp::tvin(item.title),
-        metadata.Artist        = sqlpp::tvin(item.artist),
-        metadata.Genre         = sqlpp::tvin(item.genre),
-        metadata.MimeType      = sqlpp::tvin(item.mimeType),
-        metadata.Duration      = item.duration,
-        metadata.Channels      = item.nrChannels,
-        metadata.BitRate       = item.bitrate,
-        metadata.SampleRate    = item.sampleRate,
-        metadata.Thumbnail     = sqlpp::tvin(item.thumbnail)
+        metadata.ModifiedTime  = static_cast<int64_t>(meta.modifiedTime),
+        metadata.FilePath      = sqlpp::tvin(meta.path),
+        metadata.FileSize      = static_cast<int64_t>(meta.fileSize),
+        metadata.Title         = sqlpp::tvin(meta.title),
+        metadata.Artist        = sqlpp::tvin(meta.artist),
+        metadata.Genre         = sqlpp::tvin(meta.genre),
+        metadata.MimeType      = sqlpp::tvin(meta.mimeType),
+        metadata.Duration      = meta.duration,
+        metadata.Channels      = meta.nrChannels,
+        metadata.BitRate       = meta.bitrate,
+        metadata.SampleRate    = meta.sampleRate,
+        metadata.Thumbnail     = sqlpp::tvin(meta.thumbnail)
     ).where(true));
 }
 

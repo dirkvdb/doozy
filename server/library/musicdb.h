@@ -57,9 +57,10 @@ public:
     uint64_t getChildCount(const std::string& id);
     uint64_t getUniqueIdInContainer(const std::string& containerId);
 
-    void addItemWithMetadata(const LibraryItem& item);
-    void addItemsWithMetadata(const std::vector<LibraryItem>& items);
-    void updateItem(const LibraryItem& item);
+    void addItem(const LibraryItem& item);
+    void addItem(const LibraryItem& item, const LibraryMetadata& meta);
+    void addItems(const std::vector<std::pair<LibraryItem, LibraryMetadata>>& items);
+    void updateItem(const LibraryItem& item, const LibraryMetadata& meta);
 
     bool itemExists(const std::string& filepath, std::string& objectId);
     bool albumExists(const std::string& title, const std::string& artist, std::string& objectId);
@@ -81,7 +82,7 @@ private:
 
     //static void searchTracksCb(sqlite3_stmt* pStmt, void* pData);
 
-    int64_t addMetadata(const LibraryItem& item);
+    int64_t addMetadata(const LibraryMetadata& meta);
     void removeMetaData(int64_t id);
     void createInitialDatabase();
 
