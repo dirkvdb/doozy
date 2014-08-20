@@ -319,19 +319,10 @@ bool MusicDb::itemExists(const string& filepath, string& objectId)
 
 bool MusicDb::albumExists(const std::string& title, const std::string& artist, string& objectId)
 {
-    auto query = dynamic_select(m_db, objects.ObjectId)
+    auto query = select(objects.ObjectId)
                  .from(metadata.left_outer_join(objects).on(objects.MetaData == metadata.Id))
-                 .dynamic_where(objects.Class == "object.container.album.musicAlbum" and objects.Name == title);
+                 .where(objects.Class == "object.container.album.musicAlbum" and objects.Name == title and metadata.Artist == sqlpp::tvin(artist));
     
-    if (artist.empty())
-    {
-        query.where.add(metadata.Artist.is_null());
-    }
-    else
-    {
-        query.where.add(metadata.Artist == artist);
-    }
-
     return getIdFromResultIfExists(m_db.run(query), objectId);
 }
 
