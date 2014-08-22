@@ -110,7 +110,7 @@ void FilesystemMusicLibrary::scannerThread()
 
         {
             std::lock_guard<std::mutex> lock(m_scanMutex);
-            m_scanner.reset(new Scanner(m_db, filenames, m_settings.getCachePath()));
+            m_scanner.reset(new Scanner(filenames, m_settings.getDatabaseFilePath(), m_settings.getCachePath()));
         }
         m_scanner->performScan(m_libraryPath);
 

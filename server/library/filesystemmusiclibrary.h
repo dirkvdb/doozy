@@ -23,8 +23,8 @@
 #include <mutex>
 
 #include "utils/types.h"
-#include "musicdb.h"
 #include "musiclibraryinterface.h"
+#include "database.h"
 
 namespace doozy
 {
@@ -51,13 +51,13 @@ private:
     void cancelScanThread();
     void scannerThread();
 
-    MusicDb                         m_db;
-    std::string                     m_libraryPath;
-    std::thread                     m_scannerThread;
-    std::mutex                      m_scanMutex;
-    std::unique_ptr<Scanner>        m_scanner;
-    bool                            m_destroy;
-    const ServerSettings&           m_settings;
+    Database<ThreadingModel::MultiThreaded> m_db;
+    std::string                             m_libraryPath;
+    std::thread                             m_scannerThread;
+    std::mutex                              m_scanMutex;
+    std::unique_ptr<Scanner>                m_scanner;
+    bool                                    m_destroy;
+    const ServerSettings&                   m_settings;
 };
 
 }

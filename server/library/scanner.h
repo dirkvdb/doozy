@@ -19,6 +19,7 @@
 
 #include <string>
 #include <vector>
+#include "database.h"
 #include "utils/threadpool.h"
 
 namespace image
@@ -45,7 +46,7 @@ struct LibraryMetadata;
 class Scanner
 {
 public:
-    Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames, const std::string& cacheDir);
+    Scanner(const std::vector<std::string>& albumArtFilenames, const std::string& dbPath, const std::string& cacheDir);
     ~Scanner();
 
     void performScan(const std::string& libraryPath);
@@ -58,15 +59,15 @@ private:
     bool checkAlbumArt(const std::string& directoryPath, const std::string& id, std::string& hash);
     bool processAlbumArt(const std::string& filepath, const std::string& id, const audio::AlbumArt& art, std::string& hash);
 
-    MusicDb&                            m_libraryDb;
-    std::string                         m_cacheDir;
-    int32_t                             m_scannedFiles;
-    std::vector<std::string>            m_albumArtFilenames;
-    std::unique_ptr<image::ILoadStore>  m_jpgLoadStore;
-    std::unique_ptr<image::ILoadStore>  m_pngLoadStore;
+    Database<ThreadingModel::SingleThreaded>    m_libraryDb;
+    std::string                                 m_cacheDir;
+    int32_t                                     m_scannedFiles;
+    std::vector<std::string>                    m_albumArtFilenames;
+    std::unique_ptr<image::ILoadStore>          m_jpgLoadStore;
+    std::unique_ptr<image::ILoadStore>          m_pngLoadStore;
 
-    bool                                m_initialScan;
-    bool                                m_stop;
+    bool                                        m_initialScan;
+    bool                                        m_stop;
 };
 
 }

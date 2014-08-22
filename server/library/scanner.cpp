@@ -53,8 +53,8 @@ static const std::string g_musicId = "0@1";
 static const std::string g_albumsId = g_musicId + "@1";
 static const std::string g_browseFileSystemId = "0@2";
 
-Scanner::Scanner(MusicDb& db, const std::vector<std::string>& albumArtFilenames, const std::string& cacheDir)
-: m_libraryDb(db)
+Scanner::Scanner(const std::vector<std::string>& albumArtFilenames,  const std::string& dbPath, const std::string& cacheDir)
+: m_libraryDb(dbPath)
 , m_cacheDir(cacheDir)
 , m_scannedFiles(0)
 , m_albumArtFilenames(albumArtFilenames)
