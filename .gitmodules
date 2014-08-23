@@ -16,6 +16,3 @@
 [submodule "modules/sqlpp11"]
 	path = modules/sqlpp11
 	url = https://github.com/rbock/sqlpp11.git
-[submodule "modules/sqlpp11-connector-sqlite3"]
-	path = modules/sqlpp11-connector-sqlite3
-	url = https://github.com/rbock/sqlpp11-connector-sqlite3.git
