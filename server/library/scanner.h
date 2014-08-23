@@ -59,15 +59,15 @@ private:
     bool checkAlbumArt(const std::string& directoryPath, const std::string& id, std::string& hash);
     bool processAlbumArt(const std::string& filepath, const std::string& id, const audio::AlbumArt& art, std::string& hash);
 
-    Database<ThreadingModel::SingleThreaded>    m_libraryDb;
-    std::string                                 m_cacheDir;
-    int32_t                                     m_scannedFiles;
-    std::vector<std::string>                    m_albumArtFilenames;
-    std::unique_ptr<image::ILoadStore>          m_jpgLoadStore;
-    std::unique_ptr<image::ILoadStore>          m_pngLoadStore;
+    Database<>                              m_libraryDb;
+    std::string                             m_cacheDir;
+    int32_t                                 m_scannedFiles;
+    std::vector<std::string>                m_albumArtFilenames;
+    std::unique_ptr<image::ILoadStore>      m_jpgLoadStore;
+    std::unique_ptr<image::ILoadStore>      m_pngLoadStore;
 
-    bool                                        m_initialScan;
-    bool                                        m_stop;
+    bool                                    m_initialScan;
+    bool                                    m_stop;
 };
 
 }

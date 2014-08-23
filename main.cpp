@@ -84,12 +84,12 @@ int main(int argc, char **argv)
         g_deviceInstance->start();
         log::info("Bye");
 
-        return 0;
+        return EXIT_SUCCESS;
     }
     catch (std::exception& e)
     {
         log::error(e.what());
-        return -1;
+        return EXIT_FAILURE;
     }
 }
 
