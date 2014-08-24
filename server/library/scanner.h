@@ -55,7 +55,7 @@ public:
 private:
     void createInitialLayout();
     void scan(const std::string& dir, const std::string& parentId);
-    void onFile(const std::string& filepath, uint64_t id, const std::string& parentId, std::vector<std::pair<LibraryItem, LibraryMetadata>>& items);
+    void onFile(const std::string& filepath, uint64_t id, const std::string& parentId, std::vector<std::pair<std::vector<LibraryItem>, LibraryMetadata>>& items);
     bool checkAlbumArt(const std::string& directoryPath, const std::string& id, std::string& hash);
     bool processAlbumArt(const std::string& filepath, const std::string& id, const audio::AlbumArt& art, std::string& hash);
 

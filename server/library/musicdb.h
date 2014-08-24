@@ -60,6 +60,7 @@ public:
     void addItem(const LibraryItem& item);
     void addItem(const LibraryItem& item, const LibraryMetadata& meta);
     void addItems(const std::vector<std::pair<LibraryItem, LibraryMetadata>>& items);
+    void addItems(const std::vector<std::pair<std::vector<LibraryItem>, LibraryMetadata>>& items);
     void updateItem(const LibraryItem& item, const LibraryMetadata& meta);
 
     bool itemExists(const std::string& filepath, std::string& objectId);
@@ -82,6 +83,7 @@ private:
 
     //static void searchTracksCb(sqlite3_stmt* pStmt, void* pData);
 
+    int64_t addItem(const LibraryItem& item, int64_t metaId);
     int64_t addMetadata(const LibraryMetadata& meta);
     void removeMetaData(int64_t id);
     void createInitialDatabase();

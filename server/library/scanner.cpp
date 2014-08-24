@@ -132,7 +132,7 @@ void Scanner::createInitialLayout()
 
 void Scanner::scan(const std::string& dir, const std::string& parentId)
 {
-    std::vector<std::pair<LibraryItem, LibraryMetadata>> items;
+    std::vector<std::pair<std::vector<LibraryItem>, LibraryMetadata>> items;
 
     auto id = m_libraryDb.getUniqueIdInContainer(parentId);
 
@@ -200,7 +200,7 @@ void Scanner::cancel()
     m_stop = true;
 }
 
-void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string& parentId, std::vector<std::pair<LibraryItem, LibraryMetadata>>& items)
+void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string& parentId, std::vector<std::pair<std::vector<LibraryItem>, LibraryMetadata>>& items)
 {
     ++m_scannedFiles;
 
@@ -217,6 +217,8 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
     {
         return;
     }
+    
+    std::vector<LibraryItem> curItems;
 
     LibraryItem item;
     item.name = fileops::getFileName(filepath);
@@ -273,29 +275,34 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
             {
                 try
                 {
-//                    auto albumArtist = md.getAlbumArtist();
-                
-//                    std::string albumId;
-//                    if (!m_libraryDb.albumExists(item.album, albumArtist, albumId))
-//                    {
-//                        // first song we encounter of this album, add the album to the database
-//                        LibraryItem album;
-//                        album.objectId  = stringops::format("%s@%d", g_albumsId, m_libraryDb.getUniqueIdInContainer(g_albumsId));
-//                        album.parentId  = g_albumsId;
-//                        album.name      = item.album;
-//                        album.title     = item.album;
-//                        album.artist    = albumArtist;
-//                        album.date      = item.date;
-//                        album.upnpClass = "object.container.album.musicAlbum";
-//                        
-//                        if (processAlbumArt(filepath, album.objectId, art, hash))
-//                        {
-//                            album.thumbnail = hash + "_thumb.jpg";
-//                        }
-//                        
-//                        m_libraryDb.addItemWithMetadata(album);
-//                        log::debug("Add Album: %s - %s (%s)", album.artist, album.title, album.objectId);
-//                    }
+                    std::string albumId;
+                    if (!m_libraryDb.albumExists(meta.album, meta.albumArtist, albumId))
+                    {
+                        // first song we encounter of this album, add the album to the database
+                        LibraryItem album;
+                        album.objectId  = stringops::format("%s@%d", g_albumsId, m_libraryDb.getUniqueIdInContainer(g_albumsId));
+                        album.parentId  = g_albumsId;
+                        album.name      = meta.album;
+                        album.upnpClass = "object.container.album.musicAlbum";
+                        
+                        LibraryMetadata albumMeta;
+                        albumMeta.title     = meta.album;
+                        albumMeta.artist    = meta.albumArtist;
+                        albumMeta.date      = meta.date;
+                        albumMeta.thumbnail = meta.thumbnail;
+                        
+                        m_libraryDb.addItem(album);
+                        log::debug("Add Album: %s - %s (%s)", albumMeta.artist, albumMeta.title, album.objectId);
+                    }
+                    else
+                    {
+                        // add song item as child of album
+                        LibraryItem albumSongItem;
+                        albumSongItem.name = item.name;
+                        albumSongItem.objectId = m_libraryDb.getUniqueIdInContainer(parentId);;
+                        item.parentId = albumId;
+                        curItems.push_back(std::move(albumSongItem));
+                    }
                 }
                 catch (std::exception& e)
                 {
@@ -307,8 +314,7 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
         {
             log::warn("Failed to add item: %s", e.what());
         }
-    }
-    
+        
 //    track.albumArtist   = md.getAlbumArtist();
 //    track.composer      = md.getComposer();
 //    track.discNr        = md.getDiscNr();
@@ -394,8 +400,10 @@ void Scanner::onFile(const std::string& filepath, uint64_t id, const std::string
 //        log::debug("Needs update: %s", filepath);
 //        //m_LibraryDb.updateTrack(track);
 //    }
-
-    items.emplace_back(item, meta);
+    }
+    
+    curItems.push_back(std::move(item));
+    items.emplace_back(std::move(curItems), std::move(meta));
     log::debug("Add Item: %s (%s parent: %s)", filepath, item.objectId, parentId);
 }
 

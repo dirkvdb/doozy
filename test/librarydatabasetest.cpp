@@ -194,18 +194,6 @@ TEST_F(LibraryDatabaseTest, AddItems)
     EXPECT_EQ("", item->getRefId());
 }
 
-TEST_F(LibraryDatabaseTest, TestMddItems)
-{
-    std::vector<std::pair<LibraryItem, LibraryMetadata>> items = {
-        createItem("0@1", "0", "item1"),
-        createItem("0@2", "0", "item2"),
-        createItem("0", "-1", "root")
-    };
-
-    m_db->testAddItems(items);
-    EXPECT_EQ(3u, m_db->getObjectCount());
-}
-
 TEST_F(LibraryDatabaseTest, AddGetItemAmpersand)
 {
     m_meta.title = "Me & my title";

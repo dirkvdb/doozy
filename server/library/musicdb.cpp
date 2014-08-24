@@ -235,14 +235,7 @@ void MusicDb::addItem(const LibraryItem& item)
 
 void MusicDb::addItem(const LibraryItem& item, const LibraryMetadata& meta)
 {
-    addMetadata(meta);
-    m_statements->addItem.params.ObjectId = item.objectId;
-    m_statements->addItem.params.ParentId = sqlpp::tvin(item.parentId);
-    m_statements->addItem.params.RefId    = sqlpp::tvin(item.refId);
-    m_statements->addItem.params.Name     = item.name;
-    m_statements->addItem.params.Class    = sqlpp::tvin(item.upnpClass);
-    m_statements->addItem.params.MetaData = sqlpp::eval<sqlpp::integer>(m_db, "last_insert_rowid()");
-    m_db.run(m_statements->addItem);
+    addItem(item, addMetadata(meta));
 }
 
 void MusicDb::addItems(const std::vector<std::pair<LibraryItem, LibraryMetadata>>& items)
@@ -255,6 +248,33 @@ void MusicDb::addItems(const std::vector<std::pair<LibraryItem, LibraryMetadata>
     }
     
     m_db.commit_transaction();
+}
+
+void MusicDb::addItems(const std::vector<std::pair<std::vector<LibraryItem>, LibraryMetadata>>& items)
+{
+    m_db.start_transaction();
+    
+    for (auto& itemEntry : items)
+    {
+        auto metaId = addMetadata(itemEntry.second);
+        for (auto& item : itemEntry.first)
+        {
+            addItem(item, metaId);
+        }
+    }
+    
+    m_db.commit_transaction();
+}
+
+int64_t MusicDb::addItem(const LibraryItem& item, int64_t metaId)
+{
+    m_statements->addItem.params.ObjectId = item.objectId;
+    m_statements->addItem.params.ParentId = sqlpp::tvin(item.parentId);
+    m_statements->addItem.params.RefId    = sqlpp::tvin(item.refId);
+    m_statements->addItem.params.Name     = item.name;
+    m_statements->addItem.params.Class    = sqlpp::tvin(item.upnpClass);
+    m_statements->addItem.params.MetaData = metaId;
+    return m_db.run(m_statements->addItem);
 }
 
 int64_t MusicDb::addMetadata(const LibraryMetadata& meta)
