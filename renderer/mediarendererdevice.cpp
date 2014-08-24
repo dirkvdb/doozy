@@ -70,19 +70,19 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
 , m_AVTransport(m_RootDevice, *this)
 , m_WebServer(webServer)
 {
-    m_Playback->PlaybackStateChanged.connect([this] (auto state) {
+    m_Playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
         setTransportVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(state)));
     }, this);
     
-    m_Playback->AvailableActionsChanged.connect([this] (auto actions) {
+    m_Playback->AvailableActionsChanged.connect([this] (const std::set<PlaybackAction>& actions) {
         setTransportVariable(0, AVTransport::Variable::CurrentTransportActions, toString(actions));
     }, this);
     
-    m_Playback->ProgressChanged.connect([this] (auto progress) {
+    m_Playback->ProgressChanged.connect([this] (double progress) {
         setTransportVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(progress));
     }, this);
     
-    m_Playback->NewTrackStarted.connect([this] (auto track) {
+    m_Playback->NewTrackStarted.connect([this] (const std::shared_ptr<ITrack>& track) {
         auto item = std::dynamic_pointer_cast<PlayQueueItem>(track);
         assert(item);
         

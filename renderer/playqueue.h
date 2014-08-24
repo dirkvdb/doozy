@@ -89,9 +89,9 @@ public:
     virtual std::shared_ptr<audio::ITrack> dequeueNextTrack();
     size_t getNumberOfTracks() const;
     
-    utils::Signal<void()> QueueChanged;
-    utils::Signal<void(std::string)> CurrentTransportUriChanged;
-    utils::Signal<void(std::string)> NextTransportUriChanged;
+    utils::Signal<> QueueChanged;
+    utils::Signal<std::string> CurrentTransportUriChanged;
+    utils::Signal<std::string> NextTransportUriChanged;
 
 private:
     utils::WorkerThread                 m_Thread;

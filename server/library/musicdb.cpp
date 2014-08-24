@@ -336,7 +336,7 @@ ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modified
         return ItemStatus::DoesntExist;
     }
     
-    return result.front().ModifiedTime < modifiedTime ? ItemStatus::NeedsUpdate : ItemStatus::UpToDate;
+    return static_cast<uint64_t>(result.front().ModifiedTime) < modifiedTime ? ItemStatus::NeedsUpdate : ItemStatus::UpToDate;
 }
 
 std::string MusicDb::getItemPath(const std::string& objectId)
@@ -450,7 +450,6 @@ void MusicDb::removeMetaData(int64_t id)
         .where(metadata.Id == static_cast<int64_t>(id))
     );
 }
-
 
 void MusicDb::removeNonExistingFiles()
 {

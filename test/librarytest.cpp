@@ -84,14 +84,14 @@ TEST_F(LibraryTest, GetRootContainer)
 TEST_F(LibraryTest, GetItems)
 {
     auto items = m_library->getItems("0@2", 0, 0);
-    ASSERT_EQ(3, items.size());
+    ASSERT_EQ(3u, items.size());
 
     EXPECT_EQ("audio", items[0]->getTitle());
     EXPECT_EQ("delaytest.mp3", items[1]->getTitle());
     EXPECT_EQ("aTitle", items[2]->getTitle());
 
     items = m_library->getItems("0@2@1", 0, 0);
-    ASSERT_EQ(3, items.size());
+    ASSERT_EQ(3u, items.size());
     EXPECT_EQ("subdir", items[0]->getTitle());
     EXPECT_EQ("aTitle", items[1]->getTitle());
     EXPECT_EQ("aTitle", items[2]->getTitle());

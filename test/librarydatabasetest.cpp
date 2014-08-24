@@ -87,9 +87,9 @@ protected:
 
 TEST_F(LibraryDatabaseTest, GetObjectCount)
 {
-    EXPECT_EQ(0, m_db->getObjectCount());
+    EXPECT_EQ(0u, m_db->getObjectCount());
     m_db->addItem(m_item, m_meta);
-    EXPECT_EQ(1, m_db->getObjectCount());
+    EXPECT_EQ(1u, m_db->getObjectCount());
 }
 
 TEST_F(LibraryDatabaseTest, GetChildCount)
@@ -98,9 +98,9 @@ TEST_F(LibraryDatabaseTest, GetChildCount)
     addItem("0#1", "0", "item1");
     addItem("0#2", "0", "item2");
 
-    EXPECT_EQ(2, m_db->getChildCount("0"));
-    EXPECT_EQ(0, m_db->getChildCount("0#1"));
-    EXPECT_EQ(0, m_db->getChildCount("0#2"));
+    EXPECT_EQ(2u, m_db->getChildCount("0"));
+    EXPECT_EQ(0u, m_db->getChildCount("0#1"));
+    EXPECT_EQ(0u, m_db->getChildCount("0#2"));
 }
 
 TEST_F(LibraryDatabaseTest, ItemExists)
@@ -178,7 +178,7 @@ TEST_F(LibraryDatabaseTest, AddItems)
     };
 
     m_db->addItems(items);
-    EXPECT_EQ(3, m_db->getObjectCount());
+    EXPECT_EQ(3u, m_db->getObjectCount());
     
     auto item = m_db->getItem("0");
     EXPECT_EQ("root", item->getTitle());
@@ -192,6 +192,18 @@ TEST_F(LibraryDatabaseTest, AddItems)
     EXPECT_EQ("item2", item->getTitle());
     EXPECT_EQ("0", item->getParentId());
     EXPECT_EQ("", item->getRefId());
+}
+
+TEST_F(LibraryDatabaseTest, TestMddItems)
+{
+    std::vector<std::pair<LibraryItem, LibraryMetadata>> items = {
+        createItem("0@1", "0", "item1"),
+        createItem("0@2", "0", "item2"),
+        createItem("0", "-1", "root")
+    };
+
+    m_db->testAddItems(items);
+    EXPECT_EQ(3u, m_db->getObjectCount());
 }
 
 TEST_F(LibraryDatabaseTest, AddGetItemAmpersand)
@@ -250,7 +262,7 @@ TEST_F(LibraryDatabaseTest, GetItems)
     addItem("0#3", "0", "item3");
     
     auto items = m_db->getItems("0", 0, 0);
-    EXPECT_EQ(3, items.size());
+    EXPECT_EQ(3u, items.size());
 }
 
 TEST_F(LibraryDatabaseTest, GetItemsOffsetCount)
@@ -262,23 +274,23 @@ TEST_F(LibraryDatabaseTest, GetItemsOffsetCount)
     
     // 1 item beginning at offset 1
     auto items = m_db->getItems("0", 1, 1);
-    EXPECT_EQ(1, items.size());
+    EXPECT_EQ(1u, items.size());
     
     // 2 item beginning at offset 1
     items = m_db->getItems("0", 1, 2);
-    EXPECT_EQ(2, items.size());
+    EXPECT_EQ(2u, items.size());
     
     // 3 item beginning at offset 1 -> results in 2 items
     items = m_db->getItems("0", 1, 3);
-    EXPECT_EQ(2, items.size());
+    EXPECT_EQ(2u, items.size());
     
     // all items beginning at offset 1 -> results in 2 items
     items = m_db->getItems("0", 1, 0);
-    EXPECT_EQ(2, items.size());
+    EXPECT_EQ(2u, items.size());
     
     // all items beginning at offset 3 -> results in 0 items
     items = m_db->getItems("0", 3, 0);
-    EXPECT_EQ(0, items.size());
+    EXPECT_EQ(0u, items.size());
 }
 
 }
