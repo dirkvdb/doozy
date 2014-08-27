@@ -30,7 +30,6 @@ namespace test
 {
 
 static const int64_t g_rootId = 0;
-static const int64_t g_musicId = 1;
 static const int64_t g_albumsId = 2;
 static const int64_t g_browseFileSystemId = 3;
 
@@ -81,7 +80,7 @@ class LibraryTest : public testing::Test
 
 TEST_F(LibraryTest, GetRootContainer)
 {
-    auto item = m_library->getItem("0");
+    auto item = m_library->getItem(std::to_string(g_rootId));
     EXPECT_EQ("0", item->getObjectId());
     EXPECT_EQ("-1", item->getParentId());
     EXPECT_EQ(upnp::Class::Container, item->getClass());
