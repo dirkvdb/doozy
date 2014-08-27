@@ -23,21 +23,6 @@ namespace doozy
       };
       using _traits = sqlpp::make_traits<sqlpp::integer, sqlpp::tag::can_be_null>;
     };
-    struct ObjectId
-    {
-      struct _name_t
-      {
-        static constexpr const char* _get_name() { return "ObjectId"; }
-        template<typename T>
-        struct _member_t
-          {
-            T ObjectId;
-            T& operator()() { return ObjectId; }
-            const T& operator()() const { return ObjectId; }
-          };
-      };
-      using _traits = sqlpp::make_traits<sqlpp::text, sqlpp::tag::can_be_null>;
-    };
     struct ParentId
     {
       struct _name_t
@@ -51,7 +36,7 @@ namespace doozy
             const T& operator()() const { return ParentId; }
           };
       };
-      using _traits = sqlpp::make_traits<sqlpp::text, sqlpp::tag::can_be_null>;
+      using _traits = sqlpp::make_traits<sqlpp::integer, sqlpp::tag::require_insert>;
     };
     struct RefId
     {
@@ -66,7 +51,7 @@ namespace doozy
             const T& operator()() const { return RefId; }
           };
       };
-      using _traits = sqlpp::make_traits<sqlpp::text, sqlpp::tag::can_be_null>;
+      using _traits = sqlpp::make_traits<sqlpp::integer, sqlpp::tag::can_be_null>;
     };
     struct Name
     {
@@ -117,7 +102,6 @@ namespace doozy
 
   struct Objects: sqlpp::table_t<Objects,
                Objects_::Id,
-               Objects_::ObjectId,
                Objects_::ParentId,
                Objects_::RefId,
                Objects_::Name,

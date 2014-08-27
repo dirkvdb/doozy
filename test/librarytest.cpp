@@ -10,6 +10,7 @@
 #include "server/library/musiclibraryinterface.h"
 #include "server/library/filesystemmusiclibrary.h"
 
+#include "Utils/log.h"
 #include "Utils/fileoperations.h"
 #include "Utils/stringoperations.h"
 #include "Utils/numericoperations.h"
@@ -27,6 +28,11 @@ namespace doozy
 {
 namespace test
 {
+
+static const int64_t g_rootId = 0;
+static const int64_t g_musicId = 1;
+static const int64_t g_albumsId = 2;
+static const int64_t g_browseFileSystemId = 3;
 
 class LibraryTest : public testing::Test
 {
@@ -83,18 +89,30 @@ TEST_F(LibraryTest, GetRootContainer)
 
 TEST_F(LibraryTest, GetItems)
 {
-    auto items = m_library->getItems("0@2", 0, 0);
+    auto items = m_library->getItems(std::to_string(g_browseFileSystemId), 0, 0);
     ASSERT_EQ(3u, items.size());
 
     EXPECT_EQ("audio", items[0]->getTitle());
     EXPECT_EQ("delaytest.mp3", items[1]->getTitle());
-    EXPECT_EQ("aTitle", items[2]->getTitle());
+    EXPECT_EQ("aTitle1", items[2]->getTitle());
 
-    items = m_library->getItems("0@2@1", 0, 0);
-    ASSERT_EQ(3u, items.size());
-    EXPECT_EQ("subdir", items[0]->getTitle());
-    EXPECT_EQ("aTitle", items[1]->getTitle());
-    EXPECT_EQ("aTitle", items[2]->getTitle());
+//    items = m_library->getItems("0@2@1", 0, 0);
+//    ASSERT_EQ(3u, items.size());
+//    EXPECT_EQ("subdir", items[0]->getTitle());
+//    EXPECT_EQ("aTitle3", items[1]->getTitle());
+//    EXPECT_EQ("aTitle2", items[2]->getTitle());
+}
+
+TEST_F(LibraryTest, GetAlbum)
+{
+    auto albums = m_library->getItems(std::to_string(g_albumsId), 0, 0);
+    
+    for (auto a : albums)
+    {
+        utils::log::info("%s - %s", a->getMetaData(upnp::Property::Artist), a->getTitle());
+    }
+    
+    EXPECT_EQ(1u, albums.size());
 }
 
 //TEST_F(LibraryTest, DownloadFile)

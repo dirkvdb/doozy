@@ -53,14 +53,15 @@ doozy::Objects objects;
 doozy::Metadata metadata;
 
 SQLPP_ALIAS_PROVIDER(numObjects);
+SQLPP_ALIAS_PROVIDER(objectId);
 
 template <typename T>
-bool getIdFromResultIfExists(const T& result, std::string& id)
+bool getIdFromResultIfExists(const T& result, int64_t& id)
 {
     bool hasResults = !result.empty();
     if (hasResults)
     {
-        id = result.front().ObjectId;
+        id = result.front().objectId;
     }
     
     return hasResults;
@@ -94,7 +95,6 @@ auto childCountQuery = [] () {
 
 auto addItemQuery = [] () {
     return insert_into(objects).set(
-        objects.ObjectId    = parameter(objects.ObjectId),
         objects.ParentId    = parameter(objects.ParentId),
         objects.RefId       = parameter(objects.RefId),
         objects.Name        = parameter(objects.Name),
@@ -123,7 +123,7 @@ auto addMetadataQuery = [] () {
 };
 
 auto itemExistsQuery = [] () {
-    return select(objects.ObjectId)
+    return select(objects.Id.as(objectId))
            .from(metadata.left_outer_join(objects).on(objects.MetaData == metadata.Id))
            .where(metadata.FilePath == parameter(metadata.FilePath));
 };
@@ -137,13 +137,7 @@ auto itemStatusQuery = [] () {
 auto itemPathQuery = [] () {
     return select(metadata.FilePath)
            .from(objects.left_outer_join(metadata).on(objects.MetaData == metadata.Id))
-           .where(objects.ObjectId == parameter(objects.ObjectId));
-};
-
-auto uniqueContainerIdQuery = [] () {
-    return select(count(objects.Id).as(numObjects))
-           .from(objects)
-           .where(objects.ParentId == parameter(objects.ParentId));
+           .where(objects.Id == parameter(objects.Id));
 };
 
 using ObjectCountQuery       = decltype(objectCountQuery());
@@ -153,7 +147,6 @@ using AddMetadataQuery       = decltype(addMetadataQuery());
 using ItemExistsQuery        = decltype(itemExistsQuery());
 using ItemStatusQuery        = decltype(itemStatusQuery());
 using ItemPathQuery          = decltype(itemPathQuery());
-using UniqueContainerIdQuery = decltype(uniqueContainerIdQuery());
 
 template <typename SelectType>
 using PreparedStatement = decltype(((sql::connection*)nullptr)->prepare(*((SelectType*)nullptr)));
@@ -169,7 +162,6 @@ struct MusicDb::PreparedStatements
     PreparedStatement<ItemExistsQuery> itemExists;
     PreparedStatement<ItemStatusQuery> itemStatus;
     PreparedStatement<ItemPathQuery> itemPath;
-    PreparedStatement<UniqueContainerIdQuery> uniqueContainerId;
 };
 
 MusicDb::MusicDb(const string& dbFilepath)
@@ -197,7 +189,6 @@ void MusicDb::prepareStatements()
     m_statements->itemExists        = m_db.prepare(itemExistsQuery());
     m_statements->itemStatus        = m_db.prepare(itemStatusQuery());
     m_statements->itemPath          = m_db.prepare(itemPathQuery());
-    m_statements->uniqueContainerId = m_db.prepare(uniqueContainerIdQuery());
 }
 
 void MusicDb::setWebRoot(const std::string& webRoot)
@@ -210,32 +201,39 @@ uint64_t MusicDb::getObjectCount()
     return m_db.run(m_statements->objectCount).front().numObjects;
 }
 
-uint64_t MusicDb::getChildCount(const std::string& id)
+uint64_t MusicDb::getChildCount(int64_t id)
 {
     m_statements->childCount.params.ParentId = id;
     return m_db.run(m_statements->childCount).front().numObjects;
 }
 
-uint64_t MusicDb::getUniqueIdInContainer(const std::string& containerId)
+void MusicDb::addItemWithId(const LibraryItem& item, const LibraryMetadata& meta)
 {
-    m_statements->uniqueContainerId.params.ParentId = containerId;
-    return m_db.run(m_statements->uniqueContainerId).front().numObjects;
+    auto metaId = addMetadata(meta);
+
+    m_db.run(insert_into(objects).set(
+        objects.Id          = item.objectId,
+        objects.ParentId    = item.parentId,
+        objects.RefId       = sqlpp::tvin(item.refId),
+        objects.Name        = item.name,
+        objects.Class       = sqlpp::tvin(item.upnpClass),
+        objects.MetaData    = metaId
+    ));
 }
 
-void MusicDb::addItem(const LibraryItem& item)
+int64_t MusicDb::addItem(const LibraryItem& item)
 {
-    m_statements->addItem.params.ObjectId = item.objectId;
     m_statements->addItem.params.ParentId = sqlpp::tvin(item.parentId);
     m_statements->addItem.params.RefId    = sqlpp::tvin(item.refId);
     m_statements->addItem.params.Name     = item.name;
     m_statements->addItem.params.Class    = sqlpp::tvin(item.upnpClass);
     m_statements->addItem.params.MetaData = -1;
-    m_db.run(m_statements->addItem);
+    return m_db.run(m_statements->addItem);
 }
 
-void MusicDb::addItem(const LibraryItem& item, const LibraryMetadata& meta)
+int64_t MusicDb::addItem(const LibraryItem& item, const LibraryMetadata& meta)
 {
-    addItem(item, addMetadata(meta));
+    return addItem(item, addMetadata(meta));
 }
 
 void MusicDb::addItems(const std::vector<std::pair<LibraryItem, LibraryMetadata>>& items)
@@ -268,8 +266,7 @@ void MusicDb::addItems(const std::vector<std::pair<std::vector<LibraryItem>, Lib
 
 int64_t MusicDb::addItem(const LibraryItem& item, int64_t metaId)
 {
-    m_statements->addItem.params.ObjectId = item.objectId;
-    m_statements->addItem.params.ParentId = sqlpp::tvin(item.parentId);
+    m_statements->addItem.params.ParentId = item.parentId;
     m_statements->addItem.params.RefId    = sqlpp::tvin(item.refId);
     m_statements->addItem.params.Name     = item.name;
     m_statements->addItem.params.Class    = sqlpp::tvin(item.upnpClass);
@@ -300,12 +297,11 @@ int64_t MusicDb::addMetadata(const LibraryMetadata& meta)
 void MusicDb::updateItem(const LibraryItem& item, const LibraryMetadata& meta)
 {
     m_db.run(update(objects).set(
-        objects.ObjectId   = item.objectId,
-        objects.ParentId   = sqlpp::tvin(item.parentId),
+        objects.ParentId   = item.parentId,
         objects.RefId      = sqlpp::tvin(item.refId),
         objects.Name       = item.name,
         objects.Class      = sqlpp::tvin(item.upnpClass)
-    ).where(true));
+    ).where(objects.Id == item.objectId));
     
     m_db.run(update(metadata).set(
         metadata.ModifiedTime  = static_cast<int64_t>(meta.modifiedTime),
@@ -323,7 +319,7 @@ void MusicDb::updateItem(const LibraryItem& item, const LibraryMetadata& meta)
     ).where(true));
 }
 
-bool MusicDb::itemExists(const string& filepath, string& objectId)
+bool MusicDb::itemExists(const string& filepath, int64_t& objectId)
 {
     m_statements->itemExists.params.FilePath = filepath;
     auto result = m_db.run(m_statements->itemExists);
@@ -333,17 +329,17 @@ bool MusicDb::itemExists(const string& filepath, string& objectId)
         return false;
     }
     
-    objectId = result.front().ObjectId;
+    objectId = result.front().objectId;
     return true;
 }
 
-bool MusicDb::albumExists(const std::string& title, const std::string& artist, string& objectId)
+bool MusicDb::albumExists(const std::string& title, const std::string& artist, int64_t& id)
 {
-    auto query = select(objects.ObjectId)
+    auto query = select(objects.Id.as(objectId))
                  .from(metadata.left_outer_join(objects).on(objects.MetaData == metadata.Id))
                  .where(objects.Class == "object.container.album.musicAlbum" and objects.Name == title and metadata.Artist == sqlpp::tvin(artist));
     
-    return getIdFromResultIfExists(m_db.run(query), objectId);
+    return getIdFromResultIfExists(m_db.run(query), id);
 }
 
 ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modifiedTime)
@@ -359,14 +355,14 @@ ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modified
     return static_cast<uint64_t>(result.front().ModifiedTime) < modifiedTime ? ItemStatus::NeedsUpdate : ItemStatus::UpToDate;
 }
 
-std::string MusicDb::getItemPath(const std::string& objectId)
+std::string MusicDb::getItemPath(int64_t objectId)
 {
-    m_statements->itemPath.params.ObjectId = objectId;
+    m_statements->itemPath.params.Id = objectId;
     auto result = m_db.run(m_statements->itemPath);
     
     if (result.empty())
     {
-        throw std::runtime_error("No item in database with id: " + objectId);
+        throw std::runtime_error(stringops::format("No item in database with id: %d", objectId));
     }
 
     return result.front().FilePath;
@@ -378,12 +374,16 @@ upnp::ItemPtr MusicDb::parseItem(const T& row)
     assert(!m_webRoot.empty());
 
     auto item = std::make_shared<upnp::Item>();
-    item->setObjectId(row.ObjectId);
+    item->setObjectId(std::to_string(row.objectId));
     item->setTitle(row.Name);
-    item->setParentId(row.ParentId);
-    item->setRefId(row.RefId);
+    item->setParentId(std::to_string(row.ParentId));
     item->setClass(row.Class);
     item->addMetaData(upnp::Property::Artist, row.Artist);
+    
+    if (!row.RefId.is_null())
+    {
+        item->setRefId(std::to_string(row.RefId));
+    }    
 
     if (!row.Title.is_null())
     {
@@ -421,28 +421,28 @@ upnp::ItemPtr MusicDb::parseItem(const T& row)
     return item;
 }
 
-upnp::ItemPtr MusicDb::getItem(const std::string& id)
+upnp::ItemPtr MusicDb::getItem(int64_t id)
 {
     const auto& result = m_db.run(
-        select(objects.ObjectId, objects.Name, objects.ParentId, objects.RefId, objects.Class, all_of(metadata))
+        select(objects.Id.as(objectId), objects.Name, objects.ParentId, objects.RefId, objects.Class, all_of(metadata))
         .from(objects.left_outer_join(metadata).on(objects.MetaData == metadata.Id))
-        .where(objects.ObjectId == id)
+        .where(objects.Id == id)
     );
 
     if (result.empty())
     {
-        throw std::runtime_error("No track found in db with id: " + id);
+        throw std::runtime_error(stringops::format("No track found in db with id: %d", + id));
     }
 
     return parseItem(result.front());
 }
 
-std::vector<upnp::ItemPtr> MusicDb::getItems(const std::string& parentId, uint32_t offset, uint32_t count)
+std::vector<upnp::ItemPtr> MusicDb::getItems(int64_t parentId, uint32_t offset, uint32_t count)
 {
     std::vector<upnp::ItemPtr> items;
 
     for (const auto& row : m_db.run(
-        select(objects.ObjectId, objects.Name, objects.ParentId, objects.RefId, objects.Class, all_of(metadata))
+        select(objects.Id.as(objectId), objects.Name, objects.ParentId, objects.RefId, objects.Class, all_of(metadata))
         .from(objects.left_outer_join(metadata).on(objects.MetaData == metadata.Id))
         .where(objects.ParentId == parentId)
         .limit(count == 0 ? -1 : count)
@@ -455,11 +455,11 @@ std::vector<upnp::ItemPtr> MusicDb::getItems(const std::string& parentId, uint32
     return items;
 }
 
-void MusicDb::removeItem(const std::string& id)
+void MusicDb::removeItem(int64_t id)
 {
     m_db.run(
         remove_from(objects)
-        .where(objects.ObjectId == id)
+        .where(objects.Id == id)
     );
 }
 
@@ -473,16 +473,16 @@ void MusicDb::removeMetaData(int64_t id)
 
 void MusicDb::removeNonExistingFiles()
 {
-    std::vector<std::pair<std::string, int64_t>> files;
+    std::vector<std::pair<int64_t, int64_t>> files;
 
-    for (const auto& row : m_db.run(select(objects.ObjectId, objects.MetaData, metadata.FilePath)
+    for (const auto& row : m_db.run(select(objects.Id.as(objectId), objects.MetaData, metadata.FilePath)
                                      .from(objects.left_outer_join(metadata).on(objects.MetaData == metadata.Id))
                                      .where(true)))
     {
         std::string path = row.FilePath;
         if (!path.empty() && !fileops::pathExists(path))
         {
-            files.emplace_back(row.ObjectId, row.MetaData);
+            files.emplace_back(row.objectId, row.MetaData);
         }
     }
     
@@ -578,9 +578,8 @@ void MusicDb::createInitialDatabase()
 {
     m_db.execute("CREATE TABLE IF NOT EXISTS objects("
         "Id INTEGER PRIMARY KEY,"
-        "ObjectId TEXT UNIQUE,"
-        "ParentId TEXT,"
-        "RefId TEXT,"
+        "ParentId INTEGER NOT NULL,"
+        "RefId INTEGER,"
         "Name TEXT NOT NULL,"
         "Class TEXT,"
         "MetaData INTEGER,"

@@ -27,7 +27,7 @@ FileRequestHandler::FileRequestHandler(const std::string& dbPath, const std::str
 : m_db(dbPath)
 {
     auto id = fileops::getFileNameWithoutExtension(fileUrl);
-    auto path = m_db.getItemPath(id);
+    auto path = m_db.getItemPath(std::stoll(id));
     
     m_reader.open(path);
 }

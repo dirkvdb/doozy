@@ -73,10 +73,10 @@ public:
     }
     
     template <typename... Args>
-    auto getUniqueIdInContainer(Args&&... args)
+    auto addItemWithId(Args&&... args)
     {
         std::lock_guard<MutexType> lock(m_mutex);
-        return m_db.getUniqueIdInContainer(std::forward<Args>(args)...);
+        return m_db.addItemWithId(std::forward<Args>(args)...);
     }
 
     template <typename... Args>

@@ -69,17 +69,17 @@ uint32_t FilesystemMusicLibrary::getObjectCount()
 
 uint32_t FilesystemMusicLibrary::getObjectCountInContainer(const std::string& id)
 {
-    return static_cast<uint32_t>(m_db.getChildCount(id));
+    return static_cast<uint32_t>(m_db.getChildCount(std::stoll(id)));
 }
 
 upnp::ItemPtr FilesystemMusicLibrary::getItem(const std::string& id)
 {
-    return m_db.getItem(id);
+    return m_db.getItem(std::stoll(id));
 }
 
 std::vector<upnp::ItemPtr> FilesystemMusicLibrary::getItems(const std::string& parentId, uint32_t count, uint32_t offset)
 {
-    return m_db.getItems(parentId, count, offset);
+    return m_db.getItems(std::stoll(parentId), count, offset);
 }
 
 void FilesystemMusicLibrary::scan(bool startFresh)

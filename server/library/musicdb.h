@@ -54,24 +54,24 @@ public:
     void setWebRoot(const std::string& webRoot);
 
     uint64_t getObjectCount();
-    uint64_t getChildCount(const std::string& id);
-    uint64_t getUniqueIdInContainer(const std::string& containerId);
+    uint64_t getChildCount(int64_t id);
 
-    void addItem(const LibraryItem& item);
-    void addItem(const LibraryItem& item, const LibraryMetadata& meta);
+    void addItemWithId(const LibraryItem& item, const LibraryMetadata& meta);
+    int64_t addItem(const LibraryItem& item);
+    int64_t addItem(const LibraryItem& item, const LibraryMetadata& meta);
     void addItems(const std::vector<std::pair<LibraryItem, LibraryMetadata>>& items);
     void addItems(const std::vector<std::pair<std::vector<LibraryItem>, LibraryMetadata>>& items);
     void updateItem(const LibraryItem& item, const LibraryMetadata& meta);
 
-    bool itemExists(const std::string& filepath, std::string& objectId);
-    bool albumExists(const std::string& title, const std::string& artist, std::string& objectId);
+    bool itemExists(const std::string& filepath, int64_t& objectId);
+    bool albumExists(const std::string& title, const std::string& artist, int64_t& objectId);
     ItemStatus getItemStatus(const std::string& filepath, uint64_t modifiedTime);
-    std::string getItemPath(const std::string& id);
+    std::string getItemPath(int64_t id);
 
-    upnp::ItemPtr getItem(const std::string& id);
-    std::vector<upnp::ItemPtr> getItems(const std::string& parentId, uint32_t offset, uint32_t count);
+    upnp::ItemPtr getItem(int64_t id);
+    std::vector<upnp::ItemPtr> getItems(int64_t parentId, uint32_t offset, uint32_t count);
 
-    void removeItem(const std::string& id);
+    void removeItem(int64_t id);
     void removeNonExistingFiles();
 
     //void searchLibrary(const std::string& search, utils::ISubscriber<const Track&>& trackSubscriber, utils::ISubscriber<const Album&>& albumSubscriber);

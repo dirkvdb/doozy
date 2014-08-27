@@ -1,13 +1,12 @@
 CREATE TABLE objects(
     Id INTEGER PRIMARY KEY,
-    ObjectId TEXT UNIQUE,
-    ParentId TEXT,
-    RefId TEXT,
+    ParentId INTEGER NOT NULL,
+    RefId INTEGER,
     Name TEXT NOT NULL,
     Class TEXT,
     MetaData INTEGER,
     FOREIGN KEY (MetaData) REFERENCES metadata(id)
-)
+);
 
 CREATE TABLE metadata(
     Id INTEGER PRIMARY KEY,
@@ -31,4 +30,4 @@ CREATE TABLE metadata(
     ModifiedTime INTEGER,
     Thumbnail TEXT,
     FilePath TEXT
-)
+);

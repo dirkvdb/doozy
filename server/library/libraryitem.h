@@ -24,9 +24,9 @@ namespace doozy
 
 struct LibraryItem
 {
-    std::string     objectId;
-    std::string     parentId;
-    std::string     refId;
+    int64_t         objectId = 0;
+    int64_t         parentId = 0;
+    int64_t         refId = 0;
     std::string     name;
     std::string     upnpClass;
 };
