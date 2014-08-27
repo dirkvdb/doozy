@@ -163,7 +163,7 @@ void Scanner::scan(const std::string& dir, int64_t parentId)
                     meta.thumbnail = hash + "_thumb.jpg";
                 }
 
-                m_libraryDb.addItem(item, meta);
+                objectId = m_libraryDb.addItem(item, meta);
                 log::debug("Add container: %s (%d) parent: %d", entry.path(), objectId, parentId);
             }
 
@@ -284,17 +284,16 @@ void Scanner::onFile(const std::string& filepath, int64_t parentId, std::vector<
                         albumMeta.thumbnail = meta.thumbnail;
                         
                         log::debug("Add Album: %s - %s", albumMeta.artist, albumMeta.title);
-                        m_libraryDb.addItem(album, albumMeta);
+                        albumId = m_libraryDb.addItem(album, albumMeta);
                     }
-                    else
-                    {
-                        // add song item as child of album
-                        LibraryItem albumSongItem;
-                        albumSongItem.name = item.name;
-                        albumSongItem.parentId = albumId;
-                        log::debug("Add album song: %s (parent: %d)", albumSongItem.name, parentId);
-                        curItems.push_back(std::move(albumSongItem));
-                    }
+
+                    // add song item as child of album
+                    LibraryItem albumSongItem;
+                    albumSongItem.name = item.name;
+                    albumSongItem.parentId = albumId;
+                    albumSongItem.upnpClass = item.upnpClass;
+                    log::debug("Add album song: %s (parent: %d)", albumSongItem.name, parentId);
+                    curItems.push_back(std::move(albumSongItem));
                 }
                 catch (std::exception& e)
                 {

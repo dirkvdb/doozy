@@ -96,28 +96,44 @@ TEST_F(LibraryTest, GetItems)
     EXPECT_EQ("delaytest.mp3", items[1]->getTitle());
     EXPECT_EQ("aTitle1", items[2]->getTitle());
 
-//    items = m_library->getItems("0@2@1", 0, 0);
-//    ASSERT_EQ(3u, items.size());
-//    EXPECT_EQ("subdir", items[0]->getTitle());
-//    EXPECT_EQ("aTitle3", items[1]->getTitle());
-//    EXPECT_EQ("aTitle2", items[2]->getTitle());
+    items = m_library->getItems(items[0]->getObjectId(), 0, 0);
+    ASSERT_EQ(3u, items.size());
+    EXPECT_EQ("subdir", items[0]->getTitle());
+    EXPECT_EQ("aTitle3", items[1]->getTitle());
+    EXPECT_EQ("aTitle2", items[2]->getTitle());
 }
 
 TEST_F(LibraryTest, GetAlbum)
 {
     auto albums = m_library->getItems(std::to_string(g_albumsId), 0, 0);
-    
-    for (auto a : albums)
-    {
-        utils::log::info("%s - %s", a->getMetaData(upnp::Property::Artist), a->getTitle());
-    }
-    
     EXPECT_EQ(1u, albums.size());
+    
+    auto album = albums.front();
+    EXPECT_EQ("anAlbum", album->getTitle());
+    EXPECT_EQ("anAlbumArtist", album->getMetaData(upnp::Property::Artist));
+    EXPECT_EQ(upnp::Class::AudioContainer, album->getClass());
 }
+
+TEST_F(LibraryTest, GetAlbumTracks)
+{
+    auto albums = m_library->getItems(std::to_string(g_albumsId), 0, 0);
+    ASSERT_EQ(1u, albums.size());
+    
+    auto album = albums.front();
+    auto songs = m_library->getItems(albums.front()->getObjectId(), 0, 0);
+    EXPECT_EQ(4u, songs.size());
+    
+    for (auto& song : songs)
+    {
+        EXPECT_EQ(song->getParentId(), album->getObjectId());
+        EXPECT_EQ(upnp::Class::Audio, song->getClass());
+    }
+}
+
 
 //TEST_F(LibraryTest, DownloadFile)
 //{
-//    auto item = m_library->getItems("@1@1", 0, 1).front();
+//    auto item = m_library->getItems(std::to_string(g_browseFileSystemId), 1, 1).front();
 //    
 //    auto res = item->getResources();
 //    EXPECT_EQ(1, res.size());
