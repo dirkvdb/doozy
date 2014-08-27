@@ -285,6 +285,7 @@ void Scanner::onFile(const std::string& filepath, int64_t parentId, std::vector<
                         
                         log::debug("Add Album: %s - %s", albumMeta.artist, albumMeta.title);
                         albumId = m_libraryDb.addItem(album, albumMeta);
+                        log::debug("Album id: %d", albumId);
                     }
 
                     // add song item as child of album
@@ -292,7 +293,7 @@ void Scanner::onFile(const std::string& filepath, int64_t parentId, std::vector<
                     albumSongItem.name = item.name;
                     albumSongItem.parentId = albumId;
                     albumSongItem.upnpClass = item.upnpClass;
-                    log::debug("Add album song: %s (parent: %d)", albumSongItem.name, parentId);
+                    log::debug("Add album song: %s (parent: %d)", albumSongItem.name, albumId);
                     curItems.push_back(std::move(albumSongItem));
                 }
                 catch (std::exception& e)

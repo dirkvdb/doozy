@@ -124,9 +124,22 @@ auto addMetadataQuery = [] () {
 
 auto itemExistsQuery = [] () {
     return select(objects.Id.as(objectId))
-           .from(metadata.left_outer_join(objects).on(objects.MetaData == metadata.Id))
+           .from(metadata.inner_join(objects).on(objects.MetaData == metadata.Id))
            .where(metadata.FilePath == parameter(metadata.FilePath));
 };
+
+auto albumExistsQuery = [] () {
+    return select(objects.Id.as(objectId))
+           .from(metadata.inner_join(objects).on(objects.MetaData == metadata.Id))
+           .where(objects.Class == "object.container.album.musicAlbum" and objects.Name == parameter(objects.Name) and metadata.Artist == parameter(metadata.Artist));
+};
+
+auto albumExistsQueryNoArtist = [] () {
+    return select(objects.Id.as(objectId))
+           .from(metadata.inner_join(objects).on(objects.MetaData == metadata.Id))
+           .where(objects.Class == "object.container.album.musicAlbum" and objects.Name == parameter(objects.Name) and metadata.Artist.is_null());
+};
+
 
 auto itemStatusQuery = [] () {
     return select(metadata.ModifiedTime)
@@ -136,17 +149,19 @@ auto itemStatusQuery = [] () {
 
 auto itemPathQuery = [] () {
     return select(metadata.FilePath)
-           .from(objects.left_outer_join(metadata).on(objects.MetaData == metadata.Id))
+           .from(objects.inner_join(metadata).on(objects.MetaData == metadata.Id))
            .where(objects.Id == parameter(objects.Id));
 };
 
-using ObjectCountQuery       = decltype(objectCountQuery());
-using ChildCountQuery        = decltype(childCountQuery());
-using AddItemQuery           = decltype(addItemQuery());
-using AddMetadataQuery       = decltype(addMetadataQuery());
-using ItemExistsQuery        = decltype(itemExistsQuery());
-using ItemStatusQuery        = decltype(itemStatusQuery());
-using ItemPathQuery          = decltype(itemPathQuery());
+using ObjectCountQuery          = decltype(objectCountQuery());
+using ChildCountQuery           = decltype(childCountQuery());
+using AddItemQuery              = decltype(addItemQuery());
+using AddMetadataQuery          = decltype(addMetadataQuery());
+using ItemExistsQuery           = decltype(itemExistsQuery());
+using ItemStatusQuery           = decltype(itemStatusQuery());
+using ItemPathQuery             = decltype(itemPathQuery());
+using AlbumExistsQuery          = decltype(albumExistsQuery());
+using AlbumExistsQueryNoArtist  = decltype(albumExistsQueryNoArtist());
 
 template <typename SelectType>
 using PreparedStatement = decltype(((sql::connection*)nullptr)->prepare(*((SelectType*)nullptr)));
@@ -162,6 +177,8 @@ struct MusicDb::PreparedStatements
     PreparedStatement<ItemExistsQuery> itemExists;
     PreparedStatement<ItemStatusQuery> itemStatus;
     PreparedStatement<ItemPathQuery> itemPath;
+    PreparedStatement<AlbumExistsQuery> albumExists;
+    PreparedStatement<AlbumExistsQueryNoArtist> albumExistsNoArtist;
 };
 
 MusicDb::MusicDb(const string& dbFilepath)
@@ -182,13 +199,15 @@ MusicDb::~MusicDb()
 
 void MusicDb::prepareStatements()
 {
-    m_statements->objectCount       = m_db.prepare(objectCountQuery());
-    m_statements->childCount        = m_db.prepare(childCountQuery());
-    m_statements->addItem           = m_db.prepare(addItemQuery());
-    m_statements->addMetadata       = m_db.prepare(addMetadataQuery());
-    m_statements->itemExists        = m_db.prepare(itemExistsQuery());
-    m_statements->itemStatus        = m_db.prepare(itemStatusQuery());
-    m_statements->itemPath          = m_db.prepare(itemPathQuery());
+    m_statements->objectCount           = m_db.prepare(objectCountQuery());
+    m_statements->childCount            = m_db.prepare(childCountQuery());
+    m_statements->addItem               = m_db.prepare(addItemQuery());
+    m_statements->addMetadata           = m_db.prepare(addMetadataQuery());
+    m_statements->itemExists            = m_db.prepare(itemExistsQuery());
+    m_statements->itemStatus            = m_db.prepare(itemStatusQuery());
+    m_statements->itemPath              = m_db.prepare(itemPathQuery());
+    m_statements->albumExists           = m_db.prepare(albumExistsQuery());
+    m_statements->albumExistsNoArtist   = m_db.prepare(albumExistsQueryNoArtist());
 }
 
 void MusicDb::setWebRoot(const std::string& webRoot)
@@ -333,13 +352,33 @@ bool MusicDb::itemExists(const string& filepath, int64_t& objectId)
     return true;
 }
 
-bool MusicDb::albumExists(const std::string& title, const std::string& artist, int64_t& id)
+bool MusicDb::albumExists(const std::string& title, const std::string& artist, int64_t& objectId)
 {
-    auto query = select(objects.Id.as(objectId))
-                 .from(metadata.left_outer_join(objects).on(objects.MetaData == metadata.Id))
-                 .where(objects.Class == "object.container.album.musicAlbum" and objects.Name == title and metadata.Artist == sqlpp::tvin(artist));
-    
-    return getIdFromResultIfExists(m_db.run(query), id);
+    if (artist.empty())
+    {
+        m_statements->albumExistsNoArtist.params.Name = title;
+        auto result = m_db.run(m_statements->albumExistsNoArtist);
+        if (result.empty())
+        {
+            return false;
+        }
+
+        objectId = result.front().objectId;
+    }
+    else
+    {
+        m_statements->albumExists.params.Name = title;
+        m_statements->albumExists.params.Artist = artist;
+        auto result = m_db.run(m_statements->albumExists);
+        if (result.empty())
+        {
+            return false;
+        }
+        
+        objectId = result.front().objectId;
+    }
+
+    return true;
 }
 
 ItemStatus MusicDb::getItemStatus(const std::string& filepath, uint64_t modifiedTime)
