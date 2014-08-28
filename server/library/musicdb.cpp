@@ -304,10 +304,10 @@ int64_t MusicDb::addMetadata(const LibraryMetadata& meta)
     m_statements->addMetadata.params.AlbumArtist   = sqlpp::tvin(meta.albumArtist);
     m_statements->addMetadata.params.Genre         = sqlpp::tvin(meta.genre);
     m_statements->addMetadata.params.MimeType      = sqlpp::tvin(meta.mimeType);
-    m_statements->addMetadata.params.Duration      = meta.duration;
-    m_statements->addMetadata.params.Channels      = meta.nrChannels;
-    m_statements->addMetadata.params.BitRate       = meta.bitrate;
-    m_statements->addMetadata.params.SampleRate    = meta.sampleRate;
+    m_statements->addMetadata.params.Duration      = sqlpp::tvin(meta.duration);
+    m_statements->addMetadata.params.Channels      = sqlpp::tvin(meta.nrChannels);
+    m_statements->addMetadata.params.BitRate       = sqlpp::tvin(meta.bitrate);
+    m_statements->addMetadata.params.SampleRate    = sqlpp::tvin(meta.sampleRate);
     m_statements->addMetadata.params.Thumbnail     = sqlpp::tvin(meta.thumbnail);
     
     return m_db.run(m_statements->addMetadata);

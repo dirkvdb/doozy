@@ -42,14 +42,15 @@ struct LibraryMetadata
     std::string     path;
     std::string     mimeType;
     std::string     thumbnail;
-    uint32_t        duration;
-    uint32_t        nrChannels;
-    uint32_t        bitrate;
-    uint32_t        sampleRate;
-    uint32_t        trackNumber;
-    uint32_t        discNumber;
+    uint32_t        duration = 0;
+    uint32_t        nrChannels = 0;
+    uint32_t        bitrate = 0;
+    uint32_t        sampleRate = 0;
+    uint32_t        trackNumber = 0;
+    uint32_t        discNumber = 0;
     uint64_t        fileSize = 0;
     uint64_t        modifiedTime = 0;
+    uint64_t        dateAdded = 0;
 };
 
 }

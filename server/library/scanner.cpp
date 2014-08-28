@@ -22,6 +22,7 @@
 #include "musicdb.h"
 #include "utils/stringoperations.h"
 #include "utils/fileoperations.h"
+#include "utils/timeoperations.h"
 #include "utils/log.h"
 
 #include "md5.h"
@@ -282,6 +283,8 @@ void Scanner::onFile(const std::string& filepath, int64_t parentId, std::vector<
                         albumMeta.artist    = meta.albumArtist;
                         albumMeta.date      = meta.date;
                         albumMeta.thumbnail = meta.thumbnail;
+                        albumMeta.genre     = meta.genre;
+                        albumMeta.dateAdded = timeops::getTime();
                         
                         log::debug("Add Album: %s - %s", albumMeta.artist, albumMeta.title);
                         albumId = m_libraryDb.addItem(album, albumMeta);
@@ -306,88 +309,6 @@ void Scanner::onFile(const std::string& filepath, int64_t parentId, std::vector<
         {
             log::warn("Failed to add item: %s", e.what());
         }
-        
-//    Album album;
-//    std::string albumId;
-//    m_LibraryDb.albumExists(track.album, albumId);
-//    if (!albumId.empty())
-//    {
-//        album = m_LibraryDb.getAlbum(albumId);
-//    }
-//
-//    if (albumId.empty() || ((!track.albumArtist.empty()) && track.albumArtist != album.artist))
-//    {
-//        album.title         = track.album;
-//        album.artist        = track.albumArtist.empty() ? track.artist : track.albumArtist;
-//        album.year          = track.year;
-//        album.genre         = track.genre;
-//        album.durationInSec = track.durationInSec;
-//        album.dateAdded     = m_InitialScan ? track.modifiedTime : time(nullptr);
-//
-//        AlbumArt art(albumId);
-//        art.setAlbumArt(md.getAlbumArt());
-//        processAlbumArt(filepath, art);
-//
-//        m_LibraryDb.addAlbum(album, art);
-//    }
-//    else
-//    {
-//        if (!track.albumArtist.empty())
-//        {
-//            //if a track has an album artist set, we trust it is the right one
-//            if (track.albumArtist != album.artist)
-//            {
-//                album.artist = track.albumArtist;
-//            }
-//        }
-//        else
-//        {
-//            //if no album artist set and we detect different artists for an
-//            //album, we set the album artist to VARIOUS_ARTISTS
-//            if (album.artist != g_variousArtists && album.artist != track.artist)
-//            {
-//                album.artist = g_variousArtists;
-//            }
-//        }
-//
-//        assert(album.id == albumId);
-//
-//        AlbumArt art = m_LibraryDb.getAlbumArt(albumId);
-//        if (art.getData().empty() || status == MusicDb::NeedsUpdate)
-//        {
-//            art.setAlbumArt(md.getAlbumArt());
-//            processAlbumArt(filepath, art);
-//
-//            if (art.getDataSize() > 0)
-//            {
-//                m_LibraryDb.setAlbumArt(albumId, art.getData());
-//            }
-//        }
-//
-//        if (status == MusicDb::DoesntExist)
-//        {
-//            album.durationInSec += track.durationInSec;
-//        }
-//
-//        if (album.genre.empty())
-//        {
-//            album.genre = track.genre;
-//        }
-//
-//        m_LibraryDb.updateAlbum(album);
-//    }
-//
-//    track.albumId = album.id;
-//    if (status == MusicDb::DoesntExist)
-//    {
-//        log::debug("New track: %s %s", filepath, track.albumId);
-//        //m_LibraryDb.addTrack(track);
-//    }
-//    else if (status == MusicDb::NeedsUpdate)
-//    {
-//        log::debug("Needs update: %s", filepath);
-//        //m_LibraryDb.updateTrack(track);
-//    }
     }
     
     log::debug("Add Item: %s (parent: %d)", filepath, parentId);
