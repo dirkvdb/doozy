@@ -52,11 +52,10 @@ int main(int argc, char **argv)
     }
     
     int option;
-    bool daemonize = false;
     std::string configFile;
     std::string deviceType;
     
-    while ((option = getopt(argc, argv, "f:t:d")) != -1)
+    while ((option = getopt(argc, argv, "f:t:")) != -1)
     {
         switch (option)
         {
@@ -65,9 +64,6 @@ int main(int argc, char **argv)
             break;
         case 'f':
             configFile = optarg != nullptr ? optarg : "";
-            break;
-        case 'd':
-            daemonize = true;
             break;
         case '?':
         default:

@@ -25,6 +25,7 @@
 #include "upnp/upnputils.h"
 
 #include "typeconversions.h"
+#include "audioconfig.h"
 
 #include <sstream>
 
