@@ -16,8 +16,10 @@
 
 #include "doozydeviceinterface.h"
 
+#ifdef BUILD_UPNP_SERVER
 #include "server/server.h"
 #include "server/serversettings.h"
+#endif
 
 #include "renderer/renderer.h"
 #include "renderer/renderersettings.h"
@@ -33,13 +35,16 @@ using namespace utils;
 
 std::unique_ptr<IDevice> createDevice(const std::string& deviceType, const std::string& configFile)
 {
+#ifdef BUILD_UPNP_SERVER
     if (deviceType == "server")
     {
         ServerSettings settings;
         settings.loadFromFile(configFile);
         return std::make_unique<Server>(settings);
     }
-    else if (deviceType == "renderer")
+#endif
+    
+    if (deviceType == "renderer")
     {
         RendererSettings settings;
         settings.loadFromFile(configFile);
