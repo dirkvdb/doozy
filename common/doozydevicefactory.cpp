@@ -15,14 +15,17 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "doozydeviceinterface.h"
+#include "doozyconfig.h"
 
-#ifdef BUILD_UPNP_SERVER
+#ifdef UPNP_SERVER
 #include "server/server.h"
 #include "server/serversettings.h"
 #endif
 
+#ifdef UPNP_RENDERER
 #include "renderer/renderer.h"
 #include "renderer/renderersettings.h"
+#endif
 
 #include "utils/log.h"
 
@@ -35,7 +38,7 @@ using namespace utils;
 
 std::unique_ptr<IDevice> createDevice(const std::string& deviceType, const std::string& configFile)
 {
-#ifdef BUILD_UPNP_SERVER
+#ifdef UPNP_SERVER
     if (deviceType == "server")
     {
         ServerSettings settings;
@@ -43,13 +46,14 @@ std::unique_ptr<IDevice> createDevice(const std::string& deviceType, const std::
         return std::make_unique<Server>(settings);
     }
 #endif
-    
+#ifdef UPNP_RENDERER
     if (deviceType == "renderer")
     {
         RendererSettings settings;
         settings.loadFromFile(configFile);
         return std::make_unique<Renderer>(settings);
     }
+#endif
 
     throw std::runtime_error("Unsupported device type: " + deviceType);
 }

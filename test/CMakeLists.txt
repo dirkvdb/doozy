@@ -33,15 +33,26 @@ SET(LINK_LIBS
     doozyrenderer
 )
 
-ADD_EXECUTABLE(doozytest EXCLUDE_FROM_ALL
+SET (TEST_INFRA
     gmock-gtest-all.cpp
     eventnotification.h
     eventlistenermock.h
-    main.cpp
-    librarytest.cpp
-    librarydatabasetest.cpp
     settingsmocks.h
+    main.cpp
     ../common/settings.cpp
+)
+
+IF (UPNP_SERVER)
+    SET (SERVER_TESTS
+        librarytest.cpp
+        librarydatabasetest.cpp
+    )
+ENDIF ()
+
+
+ADD_EXECUTABLE(doozytest EXCLUDE_FROM_ALL
+    ${TEST_INFRA}
+    ${SERVER_TESTS}
 )
 
 TARGET_LINK_LIBRARIES(doozytest
