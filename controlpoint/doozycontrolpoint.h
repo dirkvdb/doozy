@@ -22,7 +22,8 @@
 #include <condition_variable>
 #include <mutex>
 
-#include "gen-cpp/ControlPoint.h"
+#include "rpccall.pb.h"
+#include "controlpoint.pb.h"
 
 #include "upnp/upnpclient.h"
 #include "upnp/upnpwebserver.h"
@@ -33,18 +34,29 @@
 namespace doozy
 {
 
-class ControlPoint : public rpc::ControlPointIf
+class PublishChannel;
+
+class ControlPoint : public proto::ControlPoint
 {
 public:
-    ControlPoint();
+    ControlPoint(PublishChannel& pubChannel);
     void run();
     void stop();
     
-    void GetRenderers(rpc::DeviceResponse& response) override;
-    void GetServers(rpc::DeviceResponse& response) override;
-    void Browse(rpc::BrowseResponse& response, const rpc::BrowseRequest& request) override;
-    void Play(const rpc::PlayRequest& request) override;
-    void GetRendererStatus(doozy::rpc::RendererStatus& status, const doozy::rpc::Device& dev) override;
+    void GetRenderers(google::protobuf::RpcController* controller, const proto::Void* request,
+                      proto::DeviceResponse* response, google::protobuf::Closure* done);
+    
+    void GetServers(google::protobuf::RpcController* controller, const proto::Void* request,
+                    proto::DeviceResponse* response, google::protobuf::Closure* done);
+    
+    void Browse(google::protobuf::RpcController* controller, const proto::BrowseRequest* request,
+                proto::BrowseResponse* response, google::protobuf::Closure* done);
+    
+    void Play(google::protobuf::RpcController* controller, const proto::PlayRequest* request,
+              proto::Void* response, google::protobuf::Closure* done);
+    
+    void GetRendererStatus(google::protobuf::RpcController* controller, const proto::Device* request,
+                           proto::RendererStatus* response, google::protobuf::Closure* done);
     
 private:
     upnp::Client                        m_Client;
@@ -53,6 +65,8 @@ private:
     upnp::DeviceScanner                 m_RendererScanner;
     upnp::DeviceScanner                 m_ServerScanner;
     std::unique_ptr<upnp::WebServer>    m_Webserver;
+    
+    proto::ControlPointEvents::Stub     m_events;
 };
     
 }

@@ -1,0 +1,96 @@
+import "rpccall.proto";
+
+package doozy.proto;
+
+option cc_generic_services = true;
+option py_generic_services = true;
+
+message Device
+{
+    required string name = 1;
+    required string udn = 2;
+}
+
+enum ItemClass
+{
+    ItemClassUnknown = 0;
+    ItemClassContainer = 1;
+    ItemClassAudioContainer = 2;
+    ItemClassImageContainer = 3;
+    ItemClassVideoContainer = 4;
+    ItemClassItem = 5;
+    ItemClassAudioItem = 6;
+    ItemClassImageItem = 7;
+    ItemClassVideoItem = 8;
+}
+
+message Item
+{
+    required string id = 1;
+    required string title = 2;
+    required ItemClass itemclass = 3;
+    optional string thumbnailurl = 4;
+}
+
+message DeviceResponse
+{
+    repeated Device devices = 1;
+}
+
+message BrowseRequest
+{
+    required string udn = 1;
+    required string containerid = 2;
+}
+
+message BrowseResponse
+{
+    repeated Item items = 1;
+}
+
+message PlayRequest
+{
+    required string rendererudn = 1;
+    required string serverudn = 2;
+    required string containerid = 3;
+}
+
+enum PlaybackState
+{
+    Stopped = 1;
+    Playing = 2;
+    Paused = 3;
+}
+
+enum Action
+{
+    ActionPlay = 1;
+    ActionStop = 2;
+    ActionPause = 3;
+    ActionSeek = 4;
+    ActionNext = 5;
+    ActionPrevious = 6;
+}
+
+message RendererStatus
+{
+    required string artist = 1;
+    required string title = 2;
+    optional string thumbnailurl = 3;
+    required PlaybackState state = 4;
+    repeated Action availableActions = 5;
+}
+
+service ControlPoint
+{
+    rpc GetRenderers (Void) returns (DeviceResponse);
+    rpc GetServers (Void) returns (DeviceResponse);
+    rpc Browse(BrowseRequest) returns (BrowseResponse);
+    rpc Play(PlayRequest) returns (Void);
+    rpc GetRendererStatus(Device) returns (RendererStatus);
+}
+
+service ControlPointEvents
+{
+    rpc DeviceDiscovered (Device) returns (Void);
+}

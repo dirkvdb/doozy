@@ -1,0 +1,19 @@
+package doozy.proto;
+
+message RPCRequest
+{
+    required string service = 1;
+    required string method = 2;
+    required bytes payload = 3;
+}
+
+message RPCResponse
+{
+    required bytes protobuf = 1;
+    optional uint32 error_code = 2;
+    optional string error = 3;
+}
+
+message Void
+{
+}
