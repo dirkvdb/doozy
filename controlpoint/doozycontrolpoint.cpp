@@ -28,8 +28,8 @@ using namespace google::protobuf;
 ControlPoint::ControlPoint(PublishChannel& pubChannel)
 : m_Cp(m_Client)
 , m_MediaServer(m_Client)
-, m_RendererScanner(m_Client, upnp::Device::Type::MediaRenderer)
-, m_ServerScanner(m_Client, upnp::Device::Type::MediaServer)
+, m_RendererScanner(m_Client, upnp::DeviceType::MediaRenderer)
+, m_ServerScanner(m_Client, upnp::DeviceType::MediaServer)
 , m_events(&pubChannel)
 {
     run();

@@ -16,9 +16,11 @@ class ZMQChannel(service.RpcChannel):
         req.method = method_descriptor.name
         req.payload = request.SerializeToString()
 
+        print 'send'
         self.sock.send(req.SerializeToString())
-
+        print 'recv'
         res = self.sock.recv()
+        print 'received'
 
         rpcResp = rpccall_pb2.RPCResponse()
         rpcResp.ParseFromString(res)
@@ -43,24 +45,24 @@ if __name__ == "__main__":
     for dev in res.devices:
         print "device {0} ({1})".format(dev.name, dev.udn)
 
-    req = rpccall_pb2.RPCRequest()
-    req.service = 'doozy.proto.ControlPointEvents'
-    req.method = ''
-    req.payload = ''
-    print req.SerializeToString()
+    #req = rpccall_pb2.RPCRequest()
+    #req.service = 'doozy.proto.ControlPointEvents'
+    #req.method = ''
+    #req.payload = ''
+    #print req.SerializeToString()
 
-    subsock = context.socket(zmq.SUB)
-    subsock.connect('tcp://localhost:9091')
-    subsock.setsockopt(zmq.SUBSCRIBE, 'doozy.proto.ControlPointEvents')
-    while True:
-        req = rpccall_pb2.RPCRequest()
-        rec = subsock.recv() # interface name
-        rec = subsock.recv()
-        req.ParseFromString(rec)
-        print 'Service event: {0}::{1}'.format(req.service, req.method)
-        method = cpEvents.GetDescriptor().FindMethodByName(req.method)
-        aaa = cpEvents.GetRequestClass(method)()
-        aaa.ParseFromString(req.payload)
-        cpEvents.CallMethod(method, None, aaa, None)
+    #subsock = context.socket(zmq.SUB)
+    #subsock.connect('tcp://localhost:9091')
+    #subsock.setsockopt(zmq.SUBSCRIBE, 'doozy.proto.ControlPointEvents')
+    #while True:
+    #    req = rpccall_pb2.RPCRequest()
+    #    rec = subsock.recv() # interface name
+    #    rec = subsock.recv()
+    #    req.ParseFromString(rec)
+    #    print 'Service event: {0}::{1}'.format(req.service, req.method)
+    #    method = cpEvents.GetDescriptor().FindMethodByName(req.method)
+    #    aaa = cpEvents.GetRequestClass(method)()
+    #    aaa.ParseFromString(req.payload)
+    #    cpEvents.CallMethod(method, None, aaa, None)
 
 

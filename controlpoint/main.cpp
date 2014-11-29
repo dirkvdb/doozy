@@ -5,8 +5,10 @@
 #include "utils/log.h"
 
 #include "doozycontrolpoint.h"
-#include "rpccall.pb.h"
 #include "publishchannel.h"
+#include "zmqworker.h"
+
+using namespace utils;
 
 int main(int argc, char** argv)
 {
@@ -15,52 +17,19 @@ int main(int argc, char** argv)
     try
     {
         zmq::context_t context(1);
-        zmq::socket_t socket(context, ZMQ_REP);
+        zmq::socket_t frontend(context, ZMQ_ROUTER);
+        zmq::socket_t backend(context, ZMQ_DEALER);
         
-        socket.bind("tcp://*:9090");
-    
         doozy::PublishChannel pubChannel(context, "*", 9091);
         doozy::ControlPoint cp(pubChannel);
         
-        while (true)
-        {
-            //  Wait for next request from client
-            zmq::message_t message;
-            socket.recv(&message);
-            std::cout << "Request received" << std::endl;
-
-            doozy::proto::RPCRequest req;
-            if (!req.ParseFromArray(message.data(), message.size()))
-            {
-                std::cerr << "Invalid request received" << std::endl;
-                break;
-            }
-
-            std::cout << req.service() << "::" << req.method() << std::endl;
-            if (cp.descriptor()->full_name() == req.service())
-            {
-                auto method = cp.GetDescriptor()->FindMethodByName(req.method());
-                if (method == nullptr)
-                {
-                    std::cerr << "Invalid method name received" << std::endl;
-                    break;
-                }
-
-                //auto controller = std::make_shared<RPCController>();
-
-                auto reqProto = cp.GetRequestPrototype(method).New();
-                auto resProto = cp.GetResponsePrototype(method).New();
-                reqProto->ParseFromString(req.payload());
-
-                //auto callback = google::protobuf::NewCallback(this, &Server::RequestFinished, resProto);
-                cp.CallMethod(method, nullptr, reqProto, resProto, nullptr);
-
-                doozy::proto::RPCResponse rpcResp;
-                rpcResp.set_protobuf(resProto->SerializeAsString());
-                auto str = rpcResp.SerializeAsString();
-                socket.send(str.data(), str.size());
-            }
-        }
+        frontend.bind("tcp://*:9090");
+        backend.bind("inproc://#1");
+        
+        doozy::Worker<doozy::ControlPoint> worker1(context, cp, "worker1");
+        doozy::Worker<doozy::ControlPoint> worker2(context, cp, "worker2");
+        
+        zmq::proxy(frontend, backend, nullptr);
 
         return EXIT_SUCCESS;
     }
