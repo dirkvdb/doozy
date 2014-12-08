@@ -49,7 +49,6 @@ ADD_EXECUTABLE(doozycontrolpoint
     ${PROTO_FILES} ${PROTO_SRCS} ${PROTO_HDRS}
     doozycontrolpoint.h doozycontrolpoint.cpp
     publishchannel.h publishchannel.cpp
-    zmqworker.h
     main.cpp
 )
 
