@@ -1,58 +1,49 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 FIND_PACKAGE(PkgConfig)
-PKG_CHECK_MODULES(ZMQ_PKG libzmq)
-FIND_PATH(ZMQ_INCLUDE_DIRS
-    NAMES zmq.h zmq.hpp
-    PATHS ${ZMQ_PKG_INCLUDE_DIRS}
+PKG_CHECK_MODULES(THRIFT_PKG thrift)
+FIND_PATH(THRIFT_INCLUDE_DIRS
+    NAMES thrift/Thrift.h
+    PATHS ${THRIFT_PKG_INCLUDE_DIRS}
 )
 
-FIND_LIBRARY(ZMQ_LIBRARIES
-    NAMES ${ZMQ_PKG_LIBRARIES}
-    HINTS ${ZMQ_PKG_LIBRARY_DIRS}
+FIND_LIBRARY(THRIFT_LIBRARIES
+    NAMES ${THRIFT_PKG_LIBRARIES}
+    HINTS ${THRIFT_PKG_LIBRARY_DIRS}
 )
-
-FIND_PACKAGE(Protobuf REQUIRED)
 
 INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     ${UTILS_INCLUDE_DIRS}
     ${UPNPFRAMEWORK_INCLUDE_DIRS}
-    ${PROTOBUF_INCLUDE_DIRS}
-    ${ZMQ_INCLUDE_DIRS}
+    ${THRIFT_INCLUDE_DIRS}
 )
 
 LINK_DIRECTORIES(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${UTILS_LIBRARY_DIRS}
     ${UPNPFRAMEWORK_LIBRARY_DIRS}
-    ${ZMQ_LIBRARY_DIRS}
+    ${THRIFT_LIBRARY_DIRS}
 )
 
 SET(LINK_LIBS
-    ${UPNPFRAMEWORK_LIBRARIES}
     ${UTILS_LIBRARIES}
-    ${PROTOBUF_LIBRARIES}
-    ${ZMQ_LIBRARIES}
+    ${UPNPFRAMEWORK_LIBRARIES}
+    ${THRIFT_LIBRARIES}
+    ${THRIFT_LIBRARIES}
 )
-
-SET (PROTO_FILES
-    rpccall.proto
-    controlpoint.proto
-)
-
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
 ADD_EXECUTABLE(doozycontrolpoint
-    ${PROTO_FILES} ${PROTO_SRCS} ${PROTO_HDRS}
+    gen-cpp/controlpoint_constants.h gen-cpp/controlpoint_constants.cpp
+    gen-cpp/controlpoint_types.h gen-cpp/controlpoint_types.cpp
+    gen-cpp/ControlPoint.h gen-cpp/ControlPoint.cpp
     doozycontrolpoint.h doozycontrolpoint.cpp
-    publishchannel.h publishchannel.cpp
     main.cpp
+    controlpoint.thrift
 )
 
-#SOURCE_GROUP(generated REGULAR_EXPRESSION gen-cpp/)
+SOURCE_GROUP(generated REGULAR_EXPRESSION gen-cpp/)
 
 TARGET_LINK_LIBRARIES(doozycontrolpoint ${LINK_LIBS})
 INSTALL(TARGETS doozycontrolpoint RUNTIME DESTINATION bin)
