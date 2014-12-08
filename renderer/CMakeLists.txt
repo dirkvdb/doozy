@@ -12,6 +12,7 @@ INCLUDE_DIRECTORIES(
 SET (RENDERER_LIBRARIES doozyrenderer)
 
 ADD_LIBRARY(doozyrenderer
+    devicedescriptions.h
     renderer.h                  renderer.cpp
     renderersettings.h          renderersettings.cpp
     mediarendererdevice.h       mediarendererdevice.cpp

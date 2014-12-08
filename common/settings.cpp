@@ -77,7 +77,7 @@ bool Settings::getAsBool(const std::string& setting) const
         return false;
     }
 
-    throw std::runtime_error(stringops::format("Invalid boolean value for setting %s: (%s)", setting, value));
+    throw std::runtime_error(fmt::format("Invalid boolean value for setting {}: ({})", setting, value));
 }
 
 bool Settings::getAsBool(const std::string& setting, bool defaultValue) const noexcept
@@ -160,7 +160,7 @@ void Settings::loadFromFile(const std::string& filepath)
         size_t pos = line.find('=');
         if (pos == std::string::npos)
         {
-            log::warn("Warning: ignoring malformed line in config file: %d" + line);
+            log::warn("Warning: ignoring malformed line in config file: {}" + line);
             continue;
         }
 

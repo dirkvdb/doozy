@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     try
     {
         g_deviceInstance = doozy::DeviceFactory::createDevice(deviceType, configFile);
-        log::info("Doozy %s", deviceType);
+        log::info("Doozy {}", deviceType);
         g_deviceInstance->start();
         log::info("Bye");
 
@@ -93,7 +93,7 @@ static void sigterm(int signo)
 {
     try
     {
-        log::info("Sigterm %d", signo);
+        log::info("Sigterm {}", signo);
         g_deviceInstance->stop();
     }
     catch (std::exception& e)
@@ -115,7 +115,7 @@ static bool set_signal_handlers()
 
     if (sigaction(SIGINT, &sa, nullptr) < 0)
     {
-        log::error("Can't catch SIGINT: %s", strerror(errno));
+        log::error("Can't catch SIGINT: {}", strerror(errno));
         return false;
     }
 
@@ -127,7 +127,7 @@ static bool set_signal_handlers()
 
     if (sigaction(SIGQUIT, &sa, nullptr) < 0)
     {
-        log::error("Can't catch SIGQUIT: %s", strerror(errno));
+        log::error("Can't catch SIGQUIT: {}", strerror(errno));
         return false;
     }
 
@@ -139,7 +139,7 @@ static bool set_signal_handlers()
 
     if (sigaction(SIGTERM, &sa, nullptr) < 0)
     {
-        log::error("Can't catch SIGTERM: %s", strerror(errno));
+        log::error("Can't catch SIGTERM: {}", strerror(errno));
         return false;
     }
     
@@ -149,7 +149,7 @@ static bool set_signal_handlers()
     
     if (sigaction(SIGSEGV, &sa, nullptr) < 0)
     {
-        log::error("Can't catch SIGSEGV: %s", strerror(errno));
+        log::error("Can't catch SIGSEGV: {}", strerror(errno));
         return false;
     }
 

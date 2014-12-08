@@ -151,7 +151,7 @@ static void convertImageToJpeg(std::vector<uint8_t>& data)
     }
     catch (std::exception& e)
     {
-        throw std::runtime_error(stringops::format("Failed to convert image: %s", e.what()));
+        throw std::runtime_error(fmt::format("Failed to convert image: {}", e.what()));
     }
 }
 
@@ -186,7 +186,7 @@ static void obtainMetadata(PlayQueueItemPtr qItem)
             }
             catch (std::exception& e)
             {
-                log::warn("Failed to set album art: %s", e.what());
+                log::warn("Failed to set album art: {}", e.what());
             }
             
             try
@@ -199,13 +199,13 @@ static void obtainMetadata(PlayQueueItemPtr qItem)
             }
             catch (std::exception& e)
             {
-                log::warn("Failed to set album art thumbnail: %s", e.what());
+                log::warn("Failed to set album art thumbnail: {}", e.what());
             }
         }
     }
     catch (std::exception& e)
     {
-        log::warn("Failed to obtain metadata for url: %s", qItem->getUri());
+        log::warn("Failed to obtain metadata for url: {}", qItem->getUri());
     }
 }
 
@@ -252,7 +252,7 @@ void PlayQueue::setCurrentUri(const std::string& avTransportUri)
     bool first = true;
     for (auto& uri : uris)
     {
-        log::debug("Add item: %s : %s", uri, avTransportUri);
+        log::debug("Add item: {} : {}", uri, avTransportUri);
         auto item = std::make_shared<PlayQueueItem>(uri, avTransportUri);
         items.push_back(item);
         
@@ -290,7 +290,7 @@ void PlayQueue::setNextUri(const std::string& avTransportUri)
     std::deque<PlayQueueItemPtr> items;
     for (auto& uri : uris)
     {
-        log::debug("Add next item: %s : %s", uri, avTransportUri);
+        log::debug("Add next item: {} : {}", uri, avTransportUri);
         auto item = std::make_shared<PlayQueueItem>(uri, avTransportUri);
         items.push_back(item);
         m_Thread.addJob([item] () { obtainMetadata(item); });

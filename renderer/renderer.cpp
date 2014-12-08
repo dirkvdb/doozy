@@ -21,6 +21,7 @@
 #include "mediarendererdevice.h"
 
 #include "utils/log.h"
+#include "utils/format.h"
 #include "utils/readerfactory.h"
 #include "utils/stringoperations.h"
 
@@ -28,7 +29,6 @@
 #include "upnp/upnphttpreader.h"
 
 using namespace utils;
-using namespace utils::stringops;
 
 namespace doozy
 {
@@ -52,12 +52,12 @@ void Renderer::start()
         auto friendlyName       = m_settings.getFriendlyName();
         auto audioOutput        = m_settings.getAudioOutput();
         auto audioDevice        = m_settings.getAudioDevice();
-        auto description        = format(g_mediaRendererDevice.c_str(), m_client.getIpAddress(), m_client.getPort(), friendlyName, udn);
+        auto description        = fmt::format(g_mediaRendererDevice.c_str(), m_client.getIpAddress(), m_client.getPort(), friendlyName, udn);
         auto advertiseInterval  = 180;
-        
-        log::info("FriendlyName = %s", friendlyName);
-        log::info("AudioOutput = %s", audioOutput);
-        log::info("AudioDevice = %s", audioDevice);
+
+        log::info("FriendlyName = {}", friendlyName);
+        log::info("AudioOutput = {}", audioOutput);
+        log::info("AudioDevice = {}", audioDevice);
         
         upnp::WebServer webserver("/opt/");
         

@@ -188,7 +188,7 @@ void MediaRendererDevice::setTransportVariable(uint32_t instanceId, AVTransport:
 
 void MediaRendererDevice::onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest)
 {
-    //log::debug("Renderer: event subscription request %s", pRequest->ServiceId);
+    //log::debug("Renderer: event subscription request {}", pRequest->ServiceId);
     
     switch (serviceIdUrnStringToService(pRequest->ServiceId))
     {
@@ -196,13 +196,13 @@ void MediaRendererDevice::onEventSubscriptionRequest(Upnp_Subscription_Request* 
     case ServiceType::RenderingControl:         return m_RootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_RenderingControl.getSubscriptionResponse());
     case ServiceType::ConnectionManager:        return m_RootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_ConnectionManager.getSubscriptionResponse());
     default:
-        log::warn("Invalid event subscription request: %s", pRequest->ServiceId);
+        log::warn("Invalid event subscription request: {}", pRequest->ServiceId);
     }
 }
 
 void MediaRendererDevice::onControlActionRequest(Upnp_Action_Request* pRequest)
 {
-    //log::debug("Renderer: action request: %s", pRequest->ActionName);
+    //log::debug("Renderer: action request: {}", pRequest->ActionName);
     
     xml::Document requestDoc(pRequest->ActionRequest, xml::Document::NoOwnership);
     //log::debug(requestDoc.toString());
@@ -339,7 +339,7 @@ void MediaRendererDevice::setAVTransportURI(uint32_t instanceId, const std::stri
     
     try
     {
-        log::info("Play uri (%d): %s", instanceId, uri);
+        log::info("Play uri ({}): {}", instanceId, uri);
         m_Queue.setCurrentUri(uri);
         if (m_Playback->isPlaying())
         {
@@ -383,7 +383,7 @@ void MediaRendererDevice::play(uint32_t instanceId, const std::string& speed)
 {
     throwOnBadInstanceId(instanceId);
     
-    log::info("Play (%d): speed %s", instanceId, speed);
+    log::info("Play ({}): speed {}", instanceId, speed);
     m_Playback->play();
 }
 
