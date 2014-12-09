@@ -124,7 +124,6 @@ ADD_EXECUTABLE(doozy
     common/doozydeviceinterface.h
     common/doozydevicefactory.h common/doozydevicefactory.cpp
     common/settings.h common/settings.cpp
-    common/crashhandler.h
     common/devicedescriptions.h
 )
 

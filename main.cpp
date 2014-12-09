@@ -23,10 +23,10 @@
 #include <unistd.h>
 
 #include "utils/log.h"
+#include "utils/backtrace.h"
 #include "common/settings.h"
 #include "common/doozydeviceinterface.h"
 #include "common/doozydevicefactory.h"
-#include "common/crashhandler.h"
 
 static bool set_signal_handlers();
 
@@ -101,6 +101,12 @@ static void sigterm(int signo)
 }
 
 #ifndef WIN32
+static void segFaultHandler(int /*signo*/, siginfo_t* /*pInfo*/, void* /*pContext*/)
+{
+    utils::printBackTrace();
+    exit(EXIT_FAILURE);
+}
+
 static bool set_signal_handlers()
 {
     struct sigaction sa;
@@ -142,7 +148,7 @@ static bool set_signal_handlers()
     }
     
     sigemptyset(&sa.sa_mask);
-    sa.sa_sigaction = doozy::sigsegv;
+    sa.sa_sigaction = segFaultHandler;
     sa.sa_flags = SA_RESTART | SA_SIGINFO;
     
     if (sigaction(SIGSEGV, &sa, nullptr) < 0)
