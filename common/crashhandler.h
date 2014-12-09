@@ -19,6 +19,8 @@
 #define CRASH_HANDLER_H
 
 #include "utils/log.h"
+#include <ucontext.h>
+#include <execinfo.h>
 
 namespace doozy
 {

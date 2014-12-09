@@ -21,8 +21,6 @@
 #include <string>
 #include <cstring>
 #include <unistd.h>
-#include <execinfo.h>
-#include <ucontext.h>
 
 #include "utils/log.h"
 #include "common/settings.h"
