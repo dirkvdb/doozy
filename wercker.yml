@@ -1,0 +1,41 @@
+box: dirkvdb/cxx14
+no-response-timeout: 10
+build:
+    steps:
+        - script:
+            name: Setup environnement variables
+            code: |
+                SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+                BUILD_DIR="${SRC_DIR}/build"
+                UPNP_VER="1.6.19"
+                echo "SRC_DIR ${SRC_DIR}"
+                echo "BUILD_DIR ${BUILD_DIR}"
+
+        - script:
+            name: Install dependencies
+            code: |
+                sudo apt-get update
+                sudo apt-get install libxdg-basedir-dev libflac++-dev libmad0-dev libpulse-dev libopenal-dev libasound2-dev libtag1-dev libjpeg-dev
+                wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%20${UPNP_VER}/libupnp-${UPNP_VER}.tar.bz2
+                tar xf libupnp-${UPNP_VER}.tar.bz2
+                cd libupnp-${UPNP_VER}
+                ./configure --enable-ipv6 --disable-shared
+                make
+                sudo make install
+
+        - script:
+            name: Compile doozy
+            code: |
+                mkdir -p "${BUILD_DIR}"
+                cd "${SRC_DIR}"
+                git submodule update --init --recursive
+                cd "${BUILD_DIR}"
+                cmake -DCMAKE_BUILD_TYPE=Release "${SRC_DIR}"
+                make -j8
+                make check -j8
+
+        - script:
+            name: Run Tests
+            code: |
+                cd "${BUILD_DIR}"
+                make test
