@@ -22,6 +22,8 @@ build:
                 ./configure --enable-ipv6 --disable-shared
                 make
                 sudo make install
+                cd ..
+                rm -rf libupnp-${UPNP_VER}
 
         - script:
             name: Compile doozy
