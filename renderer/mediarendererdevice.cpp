@@ -343,6 +343,7 @@ void MediaRendererDevice::setAVTransportURI(uint32_t instanceId, const std::stri
         m_Queue.setCurrentUri(uri);
         if (m_Playback->isPlaying())
         {
+            log::info("Stop and play");
             m_Playback->stop();
             m_Playback->play();
         }
@@ -395,18 +396,24 @@ void MediaRendererDevice::seek(uint32_t instanceId, upnp::AVTransport::SeekMode 
 void MediaRendererDevice::next(uint32_t instanceId)
 {
     throwOnBadInstanceId(instanceId);
+
+    log::info("Next ({})", instanceId);
     m_Playback->next();
 }
 
 void MediaRendererDevice::previous(uint32_t instanceId)
 {
     throwOnBadInstanceId(instanceId);
+
+    log::info("Previous ({})", instanceId);
     m_Playback->prev();
 }
 
 void MediaRendererDevice::pause(uint32_t instanceId)
 {
     throwOnBadInstanceId(instanceId);
+
+    log::info("Pause ({})", instanceId);
     m_Playback->pause();
 }
 

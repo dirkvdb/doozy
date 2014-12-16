@@ -20,10 +20,13 @@
 #include <cerrno>
 #include <string>
 #include <cstring>
+#include <iostream>
 #include <unistd.h>
 
 #include "utils/log.h"
 #include "utils/backtrace.h"
+#include "utils/stringoperations.h"
+#include "doozyconfig.h"
 #include "common/settings.h"
 #include "common/doozydeviceinterface.h"
 #include "common/doozydevicefactory.h"
@@ -32,7 +35,33 @@ static bool set_signal_handlers();
 
 using namespace utils;
 
-static std::unique_ptr<doozy::IDevice> g_deviceInstance;
+namespace
+{
+
+std::unique_ptr<doozy::IDevice> g_deviceInstance;
+
+void printUsage()
+{
+    std::vector<std::string> supportedDevices;
+
+#ifdef UPNP_RENDERER
+    supportedDevices.push_back("renderer");
+#endif
+#ifdef UPNP_SERVER
+    supportedDevices.push_back("server");
+#endif
+#ifdef UPNP_CONTROLPOINT
+    supportedDevices.push_back("controlpoint");
+#endif
+
+    std::cout   << "Usage: " PACKAGE_NAME " [options]" << std::endl << std::endl
+                << "Options:" << std::endl
+                << "  -t<s>   : device type (" << stringops::join(supportedDevices, "|") << ")" << std::endl
+                << "  -f<s>   : config file" << std::endl
+                << "  -h      : display this help" << std::endl;
+}
+
+}
 
 int main(int argc, char **argv)
 {
@@ -49,7 +78,7 @@ int main(int argc, char **argv)
         return 1;
     }
     
-    int option;
+    int32_t option;
     std::string configFile;
     std::string deviceType;
     
@@ -63,12 +92,21 @@ int main(int argc, char **argv)
         case 'f':
             configFile = optarg != nullptr ? optarg : "";
             break;
-        case '?':
+        case 'h':
+            printUsage();
+            return EXIT_SUCCESS;
         default:
-            log::error("invalid arguments");
-            //printUsage();
-            return -1;
+            std::cerr << "Invalid arguments" << std::endl;
+            printUsage();
+            return EXIT_FAILURE;
         }
+    }
+
+    if (deviceType.empty())
+    {
+        std::cerr << "No device type provided" << std::endl;
+        printUsage();
+        return EXIT_FAILURE;
     }
 
     try
