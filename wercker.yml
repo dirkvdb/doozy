@@ -10,6 +10,7 @@ build:
                 UPNP_VER="1.6.19"
                 echo "SRC_DIR ${SRC_DIR}"
                 echo "BUILD_DIR ${BUILD_DIR}"
+                echo "UPNP_VER ${UPNP_VER}"
 
         - script:
             name: Install dependencies
