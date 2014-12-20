@@ -22,7 +22,7 @@
 #include <mutex>
 
 #include "upnp/upnpfwd.h"
-#include "library/libraryitem.h"
+#include "server/library/libraryitem.h"
 #include <sqlpp11/sqlite3/sqlite3.h>
 
 namespace sqlpp

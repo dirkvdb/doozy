@@ -75,7 +75,8 @@ void Server::start()
         addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
         //addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
 
-        auto getInfoCb = [this] (const std::string& id) -> fileops::FileSystemEntryInfo {
+        auto getInfoCb = [this] (const std::string& filePath) -> fileops::FileSystemEntryInfo {
+            auto id = fileops::getFileNameWithoutExtension(filePath);
             MusicDb musicDb(m_settings.getDatabaseFilePath());
             return fileops::getFileInfo(musicDb.getItemPath(std::stoll(id)));
         };

@@ -6,7 +6,7 @@
 #include "eventnotification.h"
 #include "settingsmocks.h"
 
-#include "serversettings.h"
+#include "server/serversettings.h"
 #include "server/library/musiclibraryinterface.h"
 #include "server/library/filesystemmusiclibrary.h"
 

@@ -14,6 +14,8 @@ INCLUDE_DIRECTORIES(
     ${AUDIO_INCLUDE_DIRS}
     ${UPNPFRAMEWORK_INCLUDE_DIRS}
     ${SERVER_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11-connector-sqlite3/include
 )
 
 LINK_DIRECTORIES(
