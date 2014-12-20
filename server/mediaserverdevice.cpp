@@ -88,7 +88,7 @@ void MediaServerDevice::setInitialValues()
 
 void MediaServerDevice::onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest)
 {
-    //log::debug("Renderer: event subscription request %s", pRequest->ServiceId);
+    //log::debug("Renderer: event subscription request {}", pRequest->ServiceId);
     
     switch (serviceIdUrnStringToService(pRequest->ServiceId))
     {
@@ -96,13 +96,13 @@ void MediaServerDevice::onEventSubscriptionRequest(Upnp_Subscription_Request* pR
     case ServiceType::ContentDirectory:         return m_RootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_ContentDirectory.getSubscriptionResponse());
     case ServiceType::ConnectionManager:        return m_RootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_ConnectionManager.getSubscriptionResponse());
     default:
-        log::warn("Invalid event subscription request: %s", pRequest->ServiceId);
+        log::warn("Invalid event subscription request: {}", pRequest->ServiceId);
     }
 }
 
 void MediaServerDevice::onControlActionRequest(Upnp_Action_Request* pRequest)
 {
-    //log::debug("Renderer: action request: %s", pRequest->ActionName);
+    //log::debug("Renderer: action request: {}", pRequest->ActionName);
     
     xml::Document requestDoc(pRequest->ActionRequest, xml::Document::NoOwnership);
     //log::debug(requestDoc.toString());
@@ -119,7 +119,7 @@ void MediaServerDevice::onControlActionRequest(Upnp_Action_Request* pRequest)
         pRequest->ActionResult = m_ConnectionManager.onAction(pRequest->ActionName, requestDoc).getActionDocument();
         break;
     default:
-        throw ServiceException("Invalid subscribtionId", 401);
+        throw InvalidSubscriptionIdException();
     }
 
 
@@ -192,7 +192,7 @@ ContentDirectory::ActionResult MediaServerDevice::Browse(const std::string& id, 
 {
     ContentDirectory::ActionResult result;
 
-    log::debug("Browse%s: %s (%d - %d)", flag == ContentDirectory::BrowseFlag::Metadata ? "Metadata" : "DirectChildren", id, startIndex, count);
+    log::debug("Browse{}: {} ({} - {})", flag == ContentDirectory::BrowseFlag::Metadata ? "Metadata" : "DirectChildren", id, startIndex, count);
 
     if (flag == ContentDirectory::BrowseFlag::DirectChildren)
     {
@@ -210,7 +210,7 @@ ContentDirectory::ActionResult MediaServerDevice::Browse(const std::string& id, 
         result.numberReturned = 1;
     }
 
-    log::debug("Browse result: Update id %d (ret %d - #matches %d)", result.updateId, result.numberReturned, result.totalMatches);
+    log::debug("Browse result: Update id {} (ret {} - #matches {})", result.updateId, result.numberReturned, result.totalMatches);
     for (auto& item : result.result)
     {
         log::debug(item->getTitle());
@@ -233,7 +233,7 @@ ContentDirectory::ActionResult MediaServerDevice::Browse(const std::string& id, 
 //    
 //    try
 //    {
-//        log::info("Play uri (%d): %s", instanceId, uri);
+//        log::info("Play uri ({}): {}", instanceId, uri);
 //        m_Queue.setCurrentUri(uri);
 //        if (m_Playback->isPlaying())
 //        {
@@ -277,7 +277,7 @@ ContentDirectory::ActionResult MediaServerDevice::Browse(const std::string& id, 
 //{
 //    throwOnBadInstanceId(instanceId);
 //    
-//    log::info("Play (%d): speed %s", instanceId, speed);
+//    log::info("Play ({}): speed {}", instanceId, speed);
 //    m_Playback->play();
 //}
 //

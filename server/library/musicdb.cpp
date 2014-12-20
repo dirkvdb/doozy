@@ -401,7 +401,7 @@ std::string MusicDb::getItemPath(int64_t objectId)
     
     if (result.empty())
     {
-        throw std::runtime_error(stringops::format("No item in database with id: %d", objectId));
+        throw std::runtime_error(fmt::format("No item in database with id: {}", objectId));
     }
 
     return result.front().FilePath;
@@ -436,8 +436,8 @@ upnp::ItemPtr MusicDb::parseItem(const T& row)
         // add the resource urls
         upnp::Resource res;
         auto mimeType = row.MimeType;
-        res.setProtocolInfo(upnp::ProtocolInfo(stringops::format("http-get:*:%s:*", mimeType)));
-        res.setUrl(stringops::format("%sMedia/%s.%s", m_webRoot, item->getObjectId(), mime::extensionFromType(mime::typeFromString(mimeType))));
+        res.setProtocolInfo(upnp::ProtocolInfo(fmt::format("http-get:*:{}:*", mimeType)));
+        res.setUrl(fmt::format("{}Media/{}.{}", m_webRoot, item->getObjectId(), mime::extensionFromType(mime::typeFromString(mimeType))));
         res.setSize(row.FileSize);
         res.setDuration(static_cast<uint32_t>(row.Duration));
         res.setNrAudioChannels(static_cast<uint32_t>(row.Channels));
@@ -470,7 +470,7 @@ upnp::ItemPtr MusicDb::getItem(int64_t id)
 
     if (result.empty())
     {
-        throw std::runtime_error(stringops::format("No track found in db with id: %d", + id));
+        throw std::runtime_error(fmt::format("No track found in db with id: {}", + id));
     }
 
     return parseItem(result.front());
@@ -527,7 +527,7 @@ void MusicDb::removeNonExistingFiles()
     
     for (auto& iter : files)
     {
-        log::debug("Removed deleted file from database: %d", iter.first);
+        log::debug("Removed deleted file from database: {}", iter.first);
         removeItem(iter.first);
         removeMetaData(iter.second);
     }

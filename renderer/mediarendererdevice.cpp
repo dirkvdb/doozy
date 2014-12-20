@@ -219,7 +219,7 @@ void MediaRendererDevice::onControlActionRequest(Upnp_Action_Request* pRequest)
         pRequest->ActionResult = m_ConnectionManager.onAction(pRequest->ActionName, requestDoc).getActionDocument();
         break;
     default:
-        throw ServiceException("Invalid subscribtionId", 401);
+        throw InvalidSubscriptionIdException();
     }
 }
 

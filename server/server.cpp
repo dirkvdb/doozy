@@ -61,11 +61,11 @@ void Server::start()
 
         auto udn                = "uuid:" + m_settings.getUdn();
         auto friendlyName       = m_settings.getFriendlyName();
-        auto description        = format(g_mediaServerDevice.c_str(), m_client.getIpAddress(), m_client.getPort(), friendlyName, udn);
+        auto description        = fmt::format(g_mediaServerDevice.c_str(), m_client.getIpAddress(), m_client.getPort(), friendlyName, udn);
         auto advertiseInterval  = 180;
 
 
-        log::info("FriendlyName = %s", friendlyName);
+        log::info("FriendlyName = {}", friendlyName);
 
         fileops::createDirectoryIfNotExists(m_settings.getCachePath());
         upnp::WebServer webserver(m_settings.getCachePath());

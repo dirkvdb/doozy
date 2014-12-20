@@ -17,6 +17,11 @@
 #include "serversettings.h"
 #include "utils/log.h"
 #include "utils/fileoperations.h"
+#include "utilsconfig.h"
+
+#ifndef HAVE_XDGBASEDIR
+static_assert(false, "Utils not compiled with xdg-basedir support");
+#endif
 
 namespace doozy
 {
@@ -38,7 +43,7 @@ void ServerSettings::loadFromFile(const std::string& filepath)
         path = fileops::combinePath(fileops::getConfigDirectory(), "doozyserver.cfg");
     }
     
-    log::info("Using config file: %s", path);
+    log::info("Using config file: {}", path);
     m_settings.loadFromFile(path);
 }
 

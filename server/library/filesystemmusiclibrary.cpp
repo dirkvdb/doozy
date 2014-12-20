@@ -121,7 +121,7 @@ void FilesystemMusicLibrary::scannerThread()
     }
     catch (std::exception& e)
     {
-        log::error("Failed to scan library: %s", e.what());
+        log::error("Failed to scan library: {}", e.what());
     }
 
     if (OnScanComplete)

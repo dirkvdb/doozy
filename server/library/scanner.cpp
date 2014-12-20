@@ -76,7 +76,7 @@ void Scanner::performScan(const std::string& libraryPath)
     m_stop = false;
 
     time_t startTime = time(nullptr);
-    log::info("Starting library scan in: %s", libraryPath);
+    log::info("Starting library scan in: {}", libraryPath);
 
     m_initialScan = m_libraryDb.getObjectCount() == 0;
     m_scannedFiles = 0;
@@ -87,7 +87,7 @@ void Scanner::performScan(const std::string& libraryPath)
     }
     
     scan(libraryPath, g_browseFileSystemId);
-    log::info("Library scan took %d seconds. Scanned %d files.", time(nullptr) - startTime, m_scannedFiles);
+    log::info("Library scan took {} seconds. Scanned {} files.", time(nullptr) - startTime, m_scannedFiles);
 }
 
 void Scanner::createInitialLayout()
@@ -165,7 +165,7 @@ void Scanner::scan(const std::string& dir, int64_t parentId)
                 }
 
                 objectId = m_libraryDb.addItem(item, meta);
-                log::debug("Add container: %s (%d) parent: %d", entry.path(), objectId, parentId);
+                log::debug("Add container: {} ({}) parent: {}", entry.path(), objectId, parentId);
             }
 
             scan(path, objectId);
@@ -286,9 +286,9 @@ void Scanner::onFile(const std::string& filepath, int64_t parentId, std::vector<
                         albumMeta.genre     = meta.genre;
                         albumMeta.dateAdded = timeops::getTime();
                         
-                        log::debug("Add Album: %s - %s", albumMeta.artist, albumMeta.title);
+                        log::debug("Add Album: {} - {}", albumMeta.artist, albumMeta.title);
                         albumId = m_libraryDb.addItem(album, albumMeta);
-                        log::debug("Album id: %d", albumId);
+                        log::debug("Album id: {}", albumId);
                     }
 
                     // add song item as child of album
@@ -296,22 +296,22 @@ void Scanner::onFile(const std::string& filepath, int64_t parentId, std::vector<
                     albumSongItem.name = item.name;
                     albumSongItem.parentId = albumId;
                     albumSongItem.upnpClass = item.upnpClass;
-                    log::debug("Add album song: %s (parent: %d)", albumSongItem.name, albumId);
+                    log::debug("Add album song: {} (parent: {})", albumSongItem.name, albumId);
                     curItems.push_back(std::move(albumSongItem));
                 }
                 catch (std::exception& e)
                 {
-                    log::warn("Failed to add album: %s", e.what());
+                    log::warn("Failed to add album: {}", e.what());
                 }
             }
         }
         catch (std::exception& e)
         {
-            log::warn("Failed to add item: %s", e.what());
+            log::warn("Failed to add item: {}", e.what());
         }
     }
     
-    log::debug("Add Item: %s (parent: %d)", filepath, parentId);
+    log::debug("Add Item: {} (parent: {})", filepath, parentId);
     curItems.push_back(std::move(item));
     items.emplace_back(std::move(curItems), std::move(meta));
 }
@@ -362,7 +362,7 @@ bool Scanner::processAlbumArt(const std::string& filepath, const audio::AlbumArt
         }
         catch (std::exception& e)
         {
-            log::warn("Failed to scale image: %s", e.what());
+            log::warn("Failed to scale image: {}", e.what());
         }
     }
     else
