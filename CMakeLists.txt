@@ -72,7 +72,7 @@ OPTION(UPNP_CONTROLPOINT "Controlpoint device support" OFF)
 OPTION(STATIC_BINARY "Build static binary" OFF)
 
 IF (STATIC_BINARY)
-    SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+    SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 ENDIF ()
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/doozyconfig.h.in ${CMAKE_BINARY_DIR}/doozyconfig.h)
