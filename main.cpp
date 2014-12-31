@@ -72,11 +72,13 @@ int main(int argc, char **argv)
     }
 #endif
 
+#ifndef ANDROID
     if (!setlocale(LC_CTYPE, "en_US.UTF-8"))
     {
         std::cerr << "Locale not specified. Check LANG, LC_CTYPE, LC_ALL" << std::endl;
         return 1;
     }
+#endif
     
     int32_t option;
     std::string configFile;
