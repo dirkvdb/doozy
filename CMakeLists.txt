@@ -29,6 +29,7 @@ OPTION(UPNP_RENDERER "Renderer device support" ON)
 OPTION(UPNP_SERVER "Server device support" OFF)
 OPTION(UPNP_CONTROLPOINT "Controlpoint device support" OFF)
 OPTION(STATIC_BINARY "Build static binary" OFF)
+OPTION(SHARED_LIBRARY "Create single shared library containing all dependencies" OFF)
 
 IF (STATIC_BINARY)
     ADD_DEFINITIONS("-DAL_LIBTYPE_STATIC")
@@ -125,15 +126,24 @@ SET(LINK_LIBS
     ${UTILS_LIBRARIES}
 )
 
-ADD_EXECUTABLE(doozy
-    main.cpp
+SET(DOOZY_SOURCES
     common/doozydeviceinterface.h
     common/doozydevicefactory.h common/doozydevicefactory.cpp
     common/settings.h common/settings.cpp
     common/devicedescriptions.h
 )
 
+ADD_EXECUTABLE(doozy
+    main.cpp
+    ${DOOZY_SOURCES}
+)
+
 TARGET_LINK_LIBRARIES(doozy ${LINK_LIBS})
 INSTALL(TARGETS doozy RUNTIME DESTINATION bin)
 
 CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/CMakeUninstall.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/CMakeUninstall.cmake" IMMEDIATE @ONLY)
+
+IF (SHARED_LIBRARY)
+    ADD_LIBRARY(doozylib SHARED ${DOOZY_SOURCES})
+    TARGET_LINK_LIBRARIES(doozylib "-Wl,--whole-archive" ${LINK_LIBS} "-Wl,--no-whole-archive")
+ENDIF ()
