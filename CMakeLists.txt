@@ -33,7 +33,9 @@ OPTION(SHARED_LIBRARY "Create single shared library containing all dependencies"
 
 IF (STATIC_BINARY)
     ADD_DEFINITIONS("-DAL_LIBTYPE_STATIC")
-    SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Gcc")
+        SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    ENDIF ()
 ENDIF ()
 
 ADD_DEFINITIONS("-std=c++1y -D_FILE_OFFSET_BITS=64")
