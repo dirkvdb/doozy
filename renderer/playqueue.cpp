@@ -35,7 +35,6 @@
 #include <cstring>
 #include <cassert>
 
-using namespace std;
 using namespace utils;
 using namespace upnp;
 using namespace image;
@@ -214,10 +213,6 @@ PlayQueue::PlayQueue()
     m_Thread.start();
 }
 
-PlayQueue::~PlayQueue()
-{
-}
-
 static std::vector<std::string> getTracksFromUri(const std::string& transportUri)
 {
     std::vector<std::string> trackUris;
@@ -254,7 +249,7 @@ void PlayQueue::setCurrentUri(const std::string& avTransportUri)
     {
         log::debug("Add item: {} : {}", uri, avTransportUri);
         auto item = std::make_shared<PlayQueueItem>(uri, avTransportUri);
-        items.push_back(item);
+        items.emplace_back(item);
         
         if (first)
         {

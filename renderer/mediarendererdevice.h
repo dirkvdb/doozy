@@ -82,21 +82,19 @@ private:
     
     void throwOnBadInstanceId(uint32_t id) const;
 
-    mutable std::mutex                          m_Mutex;
+    PlayQueue                                   m_queue;
+    std::unique_ptr<audio::IPlayback>           m_playback;
     
-    PlayQueue                                   m_Queue;
-    std::unique_ptr<audio::IPlayback>           m_Playback;
+    upnp::RootDevice                            m_rootDevice;
+    upnp::ConnectionManager::Service            m_connectionManager;
+    upnp::RenderingControl::Service             m_renderingControl;
+    upnp::AVTransport::Service                  m_avTransport;
+    upnp::WebServer&                            m_webServer;
     
-    upnp::RootDevice                            m_RootDevice;
-    upnp::ConnectionManager::Service            m_ConnectionManager;
-    upnp::RenderingControl::Service             m_RenderingControl;
-    upnp::AVTransport::Service                  m_AVTransport;
-    upnp::WebServer&                            m_WebServer;
+    std::vector<upnp::ProtocolInfo>             m_supportedProtocols;
+    upnp::ConnectionManager::ConnectionInfo     m_currentConnectionInfo;
     
-    std::vector<upnp::ProtocolInfo>             m_SupportedProtocols;
-    upnp::ConnectionManager::ConnectionInfo     m_CurrentConnectionInfo;
-    
-    utils::WorkerThread                         m_Thread;
+    utils::WorkerThread                         m_thread;
 };
 
 

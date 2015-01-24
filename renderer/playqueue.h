@@ -76,7 +76,6 @@ class PlayQueue : public audio::IPlaylist
 {
 public:
     PlayQueue();
-    virtual ~PlayQueue();
 
     void setCurrentUri(const std::string& avTransportUri);
     void setNextUri(const std::string& avTransportUri);

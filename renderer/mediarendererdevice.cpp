@@ -64,26 +64,26 @@ static AVTransport::State PlaybackStateToTransportState(PlaybackState state)
 
 MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
                                          const std::string& audioOutput, const std::string& audioDevice, upnp::WebServer& webServer)
-: m_Playback(PlaybackFactory::create("Custom", "Doozy", audioOutput, audioDevice, m_Queue))
-, m_RootDevice(udn, descriptionXml, advertiseIntervalInSeconds)
-, m_ConnectionManager(m_RootDevice, *this)
-, m_RenderingControl(m_RootDevice, *this)
-, m_AVTransport(m_RootDevice, *this)
-, m_WebServer(webServer)
+: m_playback(PlaybackFactory::create("Custom", "Doozy", audioOutput, audioDevice, m_queue))
+, m_rootDevice(udn, descriptionXml, advertiseIntervalInSeconds)
+, m_connectionManager(m_rootDevice, *this)
+, m_renderingControl(m_rootDevice, *this)
+, m_avTransport(m_rootDevice, *this)
+, m_webServer(webServer)
 {
-    m_Playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
+    m_playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
         setTransportVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(state)));
     }, this);
     
-    m_Playback->AvailableActionsChanged.connect([this] (const std::set<PlaybackAction>& actions) {
+    m_playback->AvailableActionsChanged.connect([this] (const std::set<PlaybackAction>& actions) {
         setTransportVariable(0, AVTransport::Variable::CurrentTransportActions, toString(actions));
     }, this);
     
-    m_Playback->ProgressChanged.connect([this] (double progress) {
+    m_playback->ProgressChanged.connect([this] (double progress) {
         setTransportVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(progress));
     }, this);
     
-    m_Playback->NewTrackStarted.connect([this] (const std::shared_ptr<ITrack>& track) {
+    m_playback->NewTrackStarted.connect([this] (const std::shared_ptr<ITrack>& track) {
         auto item = std::dynamic_pointer_cast<PlayQueueItem>(track);
         assert(item);
         
@@ -92,61 +92,61 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
         setTransportVariable(0, AVTransport::Variable::CurrentTrackURI,         item->getUri());
         setTransportVariable(0, AVTransport::Variable::CurrentTrackMetaData,    item->getMetadataString());
         setTransportVariable(0, AVTransport::Variable::AVTransportURI,          item->getAVTransportUri());
-        setTransportVariable(0, AVTransport::Variable::NextAVTransportURI,      m_Queue.getNextUri());
-        setTransportVariable(0, AVTransport::Variable::CurrentTrackDuration,    durationToString(m_Playback->getDuration()));
-        setTransportVariable(0, AVTransport::Variable::NumberOfTracks,          std::to_string(m_Queue.getNumberOfTracks()));
+        setTransportVariable(0, AVTransport::Variable::NextAVTransportURI,      m_queue.getNextUri());
+        setTransportVariable(0, AVTransport::Variable::CurrentTrackDuration,    durationToString(m_playback->getDuration()));
+        setTransportVariable(0, AVTransport::Variable::NumberOfTracks,          std::to_string(m_queue.getNumberOfTracks()));
     }, this);
 }
 
 void MediaRendererDevice::start()
 {
-    m_Thread.start();
+    m_thread.start();
 
-    m_RootDevice.ControlActionRequested.connect(std::bind(&MediaRendererDevice::onControlActionRequest, this, _1), this);
-    m_RootDevice.EventSubscriptionRequested.connect(std::bind(&MediaRendererDevice::onEventSubscriptionRequest, this, _1), this);
+    m_rootDevice.ControlActionRequested.connect(std::bind(&MediaRendererDevice::onControlActionRequest, this, _1), this);
+    m_rootDevice.EventSubscriptionRequested.connect(std::bind(&MediaRendererDevice::onEventSubscriptionRequest, this, _1), this);
 
-    m_RootDevice.initialize();
+    m_rootDevice.initialize();
     setInitialValues();
 }
 
 void MediaRendererDevice::stop()
 {
-    m_Thread.stop();
+    m_thread.stop();
 
-    m_RootDevice.ControlActionRequested.disconnect(this);
-    m_RootDevice.EventSubscriptionRequested.disconnect(this);
+    m_rootDevice.ControlActionRequested.disconnect(this);
+    m_rootDevice.EventSubscriptionRequested.disconnect(this);
 
-    m_RootDevice.destroy();
+    m_rootDevice.destroy();
 }
 
 void MediaRendererDevice::setInitialValues()
 {
 #if defined(HAVE_MAD) || defined(HAVE_FFMPEG)
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/mpeg:DLNA.ORG_PN=MP3"));
 #endif
 
 #if defined(HAVE_FLAC) || defined(HAVE_FFMPEG)
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/flac:*"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-flac:*"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/flac:*"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-flac:*"));
 #endif
 
 #ifdef HAVE_FFMPEG // assume ffmpeg supports these formats (possibly make this more smart and actually check ffmpeg config options)
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=1:DLNA.ORG_PN=LPCM"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=2:DLNA.ORG_PN=LPCM"));
-    //m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=1:DLNA.ORG_PN=LPCM"));
-    //m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=2:DLNA.ORG_PN=LPCM"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-ms-wma:DLNA.ORG_PN=WMABASE"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-ms-wma:DLNA.ORG_PN=WMAFULL"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/mp4:DLNA.ORG_PN=AAC_ISO"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/3gpp:DLNA.ORG_PN=AAC_ISO"));
-    //m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/vnd.dlna.adts:DLNA.ORG_PN=AAC_ADTS_320"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-wavetunes:*:audio/x-ms-wma:*"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/wav:*"));
-    m_SupportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-wav:*"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=1:DLNA.ORG_PN=LPCM"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=44100;channels=2:DLNA.ORG_PN=LPCM"));
+    //m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=1:DLNA.ORG_PN=LPCM"));
+    //m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/L16;rate=48000;channels=2:DLNA.ORG_PN=LPCM"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-ms-wma:DLNA.ORG_PN=WMABASE"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-ms-wma:DLNA.ORG_PN=WMAFULL"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/mp4:DLNA.ORG_PN=AAC_ISO"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/3gpp:DLNA.ORG_PN=AAC_ISO"));
+    //m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/vnd.dlna.adts:DLNA.ORG_PN=AAC_ADTS_320"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-wavetunes:*:audio/x-ms-wma:*"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/wav:*"));
+    m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-wav:*"));
 #endif
     
     std::stringstream ss;
-    for (auto& protocol : m_SupportedProtocols)
+    for (auto& protocol : m_supportedProtocols)
     {
         if (ss.tellp() > 0)
         {
@@ -156,33 +156,33 @@ void MediaRendererDevice::setInitialValues()
         ss << protocol.toString();
     }
     
-    m_ConnectionManager.setVariable(ConnectionManager::Variable::SourceProtocolInfo, "");
-    m_ConnectionManager.setVariable(ConnectionManager::Variable::SinkProtocolInfo, ss.str());
-    m_ConnectionManager.setVariable(ConnectionManager::Variable::CurrentConnectionIds, "0");
-    m_ConnectionManager.setVariable(ConnectionManager::Variable::ArgumentTypeConnectionStatus, "OK");
+    m_connectionManager.setVariable(ConnectionManager::Variable::SourceProtocolInfo, "");
+    m_connectionManager.setVariable(ConnectionManager::Variable::SinkProtocolInfo, ss.str());
+    m_connectionManager.setVariable(ConnectionManager::Variable::CurrentConnectionIds, "0");
+    m_connectionManager.setVariable(ConnectionManager::Variable::ArgumentTypeConnectionStatus, "OK");
     
-    m_CurrentConnectionInfo.connectionStatus    = ConnectionManager::ConnectionStatus::Ok;
-    m_CurrentConnectionInfo.direction           = ConnectionManager::Direction::Input;
+    m_currentConnectionInfo.connectionStatus    = ConnectionManager::ConnectionStatus::Ok;
+    m_currentConnectionInfo.direction           = ConnectionManager::Direction::Input;
     
-    m_RenderingControl.setVariable(RenderingControl::Variable::PresetNameList, "FactoryDefaults");
-    m_RenderingControl.setVolume(0, RenderingControl::Channel::Master, m_Playback->getVolume());
-    m_RenderingControl.setMute(0, RenderingControl::Channel::Master, m_Playback->getMute());
+    m_renderingControl.setVariable(RenderingControl::Variable::PresetNameList, "FactoryDefaults");
+    m_renderingControl.setVolume(0, RenderingControl::Channel::Master, m_playback->getVolume());
+    m_renderingControl.setMute(0, RenderingControl::Channel::Master, m_playback->getMute());
     
-    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTransportActions, toString(m_Playback->getAvailableActions()));
-    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::PlaybackStorageMedium, "NETWORK");
-    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(m_Playback->getState())));
-    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentPlayMode, toString(AVTransport::PlayMode::Normal));
-    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::NumberOfTracks, std::to_string(m_Queue.getNumberOfTracks()));
-    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(0));
-    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(0));
-    m_AVTransport.setInstanceVariable(0, AVTransport::Variable::AbsoluteTimePosition, "NOT_IMPLEMENTED");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTransportActions, toString(m_playback->getAvailableActions()));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::PlaybackStorageMedium, "NETWORK");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(m_playback->getState())));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentPlayMode, toString(AVTransport::PlayMode::Normal));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::NumberOfTracks, std::to_string(m_queue.getNumberOfTracks()));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(0));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(0));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::AbsoluteTimePosition, "NOT_IMPLEMENTED");
 }
 
 void MediaRendererDevice::setTransportVariable(uint32_t instanceId, AVTransport::Variable var, const std::string& value)
 {
     // Set the variable on the workerthread to avoid blocking the playback thread
-    m_Thread.addJob([=] () {
-        m_AVTransport.setInstanceVariable(instanceId, var, value);
+    m_thread.addJob([=] () {
+        m_avTransport.setInstanceVariable(instanceId, var, value);
     });
 }
 
@@ -192,9 +192,9 @@ void MediaRendererDevice::onEventSubscriptionRequest(Upnp_Subscription_Request* 
     
     switch (serviceIdUrnStringToService(pRequest->ServiceId))
     {
-    case ServiceType::AVTransport:              return m_RootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_AVTransport.getSubscriptionResponse());
-    case ServiceType::RenderingControl:         return m_RootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_RenderingControl.getSubscriptionResponse());
-    case ServiceType::ConnectionManager:        return m_RootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_ConnectionManager.getSubscriptionResponse());
+    case ServiceType::AVTransport:              return m_rootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_avTransport.getSubscriptionResponse());
+    case ServiceType::RenderingControl:         return m_rootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_renderingControl.getSubscriptionResponse());
+    case ServiceType::ConnectionManager:        return m_rootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_connectionManager.getSubscriptionResponse());
     default:
         log::warn("Invalid event subscription request: {}", pRequest->ServiceId);
     }
@@ -210,13 +210,13 @@ void MediaRendererDevice::onControlActionRequest(Upnp_Action_Request* pRequest)
     switch (serviceIdUrnStringToService(pRequest->ServiceID))
     {
     case ServiceType::AVTransport:
-        pRequest->ActionResult = m_AVTransport.onAction(pRequest->ActionName, requestDoc).getActionDocument();
+        pRequest->ActionResult = m_avTransport.onAction(pRequest->ActionName, requestDoc).getActionDocument();
         break;
     case ServiceType::RenderingControl:
-        pRequest->ActionResult = m_RenderingControl.onAction(pRequest->ActionName, requestDoc).getActionDocument();
+        pRequest->ActionResult = m_renderingControl.onAction(pRequest->ActionName, requestDoc).getActionDocument();
         break;
     case ServiceType::ConnectionManager:
-        pRequest->ActionResult = m_ConnectionManager.onAction(pRequest->ActionName, requestDoc).getActionDocument();
+        pRequest->ActionResult = m_connectionManager.onAction(pRequest->ActionName, requestDoc).getActionDocument();
         break;
     default:
         throw InvalidSubscriptionIdException();
@@ -225,7 +225,7 @@ void MediaRendererDevice::onControlActionRequest(Upnp_Action_Request* pRequest)
 
 bool MediaRendererDevice::supportsProtocol(const ProtocolInfo& info) const
 {
-    for (auto& protocol : m_SupportedProtocols)
+    for (auto& protocol : m_supportedProtocols)
     {
         if (protocol.isCompatibleWith(info))
         {
@@ -241,17 +241,17 @@ void MediaRendererDevice::addAlbumArtToWebServer(const PlayQueueItemPtr& item)
     auto thumb = item->getAlbumArtThumb();
     if (!thumb.empty())
     {
-        m_WebServer.removeFile("Doozy", "albumartthumb.jpg");
-        m_WebServer.addFile("Doozy", "albumartthumb.jpg", "image/jpeg", thumb);
-        item->setAlbumArtUri(m_WebServer.getWebRootUrl() + "Doozy/albumartthumb.jpg", upnp::dlna::ProfileId::JpegThumbnail);
+        m_webServer.removeFile("Doozy", "albumartthumb.jpg");
+        m_webServer.addFile("Doozy", "albumartthumb.jpg", "image/jpeg", thumb);
+        item->setAlbumArtUri(m_webServer.getWebRootUrl() + "Doozy/albumartthumb.jpg", upnp::dlna::ProfileId::JpegThumbnail);
     }
     
     auto art = item->getAlbumArt();
     if (!art.empty())
     {
-        m_WebServer.removeFile("Doozy", "albumart.jpg");
-        m_WebServer.addFile("Doozy", "albumart.jpg", "image/jpeg", art);
-        item->setAlbumArtUri(m_WebServer.getWebRootUrl() + "Doozy/albumart.jpg", upnp::dlna::ProfileId::JpegLarge);
+        m_webServer.removeFile("Doozy", "albumart.jpg");
+        m_webServer.addFile("Doozy", "albumart.jpg", "image/jpeg", art);
+        item->setAlbumArtUri(m_webServer.getWebRootUrl() + "Doozy/albumart.jpg", upnp::dlna::ProfileId::JpegLarge);
     }
 }
 
@@ -281,14 +281,14 @@ void MediaRendererDevice::setVolume(uint32_t instanceId, RenderingControl::Chann
         throw InvalidArgumentsServiceException();
     }
     
-    m_Playback->setVolume(value);
-    m_RenderingControl.setVolume(instanceId, channel, m_Playback->getVolume());
+    m_playback->setVolume(value);
+    m_renderingControl.setVolume(instanceId, channel, m_playback->getVolume());
 }
 
 void MediaRendererDevice::setMute(uint32_t instanceId, RenderingControl::Channel channel, bool enabled)
 {
-    m_Playback->setMute(enabled);
-    m_RenderingControl.setMute(instanceId, channel, m_Playback->getMute());
+    m_playback->setMute(enabled);
+    m_renderingControl.setMute(instanceId, channel, m_playback->getMute());
 }
 
 
@@ -326,7 +326,7 @@ upnp::ConnectionManager::ConnectionInfo MediaRendererDevice::getCurrentConnectio
         throw ConnectionManager::InvalidConnectionReferenceException();
     }
 
-    return m_CurrentConnectionInfo;
+    return m_currentConnectionInfo;
 }
 
 /***************************************************
@@ -340,16 +340,16 @@ void MediaRendererDevice::setAVTransportURI(uint32_t instanceId, const std::stri
     try
     {
         log::info("Play uri ({}): {}", instanceId, uri);
-        m_Queue.setCurrentUri(uri);
-        if (m_Playback->isPlaying())
+        m_queue.setCurrentUri(uri);
+        if (m_playback->isPlaying())
         {
             log::info("Stop and play");
-            m_Playback->stop();
-            m_Playback->play();
+            m_playback->stop();
+            m_playback->play();
         }
         
-        m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::AVTransportURI, uri);
-        m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::AVTransportURIMetaData, metaData);
+        m_avTransport.setInstanceVariable(instanceId, AVTransport::Variable::AVTransportURI, uri);
+        m_avTransport.setInstanceVariable(instanceId, AVTransport::Variable::AVTransportURIMetaData, metaData);
     }
     catch (std::exception& e)
     {
@@ -362,10 +362,10 @@ void MediaRendererDevice::setNextAVTransportURI(uint32_t instanceId, const std::
 {
     try
     {
-        m_Queue.setNextUri(uri);
+        m_queue.setNextUri(uri);
         
-        m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::NextAVTransportURI, uri);
-        m_AVTransport.setInstanceVariable(instanceId, AVTransport::Variable::NextAVTransportURIMetaData, metaData);
+        m_avTransport.setInstanceVariable(instanceId, AVTransport::Variable::NextAVTransportURI, uri);
+        m_avTransport.setInstanceVariable(instanceId, AVTransport::Variable::NextAVTransportURIMetaData, metaData);
     }
     catch (std::exception& e)
     {
@@ -377,7 +377,7 @@ void MediaRendererDevice::setNextAVTransportURI(uint32_t instanceId, const std::
 void MediaRendererDevice::stop(uint32_t instanceId)
 {
     throwOnBadInstanceId(instanceId);
-    m_Playback->stop();
+    m_playback->stop();
 }
 
 void MediaRendererDevice::play(uint32_t instanceId, const std::string& speed)
@@ -385,7 +385,7 @@ void MediaRendererDevice::play(uint32_t instanceId, const std::string& speed)
     throwOnBadInstanceId(instanceId);
     
     log::info("Play ({}): speed {}", instanceId, speed);
-    m_Playback->play();
+    m_playback->play();
 }
 
 void MediaRendererDevice::seek(uint32_t instanceId, upnp::AVTransport::SeekMode mode, const std::string& target)
@@ -398,7 +398,7 @@ void MediaRendererDevice::next(uint32_t instanceId)
     throwOnBadInstanceId(instanceId);
 
     log::info("Next ({})", instanceId);
-    m_Playback->next();
+    m_playback->next();
 }
 
 void MediaRendererDevice::previous(uint32_t instanceId)
@@ -406,7 +406,7 @@ void MediaRendererDevice::previous(uint32_t instanceId)
     throwOnBadInstanceId(instanceId);
 
     log::info("Previous ({})", instanceId);
-    m_Playback->prev();
+    m_playback->prev();
 }
 
 void MediaRendererDevice::pause(uint32_t instanceId)
@@ -414,7 +414,7 @@ void MediaRendererDevice::pause(uint32_t instanceId)
     throwOnBadInstanceId(instanceId);
 
     log::info("Pause ({})", instanceId);
-    m_Playback->pause();
+    m_playback->pause();
 }
 
 }
