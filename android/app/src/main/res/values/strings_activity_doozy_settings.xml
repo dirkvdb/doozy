@@ -1,0 +1,10 @@
+<resources>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">General</string>
+
+    <string name="pref_title_device_name">Device name</string>
+    <string name="pref_default_device_name">Doozy Android</string>
+</resources>
