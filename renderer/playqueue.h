@@ -93,13 +93,13 @@ public:
     utils::Signal<std::string> NextTransportUriChanged;
 
 private:
-    utils::WorkerThread                 m_Thread;
-    std::deque<PlayQueueItemPtr>        m_CurrenURITracks;
-    std::deque<PlayQueueItemPtr>        m_NextURITracks;
-    std::map<std::string, int32_t>		m_IndexMap;
+    utils::WorkerThread                 m_thread;
+    std::deque<PlayQueueItemPtr>        m_currenURITracks;
+    std::deque<PlayQueueItemPtr>        m_nextURITracks;
+    std::map<std::string, int32_t>		m_indexMap;
 
-    mutable std::mutex                  m_TracksMutex;
-    std::mutex                          m_SubscribersMutex;
+    mutable std::mutex                  m_tracksMutex;
+    std::mutex                          m_subscribersMutex;
 };
 
 }

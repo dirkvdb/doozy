@@ -210,7 +210,7 @@ static void obtainMetadata(PlayQueueItemPtr qItem)
 
 PlayQueue::PlayQueue()
 {
-    m_Thread.start();
+    m_thread.start();
 }
 
 static std::vector<std::string> getTracksFromUri(const std::string& transportUri)
@@ -263,13 +263,13 @@ void PlayQueue::setCurrentUri(const std::string& avTransportUri)
         {
             // the rest of the metadata is fetched on the worker thread as it can
             // take a while to fetch all the metadata over the network
-            m_Thread.addJob([item] () { obtainMetadata(item); });
+            m_thread.addJob([item] () { obtainMetadata(item); });
         }
     }
     
     {
-        std::lock_guard<std::mutex> lock(m_TracksMutex);
-        m_CurrenURITracks = items;
+        std::lock_guard<std::mutex> lock(m_tracksMutex);
+        m_currenURITracks = items;
     }
     
     CurrentTransportUriChanged(avTransportUri);
@@ -288,12 +288,12 @@ void PlayQueue::setNextUri(const std::string& avTransportUri)
         log::debug("Add next item: {} : {}", uri, avTransportUri);
         auto item = std::make_shared<PlayQueueItem>(uri, avTransportUri);
         items.push_back(item);
-        m_Thread.addJob([item] () { obtainMetadata(item); });
+        m_thread.addJob([item] () { obtainMetadata(item); });
     }
     
     {
-        std::lock_guard<std::mutex> lock(m_TracksMutex);
-        m_NextURITracks = items;
+        std::lock_guard<std::mutex> lock(m_tracksMutex);
+        m_nextURITracks = items;
     }
     
     NextTransportUriChanged(avTransportUri);
@@ -302,22 +302,22 @@ void PlayQueue::setNextUri(const std::string& avTransportUri)
 
 std::string PlayQueue::getCurrentUri() const
 {
-    std::lock_guard<std::mutex> lock(m_TracksMutex);
-    return m_CurrenURITracks.empty() ? "" : m_CurrenURITracks.front()->getAVTransportUri();
+    std::lock_guard<std::mutex> lock(m_tracksMutex);
+    return m_currenURITracks.empty() ? "" : m_currenURITracks.front()->getAVTransportUri();
 }
 
 std::string PlayQueue::getNextUri() const
 {
-    std::lock_guard<std::mutex> lock(m_TracksMutex);
-    return m_NextURITracks.empty() ? "" : m_NextURITracks.front()->getAVTransportUri();
+    std::lock_guard<std::mutex> lock(m_tracksMutex);
+    return m_nextURITracks.empty() ? "" : m_nextURITracks.front()->getAVTransportUri();
 }
 
 void PlayQueue::clear()
 {
     {
-        std::lock_guard<std::mutex> lock(m_TracksMutex);
-        m_CurrenURITracks.clear();
-        m_NextURITracks.clear();
+        std::lock_guard<std::mutex> lock(m_tracksMutex);
+        m_currenURITracks.clear();
+        m_nextURITracks.clear();
     }
     
     QueueChanged();
@@ -329,27 +329,27 @@ std::shared_ptr<audio::ITrack> PlayQueue::dequeueNextTrack()
     PlayQueueItemPtr track;
 
     {
-        std::lock_guard<std::mutex> lock(m_TracksMutex);
-        if (m_CurrenURITracks.empty() && m_NextURITracks.empty())
+        std::lock_guard<std::mutex> lock(m_tracksMutex);
+        if (m_currenURITracks.empty() && m_nextURITracks.empty())
         {
             return track;
         }
-        else if (m_CurrenURITracks.empty() && !m_NextURITracks.empty())
+        else if (m_currenURITracks.empty() && !m_nextURITracks.empty())
         {
-            std::swap(m_CurrenURITracks, m_NextURITracks);
+            std::swap(m_currenURITracks, m_nextURITracks);
             avTransportUriChange = true;
         }
         
-        if (!m_CurrenURITracks.empty())
+        if (!m_currenURITracks.empty())
         {
-            track = m_CurrenURITracks.front();
-            m_CurrenURITracks.pop_front();
+            track = m_currenURITracks.front();
+            m_currenURITracks.pop_front();
         }
     }
     
     if (avTransportUriChange)
     {
-        CurrentTransportUriChanged(m_CurrenURITracks.front()->getAVTransportUri());
+        CurrentTransportUriChanged(m_currenURITracks.front()->getAVTransportUri());
         NextTransportUriChanged("");
     }
     
@@ -360,8 +360,8 @@ std::shared_ptr<audio::ITrack> PlayQueue::dequeueNextTrack()
 
 size_t PlayQueue::getNumberOfTracks() const
 {
-    std::lock_guard<std::mutex> lock(m_TracksMutex);
-    return m_CurrenURITracks.size();
+    std::lock_guard<std::mutex> lock(m_tracksMutex);
+    return m_currenURITracks.size();
 }
 
 }
