@@ -259,7 +259,7 @@ void MediaRendererDevice::throwOnBadInstanceId(uint32_t id) const
 {
     if (id != 0)
     {
-        throw AVTransport::InvalidInstanceIdException();
+        throw AVTransport::InvalidInstanceId();
     }
 }
 
@@ -300,12 +300,12 @@ void MediaRendererDevice::prepareForConnection(const ProtocolInfo& protocolInfo,
 {
     if (info.direction != ConnectionManager::Direction::Input)
     {
-        throw ConnectionManager::IncompatibleDirectionsException();
+        throw ConnectionManager::IncompatibleDirections();
     }
     
     if (!supportsProtocol(protocolInfo))
     {
-        throw ConnectionManager::IncompatibleProtocolException();
+        throw ConnectionManager::IncompatibleProtocol();
     }
     
     // currently we only support one instance
@@ -323,7 +323,7 @@ upnp::ConnectionManager::ConnectionInfo MediaRendererDevice::getCurrentConnectio
 {
     if (connectionId != 0)
     {
-        throw ConnectionManager::InvalidConnectionReferenceException();
+        throw ConnectionManager::InvalidConnectionReference();
     }
 
     return m_currentConnectionInfo;
