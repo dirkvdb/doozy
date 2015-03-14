@@ -20,8 +20,7 @@
 #include <string>
 #include <map>
 #include <vector>
-
-#include "utils/types.h"
+#include <cinttypes>
 
 namespace doozy
 {
@@ -40,7 +39,7 @@ public:
     bool getAsBool(const std::string& setting, bool defaultValue) const noexcept;
     std::vector<std::string> getAsVector(const std::string& setting) const;
     std::vector<std::string> getAsVector(const std::string& setting, const std::vector<std::string>& defaultValue) const noexcept;
-    
+
     void set(const std::string& setting, const char* value) noexcept;
     void set(const std::string& setting, const std::string& value) noexcept;
     void set(const std::string& setting, int32_t value) noexcept;

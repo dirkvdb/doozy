@@ -119,7 +119,7 @@
 			"file": "doozycp.css",
 			"settings":
 			{
-				"buffer_size": 549,
+				"buffer_size": 0,
 				"line_ending": "Unix"
 			}
 		},
@@ -127,7 +127,7 @@
 			"file": "index.html",
 			"settings":
 			{
-				"buffer_size": 5068,
+				"buffer_size": 0,
 				"line_ending": "Unix"
 			}
 		},
@@ -135,15 +135,15 @@
 			"file": "doozycp.js",
 			"settings":
 			{
-				"buffer_size": 5655,
+				"buffer_size": 0,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"contents": "Package Control Messages\n========================\n\nSublimeLinter:\n-------------\n\n  SublimeLinter 3.4.0\n  --------------------\n  Setting values may now contain tokens:\n  \n  - ${project}: the project's base directory, if available.\n  - ${directory}: the dirname of the current view's file.\n  - ${env:<x>}: the environment variable 'x'.\n  - ${home}: the user's $HOME directory.\n  \n  ${project} and ${directory} expansion are dependent on having a window.\n  \n  For example, here are project settings that use a project-relative path:\n  \n  {\n      \"SublimeLinter\": {\n          \"linters\": {\n              \"pylint\": {\n                  \"paths\":\n                  [\n                      \"${project}/source/\"\n                  ]\n              }\n          }\n      }\n  }\n  \n",
+			"contents": "",
 			"settings":
 			{
-				"buffer_size": 764,
+				"buffer_size": 0,
 				"line_ending": "Unix",
 				"name": "Package Control Messages",
 				"scratch": true
@@ -304,15 +304,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 549,
+						"buffer_size": 0,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								372,
-								372
+								0,
+								0
 							]
 						],
 						"settings":
@@ -438,15 +438,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 5068,
+						"buffer_size": 0,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								4402,
-								4402
+								0,
+								0
 							]
 						],
 						"settings":
@@ -560,7 +560,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1004.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 2,
@@ -572,15 +572,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 5655,
+						"buffer_size": 0,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								618,
-								618
+								0,
+								0
 							]
 						],
 						"settings":
@@ -705,7 +705,7 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 764,
+						"buffer_size": 0,
 						"regions":
 						{
 						},
@@ -900,6 +900,7 @@
 		],
 		"width": 0.0
 	},
+	"selected_group": 0,
 	"settings":
 	{
 	},

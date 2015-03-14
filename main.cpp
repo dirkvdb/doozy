@@ -79,11 +79,11 @@ int main(int argc, char **argv)
         return 1;
     }
 #endif
-    
+
     int32_t option;
     std::string configFile;
     std::string deviceType;
-    
+
     while ((option = getopt(argc, argv, "f:t:")) != -1)
     {
         switch (option)
@@ -137,7 +137,7 @@ static void sigterm(int signo)
     catch (std::exception& e)
     {
         log::error(e.what());
-    }    
+    }
 }
 
 #ifndef WIN32
@@ -186,11 +186,11 @@ static bool set_signal_handlers()
         log::error("Can't catch SIGTERM: {}", strerror(errno));
         return false;
     }
-    
+
     sigemptyset(&sa.sa_mask);
     sa.sa_sigaction = segFaultHandler;
     sa.sa_flags = SA_RESTART | SA_SIGINFO;
-    
+
     if (sigaction(SIGSEGV, &sa, nullptr) < 0)
     {
         log::error("Can't catch SIGSEGV: {}", strerror(errno));

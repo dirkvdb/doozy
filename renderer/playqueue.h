@@ -18,7 +18,6 @@
 #define DOOZY_PLAYQUEUE_H
 
 #include "utils/subscriber.h"
-#include "utils/types.h"
 #include "utils/signal.h"
 #include "utils/workerthread.h"
 
@@ -30,6 +29,7 @@
 #include <deque>
 #include <string>
 #include <mutex>
+#include <cinttypes>
 
 namespace doozy
 {
@@ -43,30 +43,30 @@ public:
 
     // ITrack
     virtual std::string getUri() const;
-    
+
     void setItem(const upnp::ItemPtr& item);
-    
+
     std::string getAVTransportUri() const;
     std::string getMetadataString() const;
-    
+
     const std::vector<uint8_t>& getAlbumArt() const;
     const std::vector<uint8_t>& getAlbumArtThumb() const;
-    
+
     void setAlbumArtUri(const std::string& uri);
     void setAlbumArtUri(const std::string& uri, upnp::dlna::ProfileId profile);
-    
+
     void setAlbumArt(std::vector<uint8_t>&& data);
     void setAlbumArt(const std::vector<uint8_t>& data);
     void setAlbumArtThumb(std::vector<uint8_t>&& data);
     void setAlbumArtThumb(const std::vector<uint8_t>& data);
-    
+
 private:
     std::string             m_TrackUri;
     std::string             m_AVTransportUri;
-    
+
     std::vector<uint8_t>    m_AlbumArt;
     std::vector<uint8_t>    m_AlbumArtThumb;
-    
+
     upnp::ItemPtr   m_Item;
 };
 
@@ -81,13 +81,13 @@ public:
     void setNextUri(const std::string& avTransportUri);
     std::string getCurrentUri() const;
     std::string getNextUri() const;
-    
+
     void clear();
-    
+
     // IPlaylist
     virtual std::shared_ptr<audio::ITrack> dequeueNextTrack();
     size_t getNumberOfTracks() const;
-    
+
     utils::Signal<> QueueChanged;
     utils::Signal<std::string> CurrentTransportUriChanged;
     utils::Signal<std::string> NextTransportUriChanged;

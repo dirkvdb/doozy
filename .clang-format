@@ -3,10 +3,13 @@
 AccessModifierOffset: -4
 ConstructorInitializerIndentWidth: 0
 AlignEscapedNewlinesLeft: false
+AlignOperands: true
 AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortIfStatementsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: true
 AlwaysBreakTemplateDeclarations: false
 AlwaysBreakBeforeMultilineStrings: false
 BreakBeforeBinaryOperators: false
@@ -18,6 +21,7 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: false
 DerivePointerBinding: false
 ExperimentalAutoDetectBinPacking: false
 IndentCaseLabels: false
+Language: Cpp
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 PenaltyBreakBeforeFirstCallParameter: 19
@@ -26,6 +30,7 @@ PenaltyBreakString: 1000
 PenaltyBreakFirstLessLess: 120
 PenaltyExcessCharacter: 1000000
 PenaltyReturnTypeOnItsOwnLine: 60
+PointerAlignment: Left
 PointerBindsToType: true
 SpacesBeforeTrailingComments: 1
 Cpp11BracedListStyle: false
