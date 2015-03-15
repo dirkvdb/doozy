@@ -45,11 +45,11 @@ int main(int argc, char **argv)
 #endif
 
     log::info("Doozy server");
-    
+
     int option;
     bool daemonize = false;
     std::string configFile;
-    
+
     while ((option = getopt (argc, argv, "f:d")) != -1)
     {
         switch (option)
@@ -84,7 +84,7 @@ static void sigterm(int signo)
     catch (std::exception& e)
     {
         log::error(e.what());
-    }    
+    }
 }
 
 #ifndef WIN32
@@ -127,11 +127,11 @@ static bool set_signal_handlers()
         log::error("Can't catch SIGTERM: %s", strerror(errno));
         return false;
     }
-    
+
     sigemptyset(&sa.sa_mask);
     sa.sa_sigaction = doozy::sigsegv;
     sa.sa_flags = SA_RESTART | SA_SIGINFO;
-    
+
     if (sigaction(SIGSEGV, &sa, nullptr) < 0)
     {
         log::error("Can't catch SIGSEGV: %s", strerror(errno));
