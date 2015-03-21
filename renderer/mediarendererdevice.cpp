@@ -267,7 +267,7 @@ void MediaRendererDevice::throwOnBadInstanceId(uint32_t id) const
  * Rendering control calls
  ***************************************************/
 
-void MediaRendererDevice::selectPreset(uint32_t instanceId, const std::string& name)
+void MediaRendererDevice::selectPreset(uint32_t instanceId, const std::string& /*name*/)
 {
     throwOnBadInstanceId(instanceId);
 }
@@ -314,7 +314,7 @@ void MediaRendererDevice::prepareForConnection(const ProtocolInfo& protocolInfo,
     info.renderingControlServiceId = 0;
 }
 
-void MediaRendererDevice::connectionComplete(int32_t connectionId)
+void MediaRendererDevice::connectionComplete(int32_t /*connectionId*/)
 {
     // No actions necessary because instances are not supported yet
 }
@@ -388,7 +388,7 @@ void MediaRendererDevice::play(uint32_t instanceId, const std::string& speed)
     m_playback->play();
 }
 
-void MediaRendererDevice::seek(uint32_t instanceId, upnp::AVTransport::SeekMode mode, const std::string& target)
+void MediaRendererDevice::seek(uint32_t instanceId, upnp::AVTransport::SeekMode /*mode*/, const std::string& /*target*/)
 {
     throwOnBadInstanceId(instanceId);
 }
