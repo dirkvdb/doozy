@@ -22,6 +22,11 @@ install:
   - sudo apt-get -qq install build-essential
   - if [ "$CXX" = "g++" ]; then sudo apt-get -qq --allow-unauthenticated install gcc-4.9 g++-4.9; export CXX="g++-4.9" CC="gcc-4.9"; fi
   - if [ "$CXX" = "clang++" ]; then sudo apt-get -qq --allow-unauthenticated install clang-3.6; export CXX="clang++-3.6" CC="clang-3.6"; fi
+  - tar xf taglib-1.9.1.tar.gz
+  - cd taglib-1.9.1
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX:PATH=/usr .
+  - make -j4 && sudo make install
+  - cd ..
   - wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%201.6.19/libupnp-1.6.19.tar.bz2
   - tar xf libupnp-1.6.19.tar.bz2
   - cd libupnp-1.6.19 && ./configure --disable-dependency-tracking --prefix=/usr --disable-shared --disable-samples --disable-blocking-tcp-connections && make -j4 && sudo make install
