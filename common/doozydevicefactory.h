@@ -17,6 +17,8 @@
 #ifndef DOOZY_DEVICE_FACTORY_H
 #define DOOZY_DEVICE_FACTORY_H
 
+#include <memory>
+
 namespace doozy
 {
 

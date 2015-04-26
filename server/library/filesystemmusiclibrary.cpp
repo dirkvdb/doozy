@@ -22,7 +22,6 @@
 #include "serversettings.h"
 #include "scanner.h"
 #include "utils/log.h"
-#include "utils/trace.h"
 
 #include "upnp/upnpitem.h"
 
@@ -36,7 +35,6 @@ FilesystemMusicLibrary::FilesystemMusicLibrary(const ServerSettings& settings, c
 , m_destroy(false)
 , m_settings(settings)
 {
-    utils::trace("Create FilesystemMusicLibrary");
     m_db.setWebRoot(webRoot);
 }
 

@@ -44,13 +44,13 @@ void printUsage()
 {
     std::vector<std::string> supportedDevices;
 
-#ifdef UPNP_RENDERER
+#ifdef DOOZY_RENDERER
     supportedDevices.push_back("renderer");
 #endif
-#ifdef UPNP_SERVER
+#ifdef DOOZY_SERVER
     supportedDevices.push_back("server");
 #endif
-#ifdef UPNP_CONTROLPOINT
+#ifdef DOOZY_CONTROLPOINT
     supportedDevices.push_back("controlpoint");
 #endif
 

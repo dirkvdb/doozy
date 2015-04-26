@@ -21,8 +21,8 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <cinttypes>
 
-#include "utils/types.h"
 #include "musiclibraryinterface.h"
 #include "database.h"
 

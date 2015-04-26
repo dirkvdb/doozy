@@ -24,7 +24,7 @@ namespace doozy
 class IDevice
 {
 public:
-    virtual ~IDevice() {}
+    virtual ~IDevice() = default;
 
     virtual void start() = 0;
     virtual void stop() = 0;
