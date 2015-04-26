@@ -1,5 +1,3 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-
 SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 SET(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/testdata)
 
@@ -24,10 +22,10 @@ LINK_DIRECTORIES(
 )
 
 SET(LINK_LIBS
-    ${AUDIO_LIBRARIES}
-    ${IMAGE_LIBRARIES}
+    audio
+    image
     utils
-    ${UPNPFRAMEWORK_LIBRARIES}
+    upnpframework
     ${SERVER_LIBRARIES}
     doozyrenderer
 )
@@ -48,8 +46,7 @@ IF (UPNP_SERVER)
     )
 ENDIF ()
 
-
-ADD_EXECUTABLE(doozytest EXCLUDE_FROM_ALL
+ADD_EXECUTABLE(doozytest
     ${TEST_INFRA}
     ${SERVER_TESTS}
 )
@@ -59,4 +56,3 @@ TARGET_LINK_LIBRARIES(doozytest
 )
 
 ADD_TEST(NAME DoozyTests COMMAND doozytest)
-ADD_DEPENDENCIES(check doozytest)
