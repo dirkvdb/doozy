@@ -6,12 +6,10 @@ os:
 
 compiler:
   - gcc
-  - clang
 
 env:
   matrix:
     - BUILD_TYPE=Debug
-    - BUILD_TYPE=Release
   global:
     secure: "M8/nLpE7xETAaDTf136Tfr9ubXNROfuPp9AfxkR12pNu/ErV48mSzC7wP5b9m5oO+ZvRsqFbb9BQR3aRfvLBlqe/gySh8cFN+Xl836iIT6DCZ0wpAK8JhlJYAThRzpJAB9RPwEqSyWIlB9HT35ywkeWrhH3IIGQiG2i2EyycPGU="
 
@@ -42,10 +40,7 @@ install:
   - cd ..
 
 script:
-  - git submodule update --init --recursive
-  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE .
-  - make -j4
-  - CTEST_OUTPUT_ON_FAILURE=1 make test
+  - echo "No work needed"
 
 addons:
   coverity_scan:
@@ -53,6 +48,6 @@ addons:
       name: "dirkvdb/doozy"
       description: "Build submitted via Travis CI"
     notification_email: dirk.vdb@gmail.com
-    build_command_prepend: "cmake . -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
+    build_command_prepend: "git submodule update --init --recursive; cmake . -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
     build_command: "make -j4"
     branch_pattern: coverity_scan
