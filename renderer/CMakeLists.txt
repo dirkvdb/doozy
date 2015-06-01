@@ -1,4 +1,18 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+FIND_PACKAGE(PkgConfig)
+PKG_CHECK_MODULES(LIBCEC_PKG libcec)
+IF (LIBCEC_PKG_FOUND)
+    OPTION(HAVE_LIBCEC "CEC support" ON)
+
+    FIND_PATH(LIBCEC_INCLUDE_DIR
+        NAMES cec.h
+        PATHS ${LIBCEC_PKG_INCLUDE_DIRS}
+    )
+
+    FIND_LIBRARY(LIBCEC_LIBRARY
+        NAMES ${LIBCEC_PKG_LIBRARIES}
+        PATHS ${LIBCEC_PKG_LIBRARY_DIRS}
+    )
+ENDIF ()
 
 INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -7,15 +21,30 @@ INCLUDE_DIRECTORIES(
     ${IMAGE_INCLUDE_DIRS}
     ${UTILS_INCLUDE_DIRS}
     ${UPNPFRAMEWORK_INCLUDE_DIRS}
+    ${LIBCEC_INCLUDE_DIR}
 )
 
 SET (RENDERER_LIBRARIES doozyrenderer)
 
-ADD_LIBRARY(doozyrenderer
+SET (RENDERER_SRC
     devicedescriptions.h
     renderer.h                  renderer.cpp
     renderersettings.h          renderersettings.cpp
     mediarendererdevice.h       mediarendererdevice.cpp
     playqueue.h                 playqueue.cpp
     typeconversions.h
+)
+
+IF (HAVE_LIBCEC)
+    LIST(APPEND RENDERER_SRC
+        ceccontrol.h ceccontrol.cpp
+    )
+ENDIF ()
+
+ADD_LIBRARY(doozyrenderer
+    ${RENDERER_SRC}
+)
+
+TARGET_LINK_LIBRARIES(doozyrenderer
+    ${LIBCEC_LIBRARY}
 )
