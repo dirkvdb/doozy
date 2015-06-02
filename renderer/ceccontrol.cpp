@@ -17,6 +17,7 @@
 #include "ceccontrol.h"
 
 #include "utils/log.h"
+#include "utils/cppcompat.h"
 
 #include <cec.h>
 #include <array>
@@ -24,6 +25,8 @@
 
 namespace doozy
 {
+
+using namespace utils;
 
 int cecLog(void*, const CEC::cec_log_message message)
 {
@@ -61,8 +64,10 @@ CecControl::CecControl()
     if (!m_cec->Open(devices[0].strComName))
     {
         CECDestroy(m_cec);
-        throw std::runtime_error("Failed to open CEC connection");
+        throw std::runtime_error(fmt::format("Failed to open CEC connection on {}", devices[0].strComName));
     }
+
+    log::info("Opened CEC connection on {}", devices[0].strComName);
 }
 
 CecControl::~CecControl()
@@ -75,7 +80,7 @@ void CecControl::TurnOn()
 {
     if (!m_cec->PowerOnDevices(CEC::CECDEVICE_AUDIOSYSTEM))
     {
-        utils::log::error("Failed to turn on CEC device");
+        log::error("Failed to turn on CEC device");
     }
 }
 
@@ -83,7 +88,7 @@ void CecControl::StandBy()
 {
     if (!m_cec->StandbyDevices(CEC::CECDEVICE_AUDIOSYSTEM))
     {
-        utils::log::error("Failed to put CEC device in stand by");
+        log::error("Failed to put CEC device in stand by");
     }
 }
 
