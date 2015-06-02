@@ -28,6 +28,10 @@
 #include "upnp/upnpwebserver.h"
 #include "upnp/upnphttpreader.h"
 
+#ifdef HAVE_LIBCEC
+    #include "ceccontrol.h"
+#endif
+
 using namespace utils;
 
 namespace doozy
@@ -39,7 +43,20 @@ Renderer::Renderer(RendererSettings& settings)
 {
     // make sure we can read http urls
     ReaderFactory::registerBuilder(std::make_unique<upnp::HttpReaderBuilder>());
+
+#ifdef HAVE_LIBCEC
+    try
+    {
+        m_cec = std::make_unique<CecControl>();
+    }
+    catch (const std::runtime_error& e)
+    {
+        log::warn(e.what());
+    }
+#endif
 }
+
+Renderer::~Renderer() = default;
 
 void Renderer::start()
 {
@@ -47,7 +64,7 @@ void Renderer::start()
     {
         m_stop = false;
         m_client.initialize();
-        
+
         auto udn                = "uuid:" + m_settings.getUdn();
         auto friendlyName       = m_settings.getFriendlyName();
         auto audioOutput        = m_settings.getAudioOutput();
@@ -58,20 +75,20 @@ void Renderer::start()
         log::info("FriendlyName = {}", friendlyName);
         log::info("AudioOutput = {}", audioOutput);
         log::info("AudioDevice = {}", audioDevice);
-        
+
         upnp::WebServer webserver("/opt/");
-        
+
         webserver.addVirtualDirectory("Doozy");
         addServiceFileToWebserver(webserver, "RenderingControlDesc.xml", g_rendererControlService);
         addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
         addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
-        
+
         MediaRendererDevice dev(udn, description, advertiseInterval, audioOutput, audioDevice, webserver);
         dev.start();
-        
+
         std::unique_lock<std::mutex> lock(m_mutex);
         m_condition.wait(lock, [this] () { return m_stop == true; });
-        
+
         dev.stop();
         webserver.removeVirtualDirectory("Doozy");
     }
@@ -79,20 +96,20 @@ void Renderer::start()
     {
         log::error(e.what());
     }
-    
+
     m_client.destroy();
 }
-    
+
 void Renderer::stop()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_stop = true;
     m_condition.notify_all();
 }
-    
+
 void Renderer::addServiceFileToWebserver(upnp::WebServer& webserver, const std::string& filename, const std::string& fileContents)
 {
     webserver.addFile("Doozy", filename, "text/xml", fileContents);
 }
-    
+
 }
