@@ -39,11 +39,12 @@ CecControl::CecControl()
 {
     CEC::libcec_configuration config;
     CEC::ICECCallbacks callbacks;
-    config.Clear();
-    callbacks.Clear();
+
+    snprintf(config.strDeviceName, 13, "Doozy");
 
     callbacks.CBCecLogMessage = &cecLog;
     config.callbacks = &callbacks;
+    config.deviceTypes.Add(CEC::CEC_DEVICE_TYPE_RECORDING_DEVICE);
 
     m_cec = reinterpret_cast<CEC::ICECAdapter*>(CECInitialise(&config));
 
@@ -55,12 +56,13 @@ CecControl::CecControl()
     std::array<CEC::cec_adapter_descriptor, 10> devices;
     auto count = m_cec->DetectAdapters(devices.data(), devices.size());
 
-    if (count == 0)
+    if (count <= 0)
     {
         CECDestroy(m_cec);
         throw std::runtime_error("No CEC adapters found");
     }
 
+    m_cec->InitVideoStandalone();
     if (!m_cec->Open(devices[0].strComName))
     {
         CECDestroy(m_cec);
