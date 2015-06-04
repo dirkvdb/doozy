@@ -34,7 +34,7 @@ int cecLog(void*, const CEC::cec_log_message message)
     return 0;
 }
 
-CecControl::CecControl()
+CecControl::CecControl(std::string device)
 : m_cec(nullptr)
 {
     CEC::libcec_configuration config;
@@ -53,23 +53,29 @@ CecControl::CecControl()
         throw std::runtime_error("Failed to initialize CEC adapter");
     }
 
-    std::array<CEC::cec_adapter_descriptor, 10> devices;
-    auto count = m_cec->DetectAdapters(devices.data(), devices.size());
-
-    if (count <= 0)
-    {
-        CECDestroy(m_cec);
-        throw std::runtime_error("No CEC adapters found");
-    }
-
     m_cec->InitVideoStandalone();
-    if (!m_cec->Open(devices[0].strComName))
+
+    if (device.empty())
     {
-        CECDestroy(m_cec);
-        throw std::runtime_error(fmt::format("Failed to open CEC connection on {}", devices[0].strComName));
+        std::array<CEC::cec_adapter_descriptor, 10> devices;
+        auto count = m_cec->DetectAdapters(devices.data(), devices.size());
+
+        if (count <= 0)
+        {
+            CECDestroy(m_cec);
+            throw std::runtime_error("No CEC adapters found");
+        }
+
+        device = devices[0].strComName;
     }
 
-    log::info("Opened CEC connection on {}", devices[0].strComName);
+    if (!m_cec->Open(device.c_str()))
+    {
+        CECDestroy(m_cec);
+        throw std::runtime_error(fmt::format("Failed to open CEC connection on {}", device));
+    }
+
+    log::info("Opened CEC connection on {}", device);
 }
 
 CecControl::~CecControl()

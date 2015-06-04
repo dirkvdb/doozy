@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace CEC
 {
     class ICECAdapter;
@@ -27,7 +29,7 @@ namespace doozy
 class CecControl
 {
 public:
-    CecControl();
+    CecControl(std::string device);
     ~CecControl();
 
     void TurnOn();

@@ -24,6 +24,7 @@ static const std::string g_friendlyName = "FriendlyName";
 static const std::string g_udn          = "UDN";
 static const std::string g_audioOutput  = "AudioOutput";
 static const std::string g_audioDevice  = "AudioDevice";
+static const std::string g_cecDevice    = "CecDevice";
 
 void RendererSettings::loadFromFile(const std::string& filepath)
 {
@@ -60,6 +61,11 @@ std::string RendererSettings::getAudioOutput() const
 std::string RendererSettings::getAudioDevice() const
 {
     return m_settings.get(g_audioDevice, "Default");
+}
+
+std::string RendererSettings::getCecDevice() const
+{
+    return m_settings.get(g_cecDevice, "");
 }
 
 }

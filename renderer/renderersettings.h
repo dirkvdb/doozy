@@ -30,11 +30,13 @@ public:
     virtual ~RendererSettings() {}
 
     void loadFromFile(const std::string& filepath);
-    
+
     virtual std::string getFriendlyName() const;
     virtual std::string getUdn() const;
     virtual std::string getAudioOutput() const;
     virtual std::string getAudioDevice() const;
+
+    virtual std::string getCecDevice() const;
 
 private:
     std::string     m_settingsPath;

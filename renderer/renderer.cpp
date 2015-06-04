@@ -47,7 +47,7 @@ Renderer::Renderer(RendererSettings& settings)
 #ifdef HAVE_LIBCEC
     try
     {
-        m_cec = std::make_unique<CecControl>();
+        m_cec = std::make_unique<CecControl>(settings.getCecDevice());
     }
     catch (const std::runtime_error& e)
     {
