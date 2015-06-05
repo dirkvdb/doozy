@@ -53,6 +53,8 @@ Renderer::Renderer(RendererSettings& settings)
     {
         log::warn(e.what());
     }
+#else
+    log::debug("No CEC support");
 #endif
 }
 
