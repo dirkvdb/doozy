@@ -25,7 +25,6 @@
 #include "upnp/upnpclient.h"
 #include "renderersettings.h"
 #include "common/doozydeviceinterface.h"
-#include "doozyconfig.h"
 
 namespace upnp
 {
@@ -35,13 +34,11 @@ namespace upnp
 namespace doozy
 {
 
-class CecControl;
-
 class Renderer : public IDevice
 {
 public:
     Renderer(RendererSettings& settings);
-    ~Renderer();
+
     void start() override;
     void stop() override;
 
@@ -53,10 +50,6 @@ private:
     std::mutex                  m_mutex;
     upnp::Client                m_client;
     bool                        m_stop;
-
-#ifdef HAVE_LIBCEC
-    std::unique_ptr<CecControl> m_cec;
-#endif
 };
 
 }

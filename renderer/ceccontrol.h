@@ -17,11 +17,7 @@
 #pragma once
 
 #include <string>
-
-namespace CEC
-{
-    class ICECAdapter;
-}
+#include <cec.h>
 
 namespace doozy
 {
@@ -36,7 +32,9 @@ public:
     void StandBy();
 
 private:
-    CEC::ICECAdapter*   m_cec;
+    CEC::ICECAdapter*           m_cec;
+    CEC::libcec_configuration   m_config;
+    CEC::ICECCallbacks          m_callbacks;
 };
 
 }

@@ -19,7 +19,6 @@
 #include "utils/log.h"
 #include "utils/cppcompat.h"
 
-#include <cec.h>
 #include <array>
 #include <stdexcept>
 
@@ -28,25 +27,22 @@ namespace doozy
 
 using namespace utils;
 
-int cecLog(void*, const CEC::cec_log_message message)
+static int cecLog(void*, const CEC::cec_log_message message)
 {
-    utils::log::debug("CEC: {}", message.message);
+    utils::log::info("CEC: {}", message.message);
     return 0;
 }
 
 CecControl::CecControl(std::string device)
 : m_cec(nullptr)
 {
-    CEC::libcec_configuration config;
-    CEC::ICECCallbacks callbacks;
+    snprintf(m_config.strDeviceName, 13, "Doozy");
 
-    snprintf(config.strDeviceName, 13, "Doozy");
+    m_callbacks.CBCecLogMessage = &cecLog;
+    m_config.callbacks = &m_callbacks;
+    m_config.deviceTypes.Add(CEC::CEC_DEVICE_TYPE_RECORDING_DEVICE);
 
-    callbacks.CBCecLogMessage = &cecLog;
-    config.callbacks = &callbacks;
-    config.deviceTypes.Add(CEC::CEC_DEVICE_TYPE_RECORDING_DEVICE);
-
-    m_cec = reinterpret_cast<CEC::ICECAdapter*>(CECInitialise(&config));
+    m_cec = reinterpret_cast<CEC::ICECAdapter*>(CECInitialise(&m_config));
 
     if (m_cec == nullptr)
     {

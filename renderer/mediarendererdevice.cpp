@@ -27,6 +27,10 @@
 #include "typeconversions.h"
 #include "audioconfig.h"
 
+#ifdef HAVE_LIBCEC
+    #include "ceccontrol.h"
+#endif
+
 #include <sstream>
 
 using namespace utils;
@@ -63,7 +67,7 @@ static AVTransport::State PlaybackStateToTransportState(PlaybackState state)
 }
 
 MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
-                                         const std::string& audioOutput, const std::string& audioDevice, upnp::WebServer& webServer)
+                                         const std::string& audioOutput, const std::string& audioDevice, const std::string& cecDevice, upnp::WebServer& webServer)
 : m_playback(PlaybackFactory::create("Custom", "Doozy", audioOutput, audioDevice, m_queue))
 , m_rootDevice(udn, descriptionXml, advertiseIntervalInSeconds)
 , m_connectionManager(m_rootDevice, *this)
@@ -71,8 +75,20 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
 , m_avTransport(m_rootDevice, *this)
 , m_webServer(webServer)
 {
+#ifdef HAVE_LIBCEC
+    try
+    {
+        m_cec = std::make_unique<CecControl>(cecDevice);
+    }
+    catch (const std::runtime_error& e)
+    {
+        log::warn(e.what());
+    }
+#endif
+
     m_playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
         setTransportVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(state)));
+        CheckCecState(state);
     }, this);
 
     m_playback->AvailableActionsChanged.connect([this] (const std::set<PlaybackAction>& actions) {
@@ -97,6 +113,8 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
         setTransportVariable(0, AVTransport::Variable::NumberOfTracks,          std::to_string(m_queue.getNumberOfTracks()));
     }, this);
 }
+
+MediaRendererDevice::~MediaRendererDevice() = default;
 
 void MediaRendererDevice::start()
 {
@@ -416,5 +434,25 @@ void MediaRendererDevice::pause(uint32_t instanceId)
     log::info("Pause ({})", instanceId);
     m_playback->pause();
 }
+
+#ifdef HAVE_LIBCEC
+void MediaRendererDevice::CheckCecState(PlaybackState state)
+{
+    if (state == PlaybackState::Playing)
+    {
+        m_thread.addJob([this] () {
+            m_cec->TurnOn();
+        });
+    }
+    else if (state == PlaybackState::Stopped)
+    {
+        m_thread.addJob([this] () {
+            m_cec->StandBy();
+        });
+    }
+}
+#else
+void MediaRendererDevice::CheckCecState(PlaybackState) {}
+#endif
 
 }
