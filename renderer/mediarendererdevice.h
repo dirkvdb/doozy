@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "utils/timerthread.h"
+#include "utils/timer.h"
 #include "utils/workerthread.h"
 
 #include "upnp/upnprootdevice.h"
@@ -88,6 +88,8 @@ private:
 
     void throwOnBadInstanceId(uint32_t id) const;
     void CheckCecState(audio::PlaybackState state);
+    void StartCecTimer();
+    void AbortCecTimer();
 
     PlayQueue                                   m_queue;
     std::unique_ptr<audio::IPlayback>           m_playback;
@@ -105,7 +107,7 @@ private:
 
 #ifdef HAVE_LIBCEC
     std::unique_ptr<CecControl>                 m_cec;
-    utils::TimerThread                          m_timer;
+    utils::Timer                                m_timer;
 #endif
 };
 

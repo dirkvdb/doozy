@@ -42,6 +42,8 @@ using namespace std::placeholders;
 namespace doozy
 {
 
+static const uint32_t g_idleTimeout = 5;
+
 static std::string toString(const std::set<PlaybackAction>& actions)
 {
     std::stringstream ss;
@@ -79,13 +81,9 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
     try
     {
         m_cec = std::make_unique<CecControl>(cecDevice);
-        m_timer.run(std::chrono::minutes(5), [this] () {
-            auto state = m_playback->getState();
-            if (state != PlaybackState::Playing)
-            {
-                CheckCecState(state);
-            }
-        });
+
+        // creating a CecControl instance turns on the AVR, so start a timer to turn off after the idle timeout
+        CheckCecState(m_playback->getState());
     }
     catch (const std::runtime_error& e)
     {
@@ -95,10 +93,7 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
 
     m_playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
         setTransportVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(state)));
-        if (state == PlaybackState::Playing)
-        {
-            CheckCecState(state);
-        }
+        CheckCecState(state);
     }, this);
 
     m_playback->AvailableActionsChanged.connect([this] (const std::set<PlaybackAction>& actions) {
@@ -456,18 +451,23 @@ void MediaRendererDevice::CheckCecState(PlaybackState state)
     if (state == PlaybackState::Playing)
     {
         m_thread.addJob([this] () {
+            m_timer.cancel();
             m_cec->turnOn();
             m_cec->setActiveSource();
         });
     }
     else
     {
-        m_thread.addJob([this] () {
-            if (m_cec->isActiveSource())
-            {
-                m_cec->standBy();
-            }
-        });
+        if (!m_timer.isRunning())
+        {
+            m_timer.run(std::chrono::minutes(g_idleTimeout), [this] () {
+                if (m_playback->getState() != PlaybackState::Playing)
+                {
+                    log::info("Turn off receiver, idle for {} minutes", g_idleTimeout);
+                    m_cec->standBy();
+                }
+            });
+        }
     }
 }
 #else
