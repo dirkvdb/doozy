@@ -29,7 +29,7 @@ using namespace utils;
 
 static int cecLog(void*, const CEC::cec_log_message message)
 {
-    utils::log::info("CEC: {}", message.message);
+    utils::log::debug("CEC: {}", message.message);
     return 0;
 }
 
@@ -80,20 +80,40 @@ CecControl::~CecControl()
     CECDestroy(m_cec);
 }
 
-void CecControl::TurnOn()
+void CecControl::turnOn()
 {
+    auto status = m_cec->GetDevicePowerStatus(CEC::CECDEVICE_AUDIOSYSTEM);
+    log::info("Power status: {}", m_cec->ToString(status));
+    if (status == CEC::CEC_POWER_STATUS_ON || status == CEC::CEC_POWER_STATUS_IN_TRANSITION_ON_TO_STANDBY)
+    {
+        return;
+    }
+
     if (!m_cec->PowerOnDevices(CEC::CECDEVICE_AUDIOSYSTEM))
     {
         log::error("Failed to turn on CEC device");
     }
 }
 
-void CecControl::StandBy()
+void CecControl::standBy()
 {
     if (!m_cec->StandbyDevices(CEC::CECDEVICE_AUDIOSYSTEM))
     {
         log::error("Failed to put CEC device in stand by");
     }
+}
+
+void CecControl::setActiveSource()
+{
+    if (!m_cec->SetActiveSource())
+    {
+        log::error("Failed to set CEC device as active");
+    }
+}
+
+bool CecControl::isActiveSource()
+{
+    return m_cec->IsLibCECActiveSource();
 }
 
 }

@@ -19,6 +19,7 @@
 
 #include <memory>
 
+#include "utils/timerthread.h"
 #include "utils/workerthread.h"
 
 #include "upnp/upnprootdevice.h"
@@ -102,9 +103,10 @@ private:
 
     utils::WorkerThread                         m_thread;
 
-    #ifdef HAVE_LIBCEC
-        std::unique_ptr<CecControl> m_cec;
-    #endif
+#ifdef HAVE_LIBCEC
+    std::unique_ptr<CecControl>                 m_cec;
+    utils::TimerThread                          m_timer;
+#endif
 };
 
 

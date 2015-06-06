@@ -79,6 +79,13 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
     try
     {
         m_cec = std::make_unique<CecControl>(cecDevice);
+        m_timer.run(std::chrono::minutes(5), [this] () {
+            auto state = m_playback->getState();
+            if (state != PlaybackState::Playing)
+            {
+                CheckCecState(state);
+            }
+        });
     }
     catch (const std::runtime_error& e)
     {
@@ -88,7 +95,10 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
 
     m_playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
         setTransportVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(state)));
-        CheckCecState(state);
+        if (state == PlaybackState::Playing)
+        {
+            CheckCecState(state);
+        }
     }, this);
 
     m_playback->AvailableActionsChanged.connect([this] (const std::set<PlaybackAction>& actions) {
@@ -438,16 +448,25 @@ void MediaRendererDevice::pause(uint32_t instanceId)
 #ifdef HAVE_LIBCEC
 void MediaRendererDevice::CheckCecState(PlaybackState state)
 {
+    if (!m_cec)
+    {
+        return;
+    }
+
     if (state == PlaybackState::Playing)
     {
         m_thread.addJob([this] () {
-            m_cec->TurnOn();
+            m_cec->turnOn();
+            m_cec->setActiveSource();
         });
     }
-    else if (state == PlaybackState::Stopped)
+    else
     {
         m_thread.addJob([this] () {
-            m_cec->StandBy();
+            if (m_cec->isActiveSource())
+            {
+                m_cec->standBy();
+            }
         });
     }
 }

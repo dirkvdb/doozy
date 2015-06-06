@@ -28,8 +28,11 @@ public:
     CecControl(std::string device);
     ~CecControl();
 
-    void TurnOn();
-    void StandBy();
+    void turnOn();
+    void standBy();
+
+    void setActiveSource();
+    bool isActiveSource();
 
 private:
     CEC::ICECAdapter*           m_cec;
