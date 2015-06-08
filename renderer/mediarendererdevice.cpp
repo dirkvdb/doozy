@@ -461,7 +461,7 @@ void MediaRendererDevice::CheckCecState(PlaybackState state)
         if (!m_timer.isRunning())
         {
             m_timer.run(std::chrono::minutes(g_idleTimeout), [this] () {
-                if (m_playback->getState() != PlaybackState::Playing)
+                if (m_playback->getState() != PlaybackState::Playing && m_cec->isActiveSource())
                 {
                     log::info("Turn off receiver, idle for {} minutes", g_idleTimeout);
                     m_cec->standBy();
