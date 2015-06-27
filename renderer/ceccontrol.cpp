@@ -19,7 +19,6 @@
 #include "utils/log.h"
 #include "utils/cppcompat.h"
 
-#include <cec.h>
 #include <array>
 #include <stdexcept>
 
@@ -28,7 +27,7 @@ namespace doozy
 
 using namespace utils;
 
-int cecLog(void*, const CEC::cec_log_message message)
+static int cecLog(void*, const CEC::cec_log_message message)
 {
     utils::log::debug("CEC: {}", message.message);
     return 0;
@@ -37,16 +36,13 @@ int cecLog(void*, const CEC::cec_log_message message)
 CecControl::CecControl(std::string device)
 : m_cec(nullptr)
 {
-    CEC::libcec_configuration config;
-    CEC::ICECCallbacks callbacks;
+    snprintf(m_config.strDeviceName, 13, "Doozy");
 
-    snprintf(config.strDeviceName, 13, "Doozy");
+    m_callbacks.CBCecLogMessage = &cecLog;
+    m_config.callbacks = &m_callbacks;
+    m_config.deviceTypes.Add(CEC::CEC_DEVICE_TYPE_RECORDING_DEVICE);
 
-    callbacks.CBCecLogMessage = &cecLog;
-    config.callbacks = &callbacks;
-    config.deviceTypes.Add(CEC::CEC_DEVICE_TYPE_RECORDING_DEVICE);
-
-    m_cec = reinterpret_cast<CEC::ICECAdapter*>(CECInitialise(&config));
+    m_cec = reinterpret_cast<CEC::ICECAdapter*>(CECInitialise(&m_config));
 
     if (m_cec == nullptr)
     {
@@ -84,20 +80,40 @@ CecControl::~CecControl()
     CECDestroy(m_cec);
 }
 
-void CecControl::TurnOn()
+void CecControl::turnOn()
 {
+    auto status = m_cec->GetDevicePowerStatus(CEC::CECDEVICE_AUDIOSYSTEM);
+    log::info("Power status: {}", m_cec->ToString(status));
+    if (status == CEC::CEC_POWER_STATUS_ON || status == CEC::CEC_POWER_STATUS_IN_TRANSITION_ON_TO_STANDBY)
+    {
+        return;
+    }
+
     if (!m_cec->PowerOnDevices(CEC::CECDEVICE_AUDIOSYSTEM))
     {
         log::error("Failed to turn on CEC device");
     }
 }
 
-void CecControl::StandBy()
+void CecControl::standBy()
 {
     if (!m_cec->StandbyDevices(CEC::CECDEVICE_AUDIOSYSTEM))
     {
         log::error("Failed to put CEC device in stand by");
     }
+}
+
+void CecControl::setActiveSource()
+{
+    if (!m_cec->SetActiveSource())
+    {
+        log::error("Failed to set CEC device as active");
+    }
+}
+
+bool CecControl::isActiveSource()
+{
+    return m_cec->IsLibCECActiveSource();
 }
 
 }

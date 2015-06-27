@@ -27,6 +27,10 @@
 #include "typeconversions.h"
 #include "audioconfig.h"
 
+#ifdef HAVE_LIBCEC
+    #include "ceccontrol.h"
+#endif
+
 #include <sstream>
 
 using namespace utils;
@@ -37,6 +41,8 @@ using namespace std::placeholders;
 
 namespace doozy
 {
+
+static const uint32_t g_idleTimeout = 5;
 
 static std::string toString(const std::set<PlaybackAction>& actions)
 {
@@ -63,7 +69,7 @@ static AVTransport::State PlaybackStateToTransportState(PlaybackState state)
 }
 
 MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
-                                         const std::string& audioOutput, const std::string& audioDevice, upnp::WebServer& webServer)
+                                         const std::string& audioOutput, const std::string& audioDevice, const std::string& cecDevice, upnp::WebServer& webServer)
 : m_playback(PlaybackFactory::create("Custom", "Doozy", audioOutput, audioDevice, m_queue))
 , m_rootDevice(udn, descriptionXml, advertiseIntervalInSeconds)
 , m_connectionManager(m_rootDevice, *this)
@@ -71,8 +77,23 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
 , m_avTransport(m_rootDevice, *this)
 , m_webServer(webServer)
 {
+#ifdef HAVE_LIBCEC
+    try
+    {
+        m_cec = std::make_unique<CecControl>(cecDevice);
+
+        // creating a CecControl instance turns on the AVR, so start a timer to turn off after the idle timeout
+        CheckCecState(m_playback->getState());
+    }
+    catch (const std::runtime_error& e)
+    {
+        log::warn(e.what());
+    }
+#endif
+
     m_playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
         setTransportVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(state)));
+        CheckCecState(state);
     }, this);
 
     m_playback->AvailableActionsChanged.connect([this] (const std::set<PlaybackAction>& actions) {
@@ -97,6 +118,8 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
         setTransportVariable(0, AVTransport::Variable::NumberOfTracks,          std::to_string(m_queue.getNumberOfTracks()));
     }, this);
 }
+
+MediaRendererDevice::~MediaRendererDevice() = default;
 
 void MediaRendererDevice::start()
 {
@@ -416,5 +439,39 @@ void MediaRendererDevice::pause(uint32_t instanceId)
     log::info("Pause ({})", instanceId);
     m_playback->pause();
 }
+
+#ifdef HAVE_LIBCEC
+void MediaRendererDevice::CheckCecState(PlaybackState state)
+{
+    if (!m_cec)
+    {
+        return;
+    }
+
+    if (state == PlaybackState::Playing)
+    {
+        m_thread.addJob([this] () {
+            m_timer.cancel();
+            m_cec->turnOn();
+            m_cec->setActiveSource();
+        });
+    }
+    else
+    {
+        if (!m_timer.isRunning())
+        {
+            m_timer.run(std::chrono::minutes(g_idleTimeout), [this] () {
+                if (m_playback->getState() != PlaybackState::Playing && m_cec->isActiveSource())
+                {
+                    log::info("Turn off receiver, idle for {} minutes", g_idleTimeout);
+                    m_cec->standBy();
+                }
+            });
+        }
+    }
+}
+#else
+void MediaRendererDevice::CheckCecState(PlaybackState) {}
+#endif
 
 }

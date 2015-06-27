@@ -28,10 +28,6 @@
 #include "upnp/upnpwebserver.h"
 #include "upnp/upnphttpreader.h"
 
-#ifdef HAVE_LIBCEC
-    #include "ceccontrol.h"
-#endif
-
 using namespace utils;
 
 namespace doozy
@@ -43,22 +39,7 @@ Renderer::Renderer(RendererSettings& settings)
 {
     // make sure we can read http urls
     ReaderFactory::registerBuilder(std::make_unique<upnp::HttpReaderBuilder>());
-
-#ifdef HAVE_LIBCEC
-    try
-    {
-        m_cec = std::make_unique<CecControl>(settings.getCecDevice());
-    }
-    catch (const std::runtime_error& e)
-    {
-        log::warn(e.what());
-    }
-#else
-    log::info("No CEC support");
-#endif
 }
-
-Renderer::~Renderer() = default;
 
 void Renderer::start()
 {
@@ -71,6 +52,7 @@ void Renderer::start()
         auto friendlyName       = m_settings.getFriendlyName();
         auto audioOutput        = m_settings.getAudioOutput();
         auto audioDevice        = m_settings.getAudioDevice();
+        auto cecDevice          = m_settings.getCecDevice();
         auto description        = fmt::format(g_mediaRendererDevice.c_str(), m_client.getIpAddress(), m_client.getPort(), friendlyName, udn);
         auto advertiseInterval  = 180;
 
@@ -85,7 +67,7 @@ void Renderer::start()
         addServiceFileToWebserver(webserver, "ConnectionManagerDesc.xml", g_connectionManagerService);
         addServiceFileToWebserver(webserver, "AVTransportDesc.xml", g_avTransportService);
 
-        MediaRendererDevice dev(udn, description, advertiseInterval, audioOutput, audioDevice, webserver);
+        MediaRendererDevice dev(udn, description, advertiseInterval, audioOutput, audioDevice, cecDevice, webserver);
         dev.start();
 
         std::unique_lock<std::mutex> lock(m_mutex);

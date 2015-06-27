@@ -19,6 +19,7 @@
 
 #include <memory>
 
+#include "utils/timer.h"
 #include "utils/workerthread.h"
 
 #include "upnp/upnprootdevice.h"
@@ -30,6 +31,7 @@
 
 #include "audio/audioplaybackinterface.h"
 #include "playqueue.h"
+#include "doozyconfig.h"
 
 namespace upnp
 {
@@ -39,28 +41,32 @@ class WebServer;
 namespace doozy
 {
 
+class CecControl;
+
 class MediaRendererDevice : public upnp::IConnectionManager
                           , public upnp::IRenderingControl
                           , public upnp::IAVTransport
 {
 public:
     MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
-                        const std::string& audioOutput, const std::string& audioDevice, upnp::WebServer& webServer);
+                        const std::string& audioOutput, const std::string& audioDevice, const std::string& cecDevice, upnp::WebServer& webServer);
     MediaRendererDevice(const MediaRendererDevice&) = delete;
-    
+
+    ~MediaRendererDevice();
+
     void start();
     void stop();
-    
+
     // IConnectionManager
     virtual void prepareForConnection(const upnp::ProtocolInfo& protocolInfo, upnp::ConnectionManager::ConnectionInfo& info);
     virtual void connectionComplete(int32_t connectionId);
     virtual upnp::ConnectionManager::ConnectionInfo getCurrentConnectionInfo(int32_t connectionId);
-    
+
     // IRenderingControl
     virtual void selectPreset(uint32_t instanceId, const std::string& name);
     virtual void setVolume(uint32_t instanceId, upnp::RenderingControl::Channel channel, uint16_t value);
     virtual void setMute(uint32_t instanceId, upnp::RenderingControl::Channel channel, bool enabled);
-    
+
     //IAVTransport
     virtual void setAVTransportURI(uint32_t instanceId, const std::string& uri, const std::string& metaData);
     virtual void setNextAVTransportURI(uint32_t instanceId, const std::string& uri, const std::string& metaData);
@@ -70,31 +76,39 @@ public:
     virtual void next(uint32_t instanceId);
     virtual void previous(uint32_t instanceId);
     virtual void pause(uint32_t instanceId);
-    
+
 private:
     void setInitialValues();
     void setTransportVariable(uint32_t instanceId, upnp::AVTransport::Variable var, const std::string& value);
-    
+
     void onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest);
     void onControlActionRequest(Upnp_Action_Request* pRequest);
     bool supportsProtocol(const upnp::ProtocolInfo& info) const;
     void addAlbumArtToWebServer(const PlayQueueItemPtr& item);
-    
+
     void throwOnBadInstanceId(uint32_t id) const;
+    void CheckCecState(audio::PlaybackState state);
+    void StartCecTimer();
+    void AbortCecTimer();
 
     PlayQueue                                   m_queue;
     std::unique_ptr<audio::IPlayback>           m_playback;
-    
+
     upnp::RootDevice                            m_rootDevice;
     upnp::ConnectionManager::Service            m_connectionManager;
     upnp::RenderingControl::Service             m_renderingControl;
     upnp::AVTransport::Service                  m_avTransport;
     upnp::WebServer&                            m_webServer;
-    
+
     std::vector<upnp::ProtocolInfo>             m_supportedProtocols;
     upnp::ConnectionManager::ConnectionInfo     m_currentConnectionInfo;
-    
+
     utils::WorkerThread                         m_thread;
+
+#ifdef HAVE_LIBCEC
+    std::unique_ptr<CecControl>                 m_cec;
+    utils::Timer                                m_timer;
+#endif
 };
 
 

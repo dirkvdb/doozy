@@ -17,11 +17,7 @@
 #pragma once
 
 #include <string>
-
-namespace CEC
-{
-    class ICECAdapter;
-}
+#include <cec.h>
 
 namespace doozy
 {
@@ -32,11 +28,16 @@ public:
     CecControl(std::string device);
     ~CecControl();
 
-    void TurnOn();
-    void StandBy();
+    void turnOn();
+    void standBy();
+
+    void setActiveSource();
+    bool isActiveSource();
 
 private:
-    CEC::ICECAdapter*   m_cec;
+    CEC::ICECAdapter*           m_cec;
+    CEC::libcec_configuration   m_config;
+    CEC::ICECCallbacks          m_callbacks;
 };
 
 }
