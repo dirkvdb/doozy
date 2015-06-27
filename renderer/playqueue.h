@@ -96,10 +96,8 @@ private:
     utils::WorkerThread                 m_thread;
     std::deque<PlayQueueItemPtr>        m_currenURITracks;
     std::deque<PlayQueueItemPtr>        m_nextURITracks;
-    std::map<std::string, int32_t>		m_indexMap;
 
     mutable std::mutex                  m_tracksMutex;
-    std::mutex                          m_subscribersMutex;
 };
 
 }
