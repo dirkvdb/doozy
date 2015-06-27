@@ -44,7 +44,7 @@ public:
     // ITrack
     virtual std::string getUri() const;
 
-    void setItem(const upnp::ItemPtr& item);
+    void setItem(const upnp::Item& item);
 
     std::string getAVTransportUri() const;
     std::string getMetadataString() const;
@@ -61,13 +61,13 @@ public:
     void setAlbumArtThumb(const std::vector<uint8_t>& data);
 
 private:
-    std::string             m_TrackUri;
-    std::string             m_AVTransportUri;
+    std::string             m_trackUri;
+    std::string             m_avTransportUri;
 
-    std::vector<uint8_t>    m_AlbumArt;
-    std::vector<uint8_t>    m_AlbumArtThumb;
+    std::vector<uint8_t>    m_albumArt;
+    std::vector<uint8_t>    m_albumArtThumb;
 
-    upnp::ItemPtr   m_Item;
+    upnp::Item              m_item;
 };
 
 typedef std::shared_ptr<PlayQueueItem> PlayQueueItemPtr;

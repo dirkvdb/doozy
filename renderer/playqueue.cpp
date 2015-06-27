@@ -41,86 +41,86 @@ using namespace image;
 
 namespace doozy
 {
-    
+
 #ifndef HAVE_TAGLIB
     static_assert(false, "Audio library not compiled with metadata support");
 #endif
 
 PlayQueueItem::PlayQueueItem(const std::string& avTransportUri)
-: m_TrackUri(avTransportUri)
-, m_AVTransportUri(avTransportUri)
+: m_trackUri(avTransportUri)
+, m_avTransportUri(avTransportUri)
 {
 }
 
 PlayQueueItem::PlayQueueItem(const std::string& trackUri, const std::string& avTransportUri)
-: m_TrackUri(trackUri)
-, m_AVTransportUri(avTransportUri)
+: m_trackUri(trackUri)
+, m_avTransportUri(avTransportUri)
 {
 }
 
 std::string PlayQueueItem::getUri() const
 {
-    return m_TrackUri;
+    return m_trackUri;
 }
 
-void PlayQueueItem::setItem(const upnp::ItemPtr& item)
+void PlayQueueItem::setItem(const upnp::Item& item)
 {
-    m_Item = item;
+    m_item = item;
 }
 
 std::string PlayQueueItem::getAVTransportUri() const
 {
-    return m_AVTransportUri;
+    return m_avTransportUri;
 }
 
 std::string PlayQueueItem::getMetadataString() const
 {
-    if (!m_Item)
+    if (m_item.getObjectId().empty())
     {
         return "";
     }
 
-    return xml::utils::getItemDocument(*m_Item).toString();
+    return xml::utils::getItemDocument(m_item).toString();
 }
 
 const std::vector<uint8_t>& PlayQueueItem::getAlbumArt() const
 {
-    return m_AlbumArt;
+    return m_albumArt;
 }
 
 const std::vector<uint8_t>& PlayQueueItem::getAlbumArtThumb() const
 {
-    return m_AlbumArtThumb;
+    return m_albumArtThumb;
 }
 
 void PlayQueueItem::setAlbumArtUri(const std::string& uri)
 {
-    m_Item->addMetaData(upnp::Property::AlbumArt, uri);
+    m_item.addMetaData(upnp::Property::AlbumArt, uri);
 }
 
 void PlayQueueItem::setAlbumArtUri(const std::string& uri, upnp::dlna::ProfileId profile)
 {
-    m_Item->setAlbumArt(profile, uri);
+    m_item.setAlbumArt(profile, uri);
 }
 
 void PlayQueueItem::setAlbumArt(std::vector<uint8_t>&& data)
 {
-    m_AlbumArt = std::move(data);
+    m_albumArt = std::move(data);
 }
 
 void PlayQueueItem::setAlbumArt(const std::vector<uint8_t>& data)
 {
-    m_AlbumArt = data;
+    m_albumArt = data;
 }
 
 void PlayQueueItem::setAlbumArtThumb(std::vector<uint8_t>&& data)
 {
-    m_AlbumArtThumb = std::move(data);
+    m_albumArtThumb = std::move(data);
 }
 
 void PlayQueueItem::setAlbumArtThumb(const std::vector<uint8_t>& data)
 {
-    m_AlbumArtThumb = data;
+    m_albumArtThumb = data;
 }
 
 static void addMetaIfExists(Item& item, Property prop, uint32_t value)
@@ -145,7 +145,7 @@ static void convertImageToJpeg(std::vector<uint8_t>& data)
     {
         auto image = Factory::createFromData(data);
         auto loadStore = Factory::createLoadStore(Type::Jpeg);
-        
+
         data = loadStore->storeToMemory(*image);
     }
     catch (std::exception& e)
@@ -159,18 +159,18 @@ static void obtainMetadata(PlayQueueItemPtr qItem)
     try
     {
         audio::Metadata meta(qItem->getUri(), audio::Metadata::ReadAudioProperties::No);
-        
-        auto item = std::make_shared<Item>();
-        addMetaIfExists(*item, Property::Title,          meta.getTitle());
-        addMetaIfExists(*item, Property::Artist,         meta.getArtist());
-        addMetaIfExists(*item, Property::Album,          meta.getAlbum());
-        addMetaIfExists(*item, Property::Genre,          meta.getGenre());
-        
-        addMetaIfExists(*item, Property::TrackNumber,    meta.getTrackNr());
-        addMetaIfExists(*item, Property::Date,           meta.getYear());
-        
+
+        auto item = Item();
+        addMetaIfExists(item, Property::Title,          meta.getTitle());
+        addMetaIfExists(item, Property::Artist,         meta.getArtist());
+        addMetaIfExists(item, Property::Album,          meta.getAlbum());
+        addMetaIfExists(item, Property::Genre,          meta.getGenre());
+
+        addMetaIfExists(item, Property::TrackNumber,    meta.getTrackNr());
+        addMetaIfExists(item, Property::Date,           meta.getYear());
+
         qItem->setItem(item);
-        
+
         auto art = meta.getAlbumArt();
         if (!art.data.empty())
         {
@@ -180,19 +180,19 @@ static void obtainMetadata(PlayQueueItemPtr qItem)
                 {
                     convertImageToJpeg(art.data);
                 }
-            
+
                 qItem->setAlbumArt(art.data);
             }
             catch (std::exception& e)
             {
                 log::warn("Failed to set album art: {}", e.what());
             }
-            
+
             try
             {
                 auto image = Factory::createFromData(art.data, Type::Jpeg);
                 image->resize(160, 160, ResizeAlgorithm::Bilinear);
-                
+
                 auto jpegStore = Factory::createLoadStore(Type::Jpeg);
                 qItem->setAlbumArtThumb(jpegStore->storeToMemory(*image));
             }
@@ -223,7 +223,7 @@ static std::vector<std::string> getTracksFromUri(const std::string& transportUri
         upnp::HttpClient client(5);
         auto m3ufile = client.getText(transportUri);
         auto uris = audio::M3uParser::parseFileContents(m3ufile);
-        
+
         for (auto& uri : uris)
         {
             trackUris.push_back(uri);
@@ -233,7 +233,7 @@ static std::vector<std::string> getTracksFromUri(const std::string& transportUri
     {
         trackUris.push_back(transportUri);
     }
-    
+
     return trackUris;
 }
 
@@ -250,12 +250,12 @@ void PlayQueue::setCurrentUri(const std::string& avTransportUri)
         log::debug("Add item: {} : {}", uri, avTransportUri);
         auto item = std::make_shared<PlayQueueItem>(uri, avTransportUri);
         items.emplace_back(item);
-        
+
         if (first)
         {
             // fetch the metadata of the first item on the callers thread to
             // have it immediately avaiable
-            
+
             first = false;
             obtainMetadata(item);
         }
@@ -266,12 +266,12 @@ void PlayQueue::setCurrentUri(const std::string& avTransportUri)
             m_thread.addJob([item] () { obtainMetadata(item); });
         }
     }
-    
+
     {
         std::lock_guard<std::mutex> lock(m_tracksMutex);
         m_currenURITracks = items;
     }
-    
+
     CurrentTransportUriChanged(avTransportUri);
     QueueChanged();
 }
@@ -281,7 +281,7 @@ void PlayQueue::setNextUri(const std::string& avTransportUri)
     // fetch the possible playlist on the callers thread so we can indicate
     // if it was successful
     auto uris = getTracksFromUri(avTransportUri);
-    
+
     std::deque<PlayQueueItemPtr> items;
     for (auto& uri : uris)
     {
@@ -290,12 +290,12 @@ void PlayQueue::setNextUri(const std::string& avTransportUri)
         items.push_back(item);
         m_thread.addJob([item] () { obtainMetadata(item); });
     }
-    
+
     {
         std::lock_guard<std::mutex> lock(m_tracksMutex);
         m_nextURITracks = items;
     }
-    
+
     NextTransportUriChanged(avTransportUri);
     QueueChanged();
 }
@@ -319,7 +319,7 @@ void PlayQueue::clear()
         m_currenURITracks.clear();
         m_nextURITracks.clear();
     }
-    
+
     QueueChanged();
 }
 
@@ -339,22 +339,22 @@ std::shared_ptr<audio::ITrack> PlayQueue::dequeueNextTrack()
             std::swap(m_currenURITracks, m_nextURITracks);
             avTransportUriChange = true;
         }
-        
+
         if (!m_currenURITracks.empty())
         {
             track = m_currenURITracks.front();
             m_currenURITracks.pop_front();
         }
     }
-    
+
     if (avTransportUriChange)
     {
         CurrentTransportUriChanged(m_currenURITracks.front()->getAVTransportUri());
         NextTransportUriChanged("");
     }
-    
+
     QueueChanged();
-    
+
     return track;
 }
 
