@@ -27,6 +27,8 @@
 
 #include "upnp/upnpwebserver.h"
 #include "upnp/upnphttpreader.h"
+#include "upnp/upnpfactory.h"
+#include "upnp/upnpclientinterface.h"
 
 using namespace utils;
 
@@ -41,19 +43,21 @@ Renderer::Renderer(RendererSettings& settings)
     ReaderFactory::registerBuilder(std::make_unique<upnp::HttpReaderBuilder>());
 }
 
+Renderer::~Renderer() = default;
+
 void Renderer::start()
 {
     try
     {
         m_stop = false;
-        m_client.initialize();
+        m_client->initialize();
 
         auto udn                = "uuid:" + m_settings.getUdn();
         auto friendlyName       = m_settings.getFriendlyName();
         auto audioOutput        = m_settings.getAudioOutput();
         auto audioDevice        = m_settings.getAudioDevice();
         auto cecDevice          = m_settings.getCecDevice();
-        auto description        = fmt::format(g_mediaRendererDevice.c_str(), m_client.getIpAddress(), m_client.getPort(), friendlyName, udn);
+        auto description        = fmt::format(g_mediaRendererDevice.c_str(), m_client->getIpAddress(), m_client->getPort(), friendlyName, udn);
         auto advertiseInterval  = 180;
 
         log::info("FriendlyName = {}", friendlyName);
@@ -81,7 +85,7 @@ void Renderer::start()
         log::error(e.what());
     }
 
-    m_client.destroy();
+    m_client->destroy();
 }
 
 void Renderer::stop()

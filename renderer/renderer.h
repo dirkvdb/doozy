@@ -22,13 +22,13 @@
 #include <condition_variable>
 #include <mutex>
 
-#include "upnp/upnpclient.h"
 #include "renderersettings.h"
 #include "common/doozydeviceinterface.h"
 
 namespace upnp
 {
     class WebServer;
+    class IClient;
 }
 
 namespace doozy
@@ -38,6 +38,7 @@ class Renderer : public IDevice
 {
 public:
     Renderer(RendererSettings& settings);
+    virtual ~Renderer();
 
     void start() override;
     void stop() override;
@@ -45,11 +46,11 @@ public:
 private:
     void addServiceFileToWebserver(upnp::WebServer& webserver, const std::string& filename, const std::string& fileContents);
 
-    RendererSettings            m_settings;
-    std::condition_variable     m_condition;
-    std::mutex                  m_mutex;
-    upnp::Client                m_client;
-    bool                        m_stop;
+    RendererSettings                m_settings;
+    std::condition_variable         m_condition;
+    std::mutex                      m_mutex;
+    std::unique_ptr<upnp::IClient>  m_client;
+    bool                            m_stop;
 };
 
 }
