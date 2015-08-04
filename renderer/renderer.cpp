@@ -37,6 +37,7 @@ namespace doozy
 
 Renderer::Renderer(RendererSettings& settings)
 : m_settings(settings)
+, m_client(upnp::factory::createClient())
 , m_stop(false)
 {
     // make sure we can read http urls
