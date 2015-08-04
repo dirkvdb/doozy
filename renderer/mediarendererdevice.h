@@ -104,9 +104,9 @@ private:
     upnp::ConnectionManager::ConnectionInfo     m_currentConnectionInfo;
 
     utils::WorkerThread                         m_thread;
+    std::string                                 m_cecDevice;
 
 #ifdef HAVE_LIBCEC
-    std::unique_ptr<CecControl>                 m_cec;
     utils::Timer                                m_timer;
 #endif
 };
