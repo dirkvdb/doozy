@@ -8,16 +8,17 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${UTILS_INCLUDE_DIRS}
     ${AUDIO_INCLUDE_DIRS}
+    ${RENDERER_INCLUDE_DIRS}
     ${UPNPFRAMEWORK_INCLUDE_DIRS}
     ${SERVER_INCLUDE_DIRS}
+)
+
+INCLUDE_DIRECTORIES(SYSTEM
     ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11-connector-sqlite3/include
 )
 
 LINK_DIRECTORIES(
-    ${AUDIO_LIBRARY_DIRS}
-    ${IMAGE_LIBRARY_DIRS}
-    ${UPNPFRAMEWORK_LIBRARY_DIRS}
     ${SERVER_LIBRARY_DIRS}
 )
 
@@ -50,6 +51,16 @@ ADD_EXECUTABLE(doozytest
     ${TEST_INFRA}
     ${SERVER_TESTS}
 )
+
+IF (HAVE_LIBCEC)
+    ADD_EXECUTABLE(cectest
+        cectest.cpp
+    )
+
+    TARGET_LINK_LIBRARIES(cectest
+        doozyrenderer
+    )
+ENDIF ()
 
 TARGET_LINK_LIBRARIES(doozytest
 	${LINK_LIBS}
