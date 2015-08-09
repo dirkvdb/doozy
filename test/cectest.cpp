@@ -19,13 +19,43 @@
 
 #include "renderer/ceccontrol.h"
 
+using namespace doozy;
+
 int main(int argc, char **argv)
 {
-	if (!setlocale(LC_CTYPE, ""))
+    try
     {
-        std::cerr << "Locale not specified. Check LANG, LC_CTYPE, LC_ALL" << std::endl;
-        return 1;
-    }
+        if (argc != 3)
+        {
+            std::cerr << "Usage: " << argv[0] << " devicename command" << std::endl;
+            return EXIT_FAILURE;
+        }
 
-  	return EXIT_SUCCESS;
+        if (strcmp(argv[2], "on") == 0)
+        {
+            CecControl cec(argv[1]);
+            cec.turnOn();
+            if (!cec.isActiveSource())
+            {
+                cec.setActiveSource();
+            }
+        }
+        else if (strcmp(argv[2], "off") == 0)
+        {
+            CecControl cec(argv[1]);
+            cec.standBy();
+        }
+        else
+        {
+            std::cerr << "Unknown command (use 'on' or 'off')" << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        return EXIT_SUCCESS;
+    }
+    catch (const std::runtime_error& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 }

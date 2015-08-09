@@ -59,6 +59,7 @@ IF (HAVE_LIBCEC)
 
     TARGET_LINK_LIBRARIES(cectest
         doozyrenderer
+        utils
     )
 ENDIF ()
 

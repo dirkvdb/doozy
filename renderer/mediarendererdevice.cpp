@@ -78,7 +78,10 @@ void TurnOnCecDevice(const std::string& dev)
     {
         CecControl cec(dev);
         cec.turnOn();
-        cec.setActiveSource();
+        if (!cec.isActiveSource())
+        {
+            cec.setActiveSource();
+        }
     }
     catch (const std::runtime_error& e)
     {
