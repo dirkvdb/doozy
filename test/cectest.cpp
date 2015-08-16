@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <stdexcept>
 
 #include "renderer/ceccontrol.h"
 
