@@ -2,11 +2,14 @@
 # BasedOnStyle:  LLVM
 AccessModifierOffset: -4
 ConstructorInitializerIndentWidth: 0
+AlignAfterOpenBracket: DontAlign
 AlignEscapedNewlinesLeft: false
 AlignOperands: true
 AlignTrailingComments: true
+AlignConsecutiveAssignments : true
+AlignConsecutiveDeclarations : true
 AllowAllParametersOfDeclarationOnNextLine: true
-AllowShortIfStatementsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
 AllowShortBlocksOnASingleLine: true
@@ -15,9 +18,12 @@ AlwaysBreakBeforeMultilineStrings: false
 BreakBeforeBinaryOperators: false
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: true
-BinPackParameters: true
+BinPackParameters: false
+BinPackArguments: false
 ColumnLimit: 0
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ContinuationIndentWidth: 4
+Cpp11BracedListStyle: true
 DerivePointerBinding: false
 ExperimentalAutoDetectBinPacking: false
 IndentCaseLabels: false
@@ -33,7 +39,6 @@ PenaltyReturnTypeOnItsOwnLine: 60
 PointerAlignment: Left
 PointerBindsToType: true
 SpacesBeforeTrailingComments: 1
-Cpp11BracedListStyle: false
 Standard: Cpp11
 IndentWidth: 4
 TabWidth: 4
@@ -46,6 +51,6 @@ SpaceInEmptyParentheses: false
 SpacesInCStyleCastParentheses: false
 SpaceAfterControlStatementKeyword: true
 SpaceBeforeAssignmentOperators: true
-ContinuationIndentWidth: 4
+SortIncludes: true
 ...
 
