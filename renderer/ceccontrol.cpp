@@ -17,7 +17,6 @@
 #include "ceccontrol.h"
 
 #include "utils/log.h"
-#include "utils/cppcompat.h"
 
 #include <array>
 #include <stdexcept>
