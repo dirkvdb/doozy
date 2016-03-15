@@ -17,12 +17,12 @@
 #include "doozydeviceinterface.h"
 #include "doozyconfig.h"
 
-#ifdef DOOZY_SERVER
+#if DOOZY_SERVER
 #include "server/server.h"
 #include "server/serversettings.h"
 #endif
 
-#ifdef DOOZY_RENDERER
+#if DOOZY_RENDERER
 #include "renderer/renderer.h"
 #include "renderer/renderersettings.h"
 #endif
@@ -38,7 +38,7 @@ using namespace utils;
 
 std::unique_ptr<IDevice> createDevice(const std::string& deviceType, const std::string& configFile)
 {
-#ifdef DOOZY_SERVER
+#if DOOZY_SERVER
     if (deviceType == "server")
     {
         ServerSettings settings;
@@ -46,7 +46,7 @@ std::unique_ptr<IDevice> createDevice(const std::string& deviceType, const std::
         return std::make_unique<Server>(settings);
     }
 #endif
-#ifdef DOOZY_RENDERER
+#if DOOZY_RENDERER
     if (deviceType == "renderer")
     {
         RendererSettings settings;

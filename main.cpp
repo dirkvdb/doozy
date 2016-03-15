@@ -44,13 +44,13 @@ void printUsage()
 {
     std::vector<std::string> supportedDevices;
 
-#ifdef DOOZY_RENDERER
+#if DOOZY_RENDERER
     supportedDevices.push_back("renderer");
 #endif
-#ifdef DOOZY_SERVER
+#if DOOZY_SERVER
     supportedDevices.push_back("server");
 #endif
-#ifdef DOOZY_CONTROLPOINT
+#if DOOZY_CONTROLPOINT
     supportedDevices.push_back("controlpoint");
 #endif
 

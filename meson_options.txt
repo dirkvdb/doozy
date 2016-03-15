@@ -1,0 +1,1 @@
+option('renderer', type : 'boolean', value : true, description : 'Enable upnp renderer device')

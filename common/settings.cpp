@@ -179,19 +179,19 @@ std::string Settings::getSetting(const std::string& setting) const
     {
         throw std::runtime_error("No such setting: " + setting);
     }
-    
+
     return iter->second;
 }
 
 void Settings::loadDefaultSettings()
 {
-#ifdef HAVE_OPENAL
+#if HAVE_OPENAL
     m_Settings["AudioOutput"]       = "OpenAL";
 #endif
-#ifdef HAVE_ALSA
+#if HAVE_ALSA
     m_Settings["AudioOutput"]       = "Alsa";
 #endif
-#ifdef HAVE_PULSE
+#if HAVE_PULSE
     m_Settings["AudioOutput"]       = "PulseAudio";
 #endif
 
