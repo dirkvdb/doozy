@@ -45,8 +45,6 @@ namespace doozy
 namespace
 {
 
-const uint32_t g_idleTimeout = 5;
-
 std::string toString(const std::set<PlaybackAction>& actions)
 {
     std::stringstream ss;
@@ -71,9 +69,12 @@ AVTransport::State PlaybackStateToTransportState(PlaybackState state)
     }
 }
 
+#ifdef HAVE_LIBCEC
+
+const uint32_t g_idleTimeout = 5;
+
 void TurnOnCecDevice(const std::string& dev)
 {
-#ifdef HAVE_LIBCEC
     try
     {
         CecControl cec(dev);
@@ -87,12 +88,10 @@ void TurnOnCecDevice(const std::string& dev)
     {
         log::warn(e.what());
     }
-#endif
 }
 
 void TurnOffCecDevice(const std::string& dev)
 {
-#ifdef HAVE_LIBCEC
     try
     {
         log::info("Turn off receiver, idle for {} minutes", g_idleTimeout);
@@ -106,8 +105,9 @@ void TurnOffCecDevice(const std::string& dev)
     {
         log::warn(e.what());
     }
-#endif
 }
+#endif
+
 
 }
 
