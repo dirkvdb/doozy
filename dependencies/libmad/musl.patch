@@ -1,0 +1,20 @@
+--- config.sub	2004-02-17 02:51:24.000000000 +0100
++++ config.sub.musl	2015-08-18 09:56:30.000000000 +0200
+@@ -119,7 +119,7 @@
+ maybe_os=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\2/'`
+ case $maybe_os in
+   nto-qnx* | linux-gnu* | linux-dietlibc | linux-uclibc* | uclinux-uclibc* | uclinux-gnu* | \
+-  kfreebsd*-gnu* | knetbsd*-gnu* | netbsd*-gnu* | storm-chaos* | os2-emx* | rtmk-nova*)
++  kfreebsd*-gnu* | knetbsd*-gnu* | netbsd*-gnu* | storm-chaos* | os2-emx* | rtmk-nova* | linux-musl*)
+     os=-$maybe_os
+     basic_machine=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`
+     ;;
+@@ -1155,7 +1155,7 @@
+ 	      | -storm-chaos* | -tops10* | -tenex* | -tops20* | -its* \
+ 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
+ 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
+-	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly*)
++	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* | -linux-musl*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)

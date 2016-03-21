@@ -1,0 +1,11 @@
+prefix=@CMAKE_BINARY_DIR@/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: mad
+Description: MPEG audio decoder
+Requires:
+Version: @MAJOR@.@MINOR@.@REVISION@
+Libs: -L${libdir} -lmad
+Cflags: -I${includedir}

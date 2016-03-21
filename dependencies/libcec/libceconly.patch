@@ -1,0 +1,22 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 23d71fc..2fb8b48 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -5,17 +5,6 @@ set(LIBCEC_VERSION_MAJOR 3)
+ set(LIBCEC_VERSION_MINOR 0)
+ set(LIBCEC_VERSION_PATCH 1)
+ 
+-# cec-client
+-add_subdirectory(src/cec-client)
+-add_dependencies(cec-client cec)
+-
+-# cecc-client
+-add_subdirectory(src/cecc-client)
+-add_dependencies(cecc-client cec)
+-
+-# pyCecClient
+-add_subdirectory(src/pyCecClient)
+-
+ # libCEC
+ add_subdirectory(src/libcec)
+ 

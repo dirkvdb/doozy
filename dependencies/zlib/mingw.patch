@@ -1,0 +1,11 @@
+--- CMakeLists.txt	2015-08-24 20:52:57.921486527 +0200
++++ CMakeLists.txt.mingw	2015-08-24 20:54:21.176072155 +0200
+@@ -185,7 +185,7 @@
+ 
+ add_library(zlibstatic STATIC ${ZLIB_SRCS} ${ZLIB_ASMS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
+ 
+-if(UNIX)
++if(UNIX OR MINGW)
+     # On unix-like platforms the library is almost always called libz
+    set_target_properties(zlibstatic PROPERTIES OUTPUT_NAME z)
+ elseif(BUILD_SHARED_LIBS AND WIN32)

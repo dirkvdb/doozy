@@ -1,0 +1,125 @@
+diff --git a/threadutil/inc/ThreadPool.h b/threadutil/inc/ThreadPool.h
+index c7e2750..9a338c0 100644
+--- a/threadutil/inc/ThreadPool.h
++++ b/threadutil/inc/ThreadPool.h
+@@ -46,6 +46,7 @@
+ #include <errno.h>
+
+ #ifdef WIN32
++	#ifndef _TIMEZONE_DEFINED
+ 	#include <time.h>
+ 	struct timezone
+ 	{
+@@ -53,6 +54,7 @@
+ 		int  tz_dsttime;     /* type of dst correction */
+ 	};
+ 	int gettimeofday(struct timeval *tv, struct timezone *tz);
++	#endif
+ #else /* WIN32 */
+ 	#include <sys/param.h>
+ 	#include <sys/time.h> /* for gettimeofday() */
+diff --git a/threadutil/src/TimerThread.c b/threadutil/src/TimerThread.c
+index 85e2d8e..ed36c81 100644
+--- a/threadutil/src/TimerThread.c
++++ b/threadutil/src/TimerThread.c
+@@ -34,6 +34,11 @@
+  * \file
+  */
+
++ #ifdef WIN32
++     #include <winsock2.h>
++     #include <wtypes.h>
++ #endif
++
+ #include "TimerThread.h"
+
+ #include <assert.h>
+diff --git a/upnp/inc/UpnpInet.h b/upnp/inc/UpnpInet.h
+index ad00a7d..ec6cbcb 100644
+--- a/upnp/inc/UpnpInet.h
++++ b/upnp/inc/UpnpInet.h
+@@ -21,6 +21,7 @@
+ 		#include <windef.h>
+ 	#endif
+ 	#include <winsock2.h>
++ 	#include <wtypes.h>
+ 	#include <iphlpapi.h>
+ 	#include <ws2tcpip.h>
+
+diff --git a/upnp/inc/upnp.h b/upnp/inc/upnp.h
+index 894702e..378069e 100644
+--- a/upnp/inc/upnp.h
++++ b/upnp/inc/upnp.h
+@@ -41,6 +41,10 @@
+  * \file
+  */
+
++#ifdef _WIN32
++# define WIN32
++#endif
++
+ #include "ixml.h"
+ #include "upnpconfig.h"
+ #include "UpnpGlobal.h"
+@@ -65,6 +69,20 @@
+ #include <openssl/ssl.h>
+ #endif
+
++#   if defined( __MINGW32__ )
++#       if !defined( _OFF_T_ )
++            typedef long long _off_t;
++            typedef _off_t off_t;
++#           define _OFF_T_
++#       else
++#           ifdef off_t
++#               undef off_t
++#           endif
++#           define off_t long long
++#       endif
++#   endif
++
++
+ #define LINE_SIZE  (size_t)180
+ #define NAME_SIZE  (size_t)256
+ #define MNFT_NAME_SIZE  64
+diff --git a/upnp/src/inc/config.h b/upnp/src/inc/config.h
+index 58a34d7..c3fea50 100644
+--- a/upnp/src/inc/config.h
++++ b/upnp/src/inc/config.h
+@@ -33,6 +33,9 @@
+ #ifndef INTERNAL_CONFIG_H
+ #define INTERNAL_CONFIG_H
+
++ #ifdef WIN32
++ #include <wtypes.h>
++ #endif
+
+ #include "autoconfig.h"
+
+diff --git a/upnp/src/inc/upnputil.h b/upnp/src/inc/upnputil.h
+index 76292f8..ed922e1 100644
+--- a/upnp/src/inc/upnputil.h
++++ b/upnp/src/inc/upnputil.h
+@@ -130,7 +130,7 @@ void linecopylen(
+ 		#define strncasecmp		strnicmp
+ 		#define sleep(a)		Sleep((a)*1000)
+ 		#define usleep(a)		Sleep((a)/1000)
+-		#define strerror_r(a,b,c)	(strerror_s((b),(c),(a)))
++		#define strerror_r(a,b,c)       strncpy( b, strerror(a), c)
+ 	#else
+ 		#define max(a, b)   (((a)>(b))? (a):(b))
+ 		#define min(a, b)   (((a)<(b))? (a):(b))
+diff --git a/upnp/src/ssdp/ssdp_ctrlpt.c b/upnp/src/ssdp/ssdp_ctrlpt.c
+index 38bf013..a41e853 100644
+--- a/upnp/src/ssdp/ssdp_ctrlpt.c
++++ b/upnp/src/ssdp/ssdp_ctrlpt.c
+@@ -37,6 +37,10 @@
+  * \file
+  */
+
++#ifdef WIN32
++#include <wtypes.h>
++#endif
++
+ #include "config.h"
+ #include "upnputil.h"

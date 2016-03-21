@@ -1,0 +1,66 @@
+diff -Naur libupnp/threadutil/src/ThreadPool.c libupnpmod/threadutil/src/ThreadPool.c
+--- libupnp/threadutil/src/ThreadPool.c	2012-04-03 15:01:15.000000000 +0200
++++ libupnpmod/threadutil/src/ThreadPool.c	2016-03-21 17:13:45.628891900 +0100
+@@ -36,6 +36,9 @@
+ 
+ #if !defined(WIN32)
+ 	#include <sys/param.h>
++#else
++	#include <winsock2.h>
++    #include <wtypes.h>
+ #endif
+ 
+ #include "ThreadPool.h"
+@@ -263,7 +266,7 @@
+ #elif defined(__OSX__) || defined(__APPLE__) || defined(__NetBSD__)
+ 	setpriority(PRIO_PROCESS, 0, 0);
+ 	retVal = 0;
+-#elif defined(WIN32)
++#elif defined(WIN32) && !defined(__MINGW32__)
+ 	retVal = sched_setscheduler(0, in);
+ #elif defined(_POSIX_PRIORITY_SCHEDULING) && _POSIX_PRIORITY_SCHEDULING > 0
+ 	struct sched_param current;
+@@ -415,12 +418,12 @@
+ 	struct timeval t;
+   
+ 	gettimeofday(&t, NULL);
+-#if defined(WIN32)
++#if defined(__linux__) || defined(__sun) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__GLIBC__)
++	srand((unsigned int)t.tv_usec + (unsigned int)ithread_get_current_thread_id());
++#elif defined(WIN32)
+ 	srand((unsigned int)t.tv_usec + (unsigned int)ithread_get_current_thread_id().p);
+ #elif defined(BSD) || defined(__OSX__) || defined(__APPLE__) || defined(__FreeBSD_kernel__)
+ 	srand((unsigned int)t.tv_usec + (unsigned int)ithread_get_current_thread_id());
+-#elif defined(__linux__) || defined(__sun) || defined(__CYGWIN__) || defined(__GLIBC__)
+-	srand((unsigned int)t.tv_usec + (unsigned int)ithread_get_current_thread_id());
+ #else
+ 	{
+ 		volatile union {
+diff -Naur libupnp/upnp/src/inet_pton.c libupnpmod/upnp/src/inet_pton.c
+--- libupnp/upnp/src/inet_pton.c	2010-12-23 21:24:06.000000000 +0100
++++ libupnpmod/upnp/src/inet_pton.c	2016-03-21 17:18:47.710002600 +0100
+@@ -21,7 +21,8 @@
+ 
+ /* This file is WIN32 only */
+ #ifdef WIN32
+-
++#include <winsock2.h>
++#include <wtypes.h>
+ #include "inet_pton.h"
+ 
+ /*!
+diff -Naur libupnp/upnp/src/uuid/sysdep.c libupnpmod/upnp/src/uuid/sysdep.c
+--- libupnp/upnp/src/uuid/sysdep.c	2011-04-03 04:50:36.000000000 +0200
++++ libupnpmod/upnp/src/uuid/sysdep.c	2016-03-21 17:16:52.678671700 +0100
+@@ -21,6 +21,11 @@
+  * \file
+  */
+ 
++ #if defined(WIN32)
++	#include <winsock2.h>
++    #include <wtypes.h>
++#endif
++ 
+ #include "config.h"
+ 
+ #include "sysdep.h"
