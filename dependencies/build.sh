@@ -11,7 +11,7 @@ function checkresult {
 }
 
 if [ "$#" -ne 1 ]; then
-    echo "No toolchain provided. Choices: archarmv6|archarmv7|macv6|android|native"
+    echo "No toolchain provided. Choices: archarmv6|archarmv7|macv6|android|native|mingw"
     exit 1
 fi
 
@@ -22,8 +22,13 @@ fi
 #    export PATH="${CURPATH}/cross:$PATH"
 #fi
 
+BUILD_GENERATOR="Unix Makefiles"
+
 if [ "$1" = "native" ]; then
     export ARMARCH=native
+elif [ "$1" = "mingw" ]; then
+    export ARMARCH=mingw
+    BUILD_GENERATOR="MSYS Makefiles"
 elif [ "$1" = "archarmv6" ]; then
     export ARMARCH=armv6
     export PATH="/opt/x-tools6h/arm-unknown-linux-gnueabihf/bin:$PATH"
@@ -61,5 +66,5 @@ fi
 checkresult rm -rf ../build/deps
 checkresult mkdir ../build/deps
 cd ../build/deps
-checkresult cmake -DCMAKE_TOOLCHAIN_FILE=../../dependencies/toolchain-${ARMARCH}.make -DCMAKE_BUILD_TYPE=Release ../../dependencies
+checkresult cmake -G "${BUILD_GENERATOR}" -DCMAKE_TOOLCHAIN_FILE=../../dependencies/toolchain-${ARMARCH}.make -DCMAKE_BUILD_TYPE=Release ../../dependencies
 checkresult make

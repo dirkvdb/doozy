@@ -65,7 +65,7 @@ void printUsage()
 
 int main(int argc, char **argv)
 {
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__MINGW32__)
     if (!set_signal_handlers())
     {
         return -1;
@@ -140,7 +140,7 @@ static void sigterm(int signo)
     }
 }
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__MINGW32__)
 static void segFaultHandler(int /*signo*/, siginfo_t* /*pInfo*/, void* /*pContext*/)
 {
     utils::printBackTrace();
