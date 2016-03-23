@@ -35,7 +35,7 @@ OPTION(LOCAL_DEPS "force usage of locally build dependencies" OFF)
 
 IF (LOCAL_DEPS)
     SET (PKG_CONFIG_USE_CMAKE_PREFIX_PATH ON)
-    SET (CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}//build/deps/local)
+    SET (CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build/dependencies/local)
 ENDIF ()
 
 IF (STATIC_BINARY)
