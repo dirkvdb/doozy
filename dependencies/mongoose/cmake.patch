@@ -1,0 +1,27 @@
+diff -crNb mongoose-6.3/CMakeLists.txt mongoose-6.3.patch/CMakeLists.txt
+*** mongoose-6.3/CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
+--- mongoose-6.3.patch/CMakeLists.txt	2016-03-30 10:13:02.588600300 +0200
+***************
+*** 0 ****
+--- 1,21 ----
++ project(mongoose)
++ 
++ cmake_minimum_required(VERSION 2.6)
++ 
++ option(BUILD_SHARED_LIBS "Build shared instead of static library" OFF)
++ 
++ set(HEADERS mongoose.h)
++ set(SOURCES ${HEADERS} mongoose.c)
++ 
++ if(BUILD_SHARED_LIBS)
++     add_library(mongoose SHARED ${SOURCES})
++ else()
++     add_library(mongoose STATIC ${SOURCES})
++ endif()
++ 
++ install(TARGETS mongoose
++     ARCHIVE DESTINATION lib
++     LIBRARY DESTINATION lib
++ )
++ 
++ install(FILES ${HEADERS} DESTINATION include)
