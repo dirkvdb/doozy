@@ -32,6 +32,18 @@ OPTION(STATIC_BINARY "Build static binary" OFF)
 OPTION(SHARED_LIBRARY "Create single shared library containing all dependencies" OFF)
 OPTION(ENABLE_TESTS "build unit tests" ON)
 OPTION(LOCAL_DEPS "force usage of locally build dependencies" OFF)
+OPTION(SANITIZE_ADDRESS "Build with address sanitizer (detect invalid memory access and memory leaks)" OFF)
+OPTION(SANITIZE_UNDEFINED "Build with undefined behavior sanitizer (detect integer overflow, bad shifts, ...)" OFF)
+
+IF (SANITIZE_ADDRESS)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+ENDIF ()
+
+IF (SANITIZE_UNDEFINED)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fsanitize=shift -fsanitize=return -fsanitize=null -fsanitize=signed-integer-overflow -fsanitize=integer-divide-by-zero -ftrapv")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined -fsanitize=shift -fsanitize=return -fsanitize=null -fsanitize=signed-integer-overflow -fsanitize=integer-divide-by-zero -ftrapv")
+ENDIF ()
 
 IF (LOCAL_DEPS)
     SET (PKG_CONFIG_USE_CMAKE_PREFIX_PATH ON)
