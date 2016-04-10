@@ -6,28 +6,22 @@ SET(PACKAGE ${NAME}-${MAJOR}.${MINOR}.${REVISION})
 
 EXTERNALPROJECT_ADD(${NAME}
     URL https://curl.haxx.se/download/${PACKAGE}.tar.gz TIMEOUT 30
-    DEPENDS zlib
     INSTALL_DIR ${CMAKE_BINARY_DIR}/local
-    CONFIGURE_COMMAND <SOURCE_DIR>/configure ${BUILD} ${CROSS_ARGS} --disable-dependency-tracking --prefix=<INSTALL_DIR> --disable-shared
-    --without-nghttp2
-    --without-libssh2
-    --without-libpsl
-    --without-cyassl
-    --without-polarssl
-    --without-gnutls
-    --without-darwinssl
-    --without-winssl
-    --disable-manual
-    --disable-gopher
-    --disable-smtp
-    --disable-smb
-    --disable-imap
-    --disable-pop3
-    --disable-tftp
-    --disable-telnet
-    --disable-dict
-    --disable-ldap
-    --disable-file
-    --disable-ftp
-    --without-ca-path
+    PATCH_COMMAND patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/idn.patch
+    CMAKE_ARGS -DCURL_STATICLIB=ON
+               -DBUILD_CURL_EXE=OFF
+               -DBUILD_CURL_TESTS=OFF
+               -DHTTP_ONLY=ON
+               -DCURL_DISABLE_CRYPTO_AUTH=ON
+               -DENABLE_MANUAL=OFF
+               -DCMAKE_USE_OPENSSL=OFF
+               -DCMAKE_USE_OPENLDAP=OFF
+               -DCMAKE_USE_LIBSSH2=OFF
+               -DCMAKE_USE_GSSAPI=OFF
+               -DCURL_IDN=OFF
+               -DCURL_ZLIB=OFF
+               -DENABLE_UNIX_SOCKETS=OFF
+               -DCMAKE_BUILD_TYPE=Release
+               -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+               -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
 )
