@@ -8,7 +8,8 @@ EXTERNALPROJECT_ADD(${NAME}
     URL https://curl.haxx.se/download/${PACKAGE}.tar.gz TIMEOUT 30
     INSTALL_DIR ${CMAKE_BINARY_DIR}/local
     PATCH_COMMAND patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/idn.patch
-    CMAKE_ARGS -DCURL_STATICLIB=ON
+    CMAKE_ARGS -G ${CMAKE_GENERATOR}
+               -DCURL_STATICLIB=ON
                -DBUILD_CURL_EXE=OFF
                -DBUILD_CURL_TESTS=OFF
                -DHTTP_ONLY=ON
