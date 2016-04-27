@@ -37,7 +37,7 @@ using namespace utils;
 using namespace upnp;
 using namespace audio;
 using namespace std::placeholders;
-
+using namespace std::chrono_literals;
 
 namespace doozy
 {
@@ -131,7 +131,8 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
     }, this);
 
     m_playback->ProgressChanged.connect([this] (double progress) {
-        setTransportVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(progress));
+        std::chrono::seconds secs(static_cast<uint32_t>(progress));
+        setTransportVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(secs));
     }, this);
 
     m_playback->NewTrackStarted.connect([this] (const std::shared_ptr<ITrack>& track) {
@@ -139,12 +140,13 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
         assert(item);
 
         addAlbumArtToWebServer(item);
+        std::chrono::seconds duration(static_cast<uint32_t>(m_playback->getDuration()));
 
         setTransportVariable(0, AVTransport::Variable::CurrentTrackURI,         item->getUri());
         setTransportVariable(0, AVTransport::Variable::CurrentTrackMetaData,    item->getMetadataString());
         setTransportVariable(0, AVTransport::Variable::AVTransportURI,          item->getAVTransportUri());
         setTransportVariable(0, AVTransport::Variable::NextAVTransportURI,      m_queue.getNextUri());
-        setTransportVariable(0, AVTransport::Variable::CurrentTrackDuration,    durationToString(m_playback->getDuration()));
+        setTransportVariable(0, AVTransport::Variable::CurrentTrackDuration,    durationToString(duration));
         setTransportVariable(0, AVTransport::Variable::NumberOfTracks,          std::to_string(m_queue.getNumberOfTracks()));
     }, this);
 }
@@ -226,8 +228,8 @@ void MediaRendererDevice::setInitialValues()
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(m_playback->getState())));
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentPlayMode, toString(AVTransport::PlayMode::Normal));
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::NumberOfTracks, std::to_string(m_queue.getNumberOfTracks()));
-    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(0));
-    m_avTransport.setInstanceVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(0));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(0s));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(0s));
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::AbsoluteTimePosition, "NOT_IMPLEMENTED");
 }
 
