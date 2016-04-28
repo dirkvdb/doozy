@@ -15,8 +15,9 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-#ifndef TYPE_CONVERSIONS_H
-#define TYPE_CONVERSIONS_H
+#pragma once
+
+#include <sstream>
 
 #include "audio/audioplaybackinterface.h"
 
@@ -31,7 +32,7 @@ inline std::ostream& operator<< (std::ostream& os, const audio::PlaybackState& s
         case audio::PlaybackState::Playing:      return os << "Playing";
         case audio::PlaybackState::Paused:       return os << "Paused";
     }
-    
+
     return os;
 }
 
@@ -45,7 +46,7 @@ inline std::ostream& operator<< (std::ostream& os, const audio::PlaybackAction& 
         case audio::PlaybackAction::Prev:        return os << "Previous";
         case audio::PlaybackAction::Next:        return os << "Next";
     }
-    
+
     return os;
 }
 
@@ -54,10 +55,8 @@ inline std::string toString(const T& t)
 {
     std::stringstream ss;
     ss << t;
-    
+
     return ss.str();
 }
 
 }
-
-#endif

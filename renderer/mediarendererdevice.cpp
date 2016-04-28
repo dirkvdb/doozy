@@ -122,7 +122,7 @@ MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::stri
 , m_cecDevice(cecDevice)
 {
     m_playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
-        setTransportVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(state)));
+        setTransportVariable(0, AVTransport::Variable::TransportState, AVTransport::Service::toString(PlaybackStateToTransportState(state)));
         CheckCecState(state);
     }, this);
 
@@ -225,8 +225,8 @@ void MediaRendererDevice::setInitialValues()
 
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTransportActions, toString(m_playback->getAvailableActions()));
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::PlaybackStorageMedium, "NETWORK");
-    m_avTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, AVTransport::toString(PlaybackStateToTransportState(m_playback->getState())));
-    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentPlayMode, toString(AVTransport::PlayMode::Normal));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, AVTransport::Service::toString(PlaybackStateToTransportState(m_playback->getState())));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentPlayMode, AVTransport::Service::toString(AVTransport::PlayMode::Normal));
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::NumberOfTracks, std::to_string(m_queue.getNumberOfTracks()));
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(0s));
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(0s));
