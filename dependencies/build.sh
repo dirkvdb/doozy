@@ -29,6 +29,7 @@ if [ "$1" = "native" ]; then
     BUILD_GENERATOR="Ninja"
 elif [ "$1" = "nativegcc6" ]; then
     export ARMARCH=gcc
+    BUILD_GENERATOR="Unix Makefiles"
 elif [ "$1" = "mingw" ]; then
     export ARMARCH=mingw
     BUILD_GENERATOR="MSYS Makefiles"
@@ -70,4 +71,4 @@ checkresult rm -rf ../build/dependencies
 checkresult mkdir -p ../build/dependencies
 cd ../build/dependencies
 checkresult cmake -G "${BUILD_GENERATOR}" -DCMAKE_TOOLCHAIN_FILE=../../dependencies/toolchain-${ARMARCH}.make -DCMAKE_BUILD_TYPE=Release ../../dependencies
-checkresult ninja
+checkresult cmake --build .

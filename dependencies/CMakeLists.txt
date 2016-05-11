@@ -34,12 +34,16 @@ ENDIF ()
 
 ADD_SUBDIRECTORY(zlib)
 ADD_SUBDIRECTORY(libcurl)
-ADD_SUBDIRECTORY(mongoose)
 ADD_SUBDIRECTORY(libupnp)
 ADD_SUBDIRECTORY(ffmpeg)
 ADD_SUBDIRECTORY(libjpeg-turbo)
 ADD_SUBDIRECTORY(libmad)
-ADD_SUBDIRECTORY(openal)
+
+IF (NOT CMAKE_COMPILER_IS_GNUCC AND NOT APPLE)
+    # homebrew gcc does not like coreaudio includes
+    ADD_SUBDIRECTORY(openal)
+ENDIF ()
+
 ADD_SUBDIRECTORY(flac)
 ADD_SUBDIRECTORY(sqlite)
 ADD_SUBDIRECTORY(libpng)
