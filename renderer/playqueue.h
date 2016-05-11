@@ -24,7 +24,7 @@
 #include "audio/audiotrackinterface.h"
 #include "audio/audioplaylistinterface.h"
 
-#include "upnp/upnpitem.h"
+#include "upnp/upnp.item.h"
 
 #include <deque>
 #include <string>
