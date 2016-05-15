@@ -1,9 +1,6 @@
 [submodule "modules/utils"]
 	path = modules/utils
 	url = https://github.com/dirkvdb/utils.git
-[submodule "modules/upnp"]
-	path = modules/upnp
-	url = https://github.com/dirkvdb/upnp.git
 [submodule "modules/audio"]
 	path = modules/audio
 	url = https://github.com/dirkvdb/audio.git
