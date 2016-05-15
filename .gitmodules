@@ -16,3 +16,6 @@
 [submodule "modules/sqlpp11-connector-sqlite3"]
 	path = modules/sqlpp11-connector-sqlite3
 	url = https://github.com/rbock/sqlpp11-connector-sqlite3.git
+[submodule "modules/upnp"]
+	path = modules/upnp
+	url = https://dirkvdb@github.com/dirkvdb/upnp.git
