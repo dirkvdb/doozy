@@ -171,7 +171,7 @@ void MediaRendererDevice::stop()
     m_rootDevice.ControlActionRequested.disconnect(this);
     m_rootDevice.EventSubscriptionRequested.disconnect(this);
 
-    m_rootDevice.destroy();
+    m_rootDevice.uninitialize();
 }
 
 void MediaRendererDevice::setInitialValues()
@@ -262,20 +262,24 @@ void MediaRendererDevice::onControlActionRequest(Upnp_Action_Request* pRequest)
     xml::Document requestDoc(pRequest->ActionRequest, xml::Document::NoOwnership);
     //log::debug(requestDoc.toString());
 
+    xml::Document doc;
+
     switch (serviceIdUrnStringToService(pRequest->ServiceID))
     {
     case ServiceType::AVTransport:
-        pRequest->ActionResult = m_avTransport.onAction(pRequest->ActionName, requestDoc).getActionDocument();
+        doc = xml::Document(m_avTransport.onAction(pRequest->ActionName, requestDoc).toString());
         break;
     case ServiceType::RenderingControl:
-        pRequest->ActionResult = m_renderingControl.onAction(pRequest->ActionName, requestDoc).getActionDocument();
+        doc = xml::Document(m_renderingControl.onAction(pRequest->ActionName, requestDoc).toString());
         break;
     case ServiceType::ConnectionManager:
-        pRequest->ActionResult = m_connectionManager.onAction(pRequest->ActionName, requestDoc).getActionDocument();
+        doc = xml::Document(m_connectionManager.onAction(pRequest->ActionName, requestDoc).toString());
         break;
     default:
         throw InvalidSubscriptionIdException();
     }
+
+    pRequest->ActionResult = doc;
 }
 
 bool MediaRendererDevice::supportsProtocol(const ProtocolInfo& info) const
