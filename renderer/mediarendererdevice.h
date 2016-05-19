@@ -24,7 +24,7 @@
 
 #include "upnp/upnprootdevice.h"
 #include "upnp/upnpdeviceservice.h"
-#include "upnp/upnpactionresponse.h"
+#include "upnp/upnp.actionresponse.h"
 #include "upnp/upnprenderingcontrolservice.h"
 #include "upnp/upnpavtransportservice.h"
 #include "upnp/upnpconnectionmanagerservice.h"

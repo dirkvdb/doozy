@@ -26,7 +26,7 @@
 #include "utils/stringoperations.h"
 
 #include "upnp/upnpwebserver.h"
-#include "upnp/upnphttpreader.h"
+#include "upnp/upnp.http.reader.h"
 #include "upnp/upnpfactory.h"
 #include "upnp/upnpclientinterface.h"
 
@@ -41,7 +41,7 @@ Renderer::Renderer(RendererSettings& settings)
 , m_stop(false)
 {
     // make sure we can read http urls
-    ReaderFactory::registerBuilder(std::make_unique<upnp::HttpReaderBuilder>());
+    ReaderFactory::registerBuilder(std::make_unique<upnp::http::ReaderBuilder>());
 }
 
 Renderer::~Renderer() = default;
