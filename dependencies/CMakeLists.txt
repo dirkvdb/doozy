@@ -39,8 +39,10 @@ ADD_SUBDIRECTORY(ffmpeg)
 ADD_SUBDIRECTORY(libjpeg-turbo)
 ADD_SUBDIRECTORY(libmad)
 
-IF (NOT CMAKE_COMPILER_IS_GNUCC AND NOT APPLE)
+IF (CMAKE_COMPILER_IS_GNUCC AND APPLE)
     # homebrew gcc does not like coreaudio includes
+    MESSAGE(STATUS "No audio support when using gcc on apple")
+ELSE ()
     ADD_SUBDIRECTORY(openal)
 ENDIF ()
 
