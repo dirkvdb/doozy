@@ -5,7 +5,7 @@ SET(NAME curl)
 SET(PACKAGE ${NAME}-${MAJOR}.${MINOR}.${REVISION})
 
 EXTERNALPROJECT_ADD(${NAME}
-    URL http://fossies.org/linux/www/${PACKAGE}.tar.bz2 TIMEOUT 30
+    URL http://fossies.org/linux/www/${PACKAGE}.tar.bz2 TIMEOUT 90
     INSTALL_DIR ${CMAKE_BINARY_DIR}/local
     PATCH_COMMAND patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/idn.patch
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
