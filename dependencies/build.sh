@@ -26,7 +26,7 @@ BUILD_GENERATOR="Unix Makefiles"
 
 if [ "$1" = "native" ]; then
     export ARMARCH=native
-    BUILD_GENERATOR="Ninja"
+    BUILD_GENERATOR="Unix Makefiles"
 elif [ "$1" = "nativegcc6" ]; then
     export ARMARCH=gcc
     BUILD_GENERATOR="Unix Makefiles"
