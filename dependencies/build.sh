@@ -62,7 +62,7 @@ elif [ "$1" = "android" ]; then
     export HOST="arm-linux-androideabi"
     export LDFLAGS="$LDFLAGS -march=armv7-a -Wl,--fix-cortex-a8"
 else
-    echo "Unknown toolchain provided: $1. Choices: archarmv6|archarmv7|macv6|android"
+    echo "Unknown toolchain provided: $1. Choices: archarmv6|archarmv7|macv6|android|native|nativegcc6|mingw"
     exit 1
 fi
 
