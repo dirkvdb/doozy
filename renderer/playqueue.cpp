@@ -20,7 +20,7 @@
 #include "utils/fileoperations.h"
 #include "utils/stringoperations.h"
 
-#include "upnp/upnpxmlutils.h"
+#include "upnp/upnp.xml.parseutils.h"
 #include "upnp/upnphttpclient.h"
 
 #include "audioconfig.h"
@@ -80,7 +80,7 @@ std::string PlayQueueItem::getMetadataString() const
         return "";
     }
 
-    return xml::utils::getItemDocument(m_item).toString();
+    return xml::getItemDocument(m_item);
 }
 
 const std::vector<uint8_t>& PlayQueueItem::getAlbumArt() const

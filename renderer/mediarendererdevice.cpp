@@ -111,14 +111,13 @@ void TurnOffCecDevice(const std::string& dev)
 
 }
 
-MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
-                                         const std::string& audioOutput, const std::string& audioDevice, const std::string& cecDevice, upnp::WebServer& webServer)
+MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, std::chrono::seconds advertiseInterval,
+                                         const std::string& audioOutput, const std::string& audioDevice, const std::string& cecDevice)
 : m_playback(PlaybackFactory::create("Custom", "Doozy", audioOutput, audioDevice, m_queue))
-, m_rootDevice(udn, descriptionXml, advertiseIntervalInSeconds)
+, m_rootDevice(advertiseInterval)
 , m_connectionManager(m_rootDevice, *this)
 , m_renderingControl(m_rootDevice, *this)
 , m_avTransport(m_rootDevice, *this)
-, m_webServer(webServer)
 , m_cecDevice(cecDevice)
 {
     m_playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
@@ -157,8 +156,8 @@ void MediaRendererDevice::start()
 {
     m_thread.start();
 
-    m_rootDevice.ControlActionRequested.connect(std::bind(&MediaRendererDevice::onControlActionRequest, this, _1), this);
-    m_rootDevice.EventSubscriptionRequested.connect(std::bind(&MediaRendererDevice::onEventSubscriptionRequest, this, _1), this);
+    m_rootDevice.ControlActionRequested = std::bind(&MediaRendererDevice::onControlActionRequest, this, _1);
+    m_rootDevice.EventSubscriptionRequested = std::bind(&MediaRendererDevice::onEventSubscriptionRequest, this, _1);
 
     m_rootDevice.initialize();
     setInitialValues();
@@ -168,8 +167,8 @@ void MediaRendererDevice::stop()
 {
     m_thread.stop();
 
-    m_rootDevice.ControlActionRequested.disconnect(this);
-    m_rootDevice.EventSubscriptionRequested.disconnect(this);
+    m_rootDevice.ControlActionRequested = nullptr;
+    m_rootDevice.EventSubscriptionRequested = nullptr;
 
     m_rootDevice.uninitialize();
 }
@@ -241,45 +240,48 @@ void MediaRendererDevice::setTransportVariable(uint32_t instanceId, AVTransport:
     });
 }
 
-void MediaRendererDevice::onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest)
+upnp::SubscriptionResponse MediaRendererDevice::onEventSubscriptionRequest(const upnp::SubscriptionRequest& request)
 {
-    //log::debug("Renderer: event subscription request {}", pRequest->ServiceId);
+    //log::debug("Renderer: event subscription request {}", request.ServiceId);
 
-    switch (serviceIdUrnStringToService(pRequest->ServiceId))
+    upnp::SubscriptionResponse response;
+    response.timeout = request.timeout;
+
+    switch (serviceIdUrnStringToService(request.sid))
     {
-    case ServiceType::AVTransport:              return m_rootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_avTransport.getSubscriptionResponse());
-    case ServiceType::RenderingControl:         return m_rootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_renderingControl.getSubscriptionResponse());
-    case ServiceType::ConnectionManager:        return m_rootDevice.acceptSubscription(pRequest->ServiceId, pRequest->Sid, m_connectionManager.getSubscriptionResponse());
+    case ServiceType::AVTransport:
+        response.initialEvent = m_avTransport.getSubscriptionResponse();
+        break;
+    case ServiceType::RenderingControl:
+        response.initialEvent = m_renderingControl.getSubscriptionResponse();
+        break;
+    case ServiceType::ConnectionManager:
+        response.initialEvent = m_connectionManager.getSubscriptionResponse();
+        break;
     default:
-        log::warn("Invalid event subscription request: {}", pRequest->ServiceId);
+        log::warn("Invalid event subscription request: {}", request.sid);
     }
+
+    return response;
 }
 
-void MediaRendererDevice::onControlActionRequest(Upnp_Action_Request* pRequest)
+std::string MediaRendererDevice::onControlActionRequest(const upnp::ActionRequest& request)
 {
     //log::debug("Renderer: action request: {}", pRequest->ActionName);
 
-    xml::Document requestDoc(pRequest->ActionRequest, xml::Document::NoOwnership);
-    //log::debug(requestDoc.toString());
+    //log::debug(request.action);
 
-    xml::Document doc;
-
-    switch (serviceIdUrnStringToService(pRequest->ServiceID))
+    switch (serviceIdUrnStringToService(request.serviceType))
     {
     case ServiceType::AVTransport:
-        doc = xml::Document(m_avTransport.onAction(pRequest->ActionName, requestDoc).toString());
-        break;
+        return m_avTransport.onAction(request.actionName, request.action).toString();
     case ServiceType::RenderingControl:
-        doc = xml::Document(m_renderingControl.onAction(pRequest->ActionName, requestDoc).toString());
-        break;
+        return m_renderingControl.onAction(request.actionName, request.action).toString();
     case ServiceType::ConnectionManager:
-        doc = xml::Document(m_connectionManager.onAction(pRequest->ActionName, requestDoc).toString());
-        break;
+        return m_connectionManager.onAction(request.actionName, request.action).toString();
     default:
         throw InvalidSubscriptionIdException();
     }
-
-    pRequest->ActionResult = doc;
 }
 
 bool MediaRendererDevice::supportsProtocol(const ProtocolInfo& info) const
@@ -300,17 +302,17 @@ void MediaRendererDevice::addAlbumArtToWebServer(const PlayQueueItemPtr& item)
     auto thumb = item->getAlbumArtThumb();
     if (!thumb.empty())
     {
-        m_webServer.removeFile("Doozy", "albumartthumb.jpg");
-        m_webServer.addFile("Doozy", "albumartthumb.jpg", "image/jpeg", thumb);
-        item->setAlbumArtUri(m_webServer.getWebRootUrl() + "Doozy/albumartthumb.jpg", upnp::dlna::ProfileId::JpegThumbnail);
+        m_rootDevice.removeFileFromHttpServer("/Doozy/albumartthumb.jpg");
+        m_rootDevice.addFileToHttpServer("/Doozy/albumartthumb.jpg", "image/jpeg", thumb);
+        item->setAlbumArtUri(m_rootDevice.getWebrootUrl() + "/Doozy/albumartthumb.jpg", upnp::dlna::ProfileId::JpegThumbnail);
     }
 
     auto art = item->getAlbumArt();
     if (!art.empty())
     {
-        m_webServer.removeFile("Doozy", "albumart.jpg");
-        m_webServer.addFile("Doozy", "albumart.jpg", "image/jpeg", art);
-        item->setAlbumArtUri(m_webServer.getWebRootUrl() + "Doozy/albumart.jpg", upnp::dlna::ProfileId::JpegLarge);
+        m_rootDevice.removeFileFromHttpServer("/Doozy/albumart.jpg");
+        m_rootDevice.addFileToHttpServer("/Doozy/albumart.jpg", "image/jpeg", art);
+        item->setAlbumArtUri(m_rootDevice.getWebrootUrl() + "/Doozy/albumart.jpg", upnp::dlna::ProfileId::JpegLarge);
     }
 }
 

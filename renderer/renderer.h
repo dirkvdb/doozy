@@ -49,7 +49,6 @@ private:
     RendererSettings                m_settings;
     std::condition_variable         m_condition;
     std::mutex                      m_mutex;
-    std::unique_ptr<upnp::IClient>  m_client;
     bool                            m_stop;
 };
 

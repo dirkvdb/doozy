@@ -22,7 +22,7 @@
 #include "utils/timer.h"
 #include "utils/workerthread.h"
 
-#include "upnp/upnprootdevice.h"
+#include "upnp/upnp.rootdevice.h"
 #include "upnp/upnpdeviceservice.h"
 #include "upnp/upnp.actionresponse.h"
 #include "upnp/upnprenderingcontrolservice.h"
@@ -48,8 +48,8 @@ class MediaRendererDevice : public upnp::IConnectionManager
                           , public upnp::IAVTransport
 {
 public:
-    MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, int32_t advertiseIntervalInSeconds,
-                        const std::string& audioOutput, const std::string& audioDevice, const std::string& cecDevice, upnp::WebServer& webServer);
+    MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, std::chrono::seconds advertiseInterval,
+                        const std::string& audioOutput, const std::string& audioDevice, const std::string& cecDevice);
     MediaRendererDevice(const MediaRendererDevice&) = delete;
 
     ~MediaRendererDevice();
@@ -81,8 +81,8 @@ private:
     void setInitialValues();
     void setTransportVariable(uint32_t instanceId, upnp::AVTransport::Variable var, const std::string& value);
 
-    void onEventSubscriptionRequest(Upnp_Subscription_Request* pRequest);
-    void onControlActionRequest(Upnp_Action_Request* pRequest);
+    upnp::SubscriptionResponse onEventSubscriptionRequest(const upnp::SubscriptionRequest& request);
+    std::string onControlActionRequest(const upnp::ActionRequest& request);
     bool supportsProtocol(const upnp::ProtocolInfo& info) const;
     void addAlbumArtToWebServer(const PlayQueueItemPtr& item);
 
@@ -94,11 +94,10 @@ private:
     PlayQueue                                   m_queue;
     std::unique_ptr<audio::IPlayback>           m_playback;
 
-    upnp::RootDevice                            m_rootDevice;
+    upnp::RootDevice2                           m_rootDevice;
     upnp::ConnectionManager::Service            m_connectionManager;
     upnp::RenderingControl::Service             m_renderingControl;
     upnp::AVTransport::Service                  m_avTransport;
-    upnp::WebServer&                            m_webServer;
 
     std::vector<upnp::ProtocolInfo>             m_supportedProtocols;
     upnp::ConnectionManager::ConnectionInfo     m_currentConnectionInfo;
