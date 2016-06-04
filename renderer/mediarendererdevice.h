@@ -14,8 +14,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef MEDIA_RENDERER_DEVICE_H
-#define MEDIA_RENDERER_DEVICE_H
+#pragma once
 
 #include <memory>
 
@@ -23,11 +22,10 @@
 #include "utils/workerthread.h"
 
 #include "upnp/upnp.rootdevice.h"
-#include "upnp/upnpdeviceservice.h"
 #include "upnp/upnp.actionresponse.h"
-#include "upnp/upnprenderingcontrolservice.h"
-#include "upnp/upnpavtransportservice.h"
-#include "upnp/upnpconnectionmanagerservice.h"
+#include "upnp/upnp.renderingcontrol.service.h"
+#include "upnp/upnp.avtransport.service.h"
+#include "upnp/upnp.connectionmanager.service.h"
 
 #include "audio/audioplaybackinterface.h"
 #include "playqueue.h"
@@ -110,8 +108,4 @@ private:
 #endif
 };
 
-
-
 }
-
-#endif
