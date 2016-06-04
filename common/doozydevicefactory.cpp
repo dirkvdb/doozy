@@ -23,8 +23,7 @@
 #endif
 
 #if DOOZY_RENDERER
-#include "renderer/renderer.h"
-#include "renderer/renderersettings.h"
+#include "renderer/mediarendererdevice.h"
 #endif
 
 #include "utils/log.h"
@@ -51,7 +50,7 @@ std::unique_ptr<IDevice> createDevice(const std::string& deviceType, const std::
     {
         RendererSettings settings;
         settings.loadFromFile(configFile);
-        return std::make_unique<Renderer>(settings);
+        return std::make_unique<MediaRendererDevice>(settings);
     }
 #endif
 

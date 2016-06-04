@@ -27,6 +27,9 @@
 #include "upnp/upnp.avtransport.service.h"
 #include "upnp/upnp.connectionmanager.service.h"
 
+#include "renderersettings.h"
+#include "common/doozydeviceinterface.h"
+
 #include "audio/audioplaybackinterface.h"
 #include "playqueue.h"
 #include "doozyconfig.h"
@@ -44,10 +47,10 @@ class CecControl;
 class MediaRendererDevice : public upnp::IConnectionManager
                           , public upnp::IRenderingControl
                           , public upnp::IAVTransport
+                          , public IDevice
 {
 public:
-    MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, std::chrono::seconds advertiseInterval,
-                        const std::string& audioOutput, const std::string& audioDevice, const std::string& cecDevice);
+    MediaRendererDevice(RendererSettings& settings);
     MediaRendererDevice(const MediaRendererDevice&) = delete;
 
     ~MediaRendererDevice();
@@ -89,10 +92,15 @@ private:
     void StartCecTimer();
     void AbortCecTimer();
 
+    RendererSettings                            m_settings;
+    std::condition_variable                     m_condition;
+    std::mutex                                  m_mutex;
+    bool                                        m_stop;
+
     PlayQueue                                   m_queue;
     std::unique_ptr<audio::IPlayback>           m_playback;
 
-    upnp::RootDevice2                           m_rootDevice;
+    upnp::RootDevice                            m_rootDevice;
     upnp::ConnectionManager::Service            m_connectionManager;
     upnp::RenderingControl::Service             m_renderingControl;
     upnp::AVTransport::Service                  m_avTransport;

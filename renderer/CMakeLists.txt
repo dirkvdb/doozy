@@ -33,7 +33,6 @@ SET (RENDERER_LIBRARIES doozyrenderer)
 
 SET (RENDERER_SRC
     devicedescriptions.h
-    renderer.h                  renderer.cpp
     renderersettings.h          renderersettings.cpp
     mediarendererdevice.h       mediarendererdevice.cpp
     playqueue.h                 playqueue.cpp

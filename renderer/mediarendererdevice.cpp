@@ -19,13 +19,16 @@
 #include "utils/log.h"
 #include "utils/stringoperations.h"
 #include "utils/fileoperations.h"
+#include "utils/readerfactory.h"
 
 #include "audio/audioplaybackfactory.h"
-#include "upnp/upnpwebserver.h"
 #include "upnp/upnputils.h"
+#include "upnp/upnp.uv.h"
+#include "upnp/upnp.http.reader.h"
 
 #include "typeconversions.h"
 #include "audioconfig.h"
+#include "devicedescriptions.h"
 
 #ifdef HAVE_LIBCEC
     #include "ceccontrol.h"
@@ -108,18 +111,20 @@ void TurnOffCecDevice(const std::string& dev)
 }
 #endif
 
-
 }
 
-MediaRendererDevice::MediaRendererDevice(const std::string& udn, const std::string& descriptionXml, std::chrono::seconds advertiseInterval,
-                                         const std::string& audioOutput, const std::string& audioDevice, const std::string& cecDevice)
-: m_playback(PlaybackFactory::create("Custom", "Doozy", audioOutput, audioDevice, m_queue))
-, m_rootDevice(advertiseInterval)
+MediaRendererDevice::MediaRendererDevice(RendererSettings& settings)
+: m_settings(settings)
+, m_playback(PlaybackFactory::create("Custom", "Doozy", m_settings.getAudioOutput(), m_settings.getAudioDevice(), m_queue))
+, m_rootDevice(180s)
 , m_connectionManager(m_rootDevice, *this)
 , m_renderingControl(m_rootDevice, *this)
 , m_avTransport(m_rootDevice, *this)
-, m_cecDevice(cecDevice)
+, m_cecDevice(m_settings.getCecDevice())
 {
+    // make sure we can read http urls
+    ReaderFactory::registerBuilder(std::make_unique<upnp::http::ReaderBuilder>());
+
     m_playback->PlaybackStateChanged.connect([this] (PlaybackState state) {
         setTransportVariable(0, AVTransport::Variable::TransportState, AVTransport::Service::toString(PlaybackStateToTransportState(state)));
         CheckCecState(state);
@@ -154,13 +159,39 @@ MediaRendererDevice::~MediaRendererDevice() = default;
 
 void MediaRendererDevice::start()
 {
-    m_thread.start();
+    try
+    {
+        m_thread.start();
 
-    m_rootDevice.ControlActionRequested = std::bind(&MediaRendererDevice::onControlActionRequest, this, _1);
-    m_rootDevice.EventSubscriptionRequested = std::bind(&MediaRendererDevice::onEventSubscriptionRequest, this, _1);
+        m_rootDevice.ControlActionRequested = std::bind(&MediaRendererDevice::onControlActionRequest, this, _1);
+        m_rootDevice.EventSubscriptionRequested = std::bind(&MediaRendererDevice::onEventSubscriptionRequest, this, _1);
 
-    m_rootDevice.initialize();
-    setInitialValues();
+        m_rootDevice.initialize();
+        auto webroot = m_rootDevice.getWebrootUrl();
+
+        auto udn                = "uuid:" + m_settings.getUdn();
+        auto friendlyName       = m_settings.getFriendlyName();
+        auto description        = fmt::format(s_mediaRendererDevice, friendlyName, udn, webroot);
+
+        log::info("FriendlyName = {}", friendlyName);
+        log::info("AudioOutput = {}", m_settings.getAudioOutput());
+        log::info("AudioDevice = {}", m_settings.getAudioDevice());
+
+        m_rootDevice.addFileToHttpServer("/RenderingControlDesc.xml", "text/xml", s_rendererControlService);
+        m_rootDevice.addFileToHttpServer("/ConnectionManagerDesc.xml", "text/xml", s_connectionManagerService);
+        m_rootDevice.addFileToHttpServer("/AVTransportDesc.xml", "text/xml", s_avTransportService);
+
+        setInitialValues();
+
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_condition.wait(lock, [this] () { return m_stop == true; });
+
+        m_rootDevice.uninitialize();
+    }
+    catch(std::exception& e)
+    {
+        log::error(e.what());
+    }
 }
 
 void MediaRendererDevice::stop()
@@ -171,6 +202,10 @@ void MediaRendererDevice::stop()
     m_rootDevice.EventSubscriptionRequested = nullptr;
 
     m_rootDevice.uninitialize();
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_stop = true;
+    m_condition.notify_all();
 }
 
 void MediaRendererDevice::setInitialValues()
@@ -234,8 +269,8 @@ void MediaRendererDevice::setInitialValues()
 
 void MediaRendererDevice::setTransportVariable(uint32_t instanceId, AVTransport::Variable var, const std::string& value)
 {
-    // Set the variable on the workerthread to avoid blocking the playback thread
-    m_thread.addJob([=] () {
+    // TODO: avoid copies
+    upnp::uv::asyncSend(m_rootDevice.loop(), [=] () {
         m_avTransport.setInstanceVariable(instanceId, var, value);
     });
 }
