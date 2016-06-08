@@ -1,45 +1,151 @@
+sudo: false
+dist: trusty
 language: cpp
 
-os:
-  - linux
-
-compiler:
-  - gcc
+matrix:
+  include:
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+            - libcurl4-gnutls-dev
+            - uuid-dev
+      env:
+        - COMPILER=5 BUILD_TYPE=Debug
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+            - libcurl4-gnutls-dev
+            - uuid-dev
+      env:
+        - COMPILER=5 BUILD_TYPE=Release
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - libcurl4-gnutls-dev
+            - uuid-dev
+      env:
+        - COMPILER=6 BUILD_TYPE=Debug
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - libcurl4-gnutls-dev
+            - uuid-dev
+      env:
+        - COMPILER=6 BUILD_TYPE=Release
+    - compiler: clang
+      os: osx
+      env:
+        - BUILD_TYPE=Debug
+      osx_image: xcode7.3
+    - compiler: clang
+      os: osx
+      env:
+        - BUILD_TYPE=Release
+      osx_image: xcode7.3
 
 env:
-  matrix:
-    - BUILD_TYPE=Debug
   global:
     secure: "M8/nLpE7xETAaDTf136Tfr9ubXNROfuPp9AfxkR12pNu/ErV48mSzC7wP5b9m5oO+ZvRsqFbb9BQR3aRfvLBlqe/gySh8cFN+Xl836iIT6DCZ0wpAK8JhlJYAThRzpJAB9RPwEqSyWIlB9HT35ywkeWrhH3IIGQiG2i2EyycPGU="
 
 before_install:
-  - echo "deb http://llvm.org/apt/precise/ llvm-toolchain-precise main" | sudo tee -a /etc/apt/sources.list
-  - echo "deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main" | sudo tee -a /etc/apt/sources.list
-  - echo "deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu precise main" | sudo tee -a /etc/apt/sources.list
-  - sudo apt-get update -qq
+  ############################################################################
+  # All the dependencies are installed in ${TRAVIS_BUILD_DIR}/deps/
+  ############################################################################
+  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+  - mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
+  - export CXXFLAGS="-isystem ${DEPS_DIR}/local/include"
+  - export PKG_CONFIG_PATH=${DEPS_DIR}/local/lib/pkgconfig
+  - export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${DEPS_DIR}/local/lib"
+  - export LDFLAGS="-L${DEPS_DIR}/local/lib"
+
+  ############################################################################
+  # Install a recent CMake
+  ############################################################################
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      CMAKE_URL="http://www.cmake.org/files/v3.5/cmake-3.5.2-Linux-x86_64.tar.gz"
+      mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
+      export PATH=${DEPS_DIR}/cmake/bin:${PATH}
+    fi
+
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      brew install cmake libuv libupnp jpeg libpng ffmpeg
+    fi
+
+  ############################################################################
+  # Install libc++ and libc++abi (on Linux only; Xcode uses libc++ by default)
+  ############################################################################
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" && "${CXX}" == "clang++" ]]; then
+      if   [[ "${COMPILER}" == "3.5" ]]; then LLVM_VERSION="3.5.2"
+      elif [[ "${COMPILER}" == "3.6" ]]; then LLVM_VERSION="3.6.2";
+      elif [[ "${COMPILER}" == "3.7" ]]; then LLVM_VERSION="3.7.1";
+      elif [[ "${COMPILER}" == "3.8" ]]; then LLVM_VERSION="3.8.0";
+      else                                            LLVM_VERSION="trunk"; fi
+      if [[ "${LLVM_VERSION}" != "trunk" ]]; then
+        LLVM_URL="http://llvm.org/releases/${LLVM_VERSION}/llvm-${LLVM_VERSION}.src.tar.xz"
+        LIBCXX_URL="http://llvm.org/releases/${LLVM_VERSION}/libcxx-${LLVM_VERSION}.src.tar.xz"
+        LIBCXXABI_URL="http://llvm.org/releases/${LLVM_VERSION}/libcxxabi-${LLVM_VERSION}.src.tar.xz"
+        TAR_FLAGS="-xJ"
+      else
+        LLVM_URL="https://github.com/llvm-mirror/llvm/archive/master.tar.gz"
+        LIBCXX_URL="https://github.com/llvm-mirror/libcxx/archive/master.tar.gz"
+        LIBCXXABI_URL="https://github.com/llvm-mirror/libcxxabi/archive/master.tar.gz"
+        TAR_FLAGS="-xz"
+      fi
+      mkdir -p llvm llvm/build llvm/projects/libcxx llvm/projects/libcxxabi
+      travis_retry wget --quiet -O - ${LLVM_URL} | tar --strip-components=1 ${TAR_FLAGS} -C llvm
+      travis_retry wget --quiet -O - ${LIBCXX_URL} | tar --strip-components=1 ${TAR_FLAGS} -C llvm/projects/libcxx
+      travis_retry wget --quiet -O - ${LIBCXXABI_URL} | tar --strip-components=1 ${TAR_FLAGS} -C llvm/projects/libcxxabi
+      (cd llvm/build && cmake .. -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/local -DCMAKE_CXX_COMPILER=clang++)
+      (cd llvm/build/projects/libcxx && make install -j2)
+      (cd llvm/build/projects/libcxxabi && make install -j2)
+      export LDFLAGS="${LDFLAGS} -lc++ -lc++abi"
+      export CXXFLAGS="${CXXFLAGS} -isystem ${DEPS_DIR}/local/include/c++/v1 -stdlib=libc++"
+      export CXX="clang++-${COMPILER}" CC="clang-${COMPILER}"
+    fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-${COMPILER}" CC="gcc-${COMPILER}"; fi
 
 install:
-  - sudo apt-get -qq install build-essential
-  - if [ "$CXX" = "g++" ]; then sudo apt-get -qq --allow-unauthenticated install gcc-4.9 g++-4.9; export CXX="g++-4.9" CC="gcc-4.9"; fi
-  - if [ "$CXX" = "clang++" ]; then sudo apt-get -qq --allow-unauthenticated install clang-3.6; export CXX="clang++-3.6" CC="clang-3.6"; fi
-  - sudo rm -f /usr/lib/x86_64-linux-gnu/libpng*
-  - wget ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.21.tar.gz
-  - tar xf libpng-1.6.21.tar.gz
-  - cd libpng-1.6.21 && ./configure --prefix=/usr --disable-dependency-tracking && make && sudo make install
-  - cd ..
-  - wget http://taglib.github.io/releases/taglib-1.9.1.tar.gz
-  - tar xf taglib-1.9.1.tar.gz
-  - cd taglib-1.9.1
-  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX:PATH=/usr .
-  - make -j4 && sudo make install
-  - cd ..
-  - wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%201.6.19/libupnp-1.6.19.tar.bz2
-  - tar xf libupnp-1.6.19.tar.bz2
-  - cd libupnp-1.6.19 && ./configure --disable-dependency-tracking --prefix=/usr --disable-shared --disable-samples --disable-blocking-tcp-connections && make -j4 && sudo make install
-  - cd ..
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      wget http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP%201.6.19/libupnp-1.6.19.tar.bz2
+      tar xf libupnp-1.6.19.tar.bz2
+      cd libupnp-1.6.19 && ./configure --disable-dependency-tracking --prefix=${DEPS_DIR}/local --disable-shared --disable-samples --disable-blocking-tcp-connections && make -j4 && make install
+      cd ..
+      wget https://github.com/libuv/libuv/archive/v1.9.1.tar.gz
+      tar xf v1.9.1.tar.gz
+      cd libuv-1.9.1 && ./autogen.sh && ./configure --disable-dependency-tracking --prefix=${DEPS_DIR}/local --disable-shared && make -j4 && make install
+      cd ..
+      wget http://taglib.github.io/releases/taglib-1.11.tar.gz
+      tar xf taglib-1.11.tar.gz
+      cd taglib-1.11
+      cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_DIR}/local .
+      make -j4 install
+    fi
+  - cd ${TRAVIS_BUILD_DIR}
 
 script:
-  - echo "No work needed"
+  - git submodule update --init --recursive
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE .
+  - make -j4
 
 addons:
   coverity_scan:
