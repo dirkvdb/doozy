@@ -149,7 +149,7 @@ install:
 
 script:
   - git submodule update --init --recursive
-  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE .
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DENABLE_TESTS=OFF .
   - make -j4
 
 addons:
