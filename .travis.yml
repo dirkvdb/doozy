@@ -2,34 +2,62 @@ sudo: false
 dist: trusty
 language: cpp
 
-env:
-  global:
-    secure: "M8/nLpE7xETAaDTf136Tfr9ubXNROfuPp9AfxkR12pNu/ErV48mSzC7wP5b9m5oO+ZvRsqFbb9BQR3aRfvLBlqe/gySh8cFN+Xl836iIT6DCZ0wpAK8JhlJYAThRzpJAB9RPwEqSyWIlB9HT35ywkeWrhH3IIGQiG2i2EyycPGU="
-
-addons:
-  apt:
-    sources: &sources
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-5
-      - libcurl4-gnutls-dev
-      - uuid-dev
-      - libpng-dev
-      - libtag1-dev
-      - libuv1-dev
-
 matrix:
   include:
     - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+            - libcurl4-gnutls-dev
+            - uuid-dev
+            - libpng-dev
+            - libtag1-dev
+            - libuv1-dev
       env:
         - COMPILER=5 BUILD_TYPE=Debug
     - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+            - libcurl4-gnutls-dev
+            - uuid-dev
+            - libpng-dev
+            - libtag1-dev
+            - libuv1-dev
       env:
         - COMPILER=5 BUILD_TYPE=Release
     - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - libcurl4-gnutls-dev
+            - uuid-dev
+            - libpng-dev
+            - libtag1-dev
+            - libuv1-dev
       env:
         - COMPILER=6 BUILD_TYPE=Debug
     - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - libcurl4-gnutls-dev
+            - uuid-dev
+            - libpng-dev
+            - libtag1-dev
+
       env:
         - COMPILER=6 BUILD_TYPE=Release
     - compiler: clang
@@ -42,6 +70,10 @@ matrix:
       env:
         - BUILD_TYPE=Release
       osx_image: xcode7.3
+
+env:
+  global:
+    secure: "M8/nLpE7xETAaDTf136Tfr9ubXNROfuPp9AfxkR12pNu/ErV48mSzC7wP5b9m5oO+ZvRsqFbb9BQR3aRfvLBlqe/gySh8cFN+Xl836iIT6DCZ0wpAK8JhlJYAThRzpJAB9RPwEqSyWIlB9HT35ywkeWrhH3IIGQiG2i2EyycPGU="
 
 before_install:
   ############################################################################
