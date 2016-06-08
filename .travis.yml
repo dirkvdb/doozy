@@ -2,9 +2,13 @@ sudo: false
 dist: trusty
 language: cpp
 
+env:
+  global:
+    secure: "M8/nLpE7xETAaDTf136Tfr9ubXNROfuPp9AfxkR12pNu/ErV48mSzC7wP5b9m5oO+ZvRsqFbb9BQR3aRfvLBlqe/gySh8cFN+Xl836iIT6DCZ0wpAK8JhlJYAThRzpJAB9RPwEqSyWIlB9HT35ywkeWrhH3IIGQiG2i2EyycPGU="
+
 addons:
   apt:
-    sources:
+    sources: &sources
       - ubuntu-toolchain-r-test
     packages:
       - g++-5
@@ -38,10 +42,6 @@ matrix:
       env:
         - BUILD_TYPE=Release
       osx_image: xcode7.3
-
-env:
-  global:
-    secure: "M8/nLpE7xETAaDTf136Tfr9ubXNROfuPp9AfxkR12pNu/ErV48mSzC7wP5b9m5oO+ZvRsqFbb9BQR3aRfvLBlqe/gySh8cFN+Xl836iIT6DCZ0wpAK8JhlJYAThRzpJAB9RPwEqSyWIlB9HT35ywkeWrhH3IIGQiG2i2EyycPGU="
 
 before_install:
   ############################################################################
