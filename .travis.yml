@@ -13,6 +13,7 @@ matrix:
             - g++-5
             - libcurl4-gnutls-dev
             - uuid-dev
+            - libpng-dev
       env:
         - COMPILER=5 BUILD_TYPE=Debug
     - compiler: gcc
@@ -24,6 +25,7 @@ matrix:
             - g++-5
             - libcurl4-gnutls-dev
             - uuid-dev
+            - libpng-dev
       env:
         - COMPILER=5 BUILD_TYPE=Release
     - compiler: gcc
@@ -35,6 +37,7 @@ matrix:
             - g++-6
             - libcurl4-gnutls-dev
             - uuid-dev
+            - libpng-dev
       env:
         - COMPILER=6 BUILD_TYPE=Debug
     - compiler: gcc
@@ -46,6 +49,7 @@ matrix:
             - g++-6
             - libcurl4-gnutls-dev
             - uuid-dev
+            - libpng-dev
       env:
         - COMPILER=6 BUILD_TYPE=Release
     - compiler: clang
