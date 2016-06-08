@@ -86,7 +86,7 @@ before_install:
 
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      brew install cmake libuv libupnp jpeg libpng ffmpeg
+      brew install cmake libuv libupnp jpeg libpng ffmpeg taglib
     fi
 
   ############################################################################
