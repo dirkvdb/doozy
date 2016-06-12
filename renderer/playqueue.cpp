@@ -21,7 +21,7 @@
 #include "utils/stringoperations.h"
 
 #include "upnp/upnp.xml.parseutils.h"
-#include "upnp/upnphttpclient.h"
+#include "upnp/upnp.http.reader.h"
 
 #include "audioconfig.h"
 #include "audio/audiom3uparser.h"
@@ -220,9 +220,12 @@ static std::vector<std::string> getTracksFromUri(const std::string& transportUri
     const std::string extension = fileops::getFileExtension(transportUri);
     if (stringops::lowercase(extension) == "m3u")
     {
-        upnp::HttpClient client(5);
-        auto m3ufile = client.getText(transportUri);
-        auto uris = audio::M3uParser::parseFileContents(m3ufile);
+        upnp::http::Reader client;
+        client.open(transportUri);
+        
+        auto m3ufile = client.readAllData();
+        std::string m3uString(m3ufile.begin(), m3ufile.end());
+        auto uris = audio::M3uParser::parseFileContents(m3uString);
 
         for (auto& uri : uris)
         {
