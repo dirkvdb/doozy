@@ -270,7 +270,7 @@ void MediaRendererDevice::setInitialValues()
 void MediaRendererDevice::setTransportVariable(uint32_t instanceId, AVTransport::Variable var, const std::string& value)
 {
     // TODO: avoid copies
-    upnp::uv::asyncSend(m_rootDevice.loop(), [=] () {
+    m_rootDevice.ioService().post([=] () {
         m_avTransport.setInstanceVariable(instanceId, var, value);
     });
 }
