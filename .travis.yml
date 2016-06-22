@@ -11,7 +11,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
-            - libcurl4-gnutls-dev
             - uuid-dev
             - libpng-dev
       env:
@@ -23,7 +22,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
-            - libcurl4-gnutls-dev
             - uuid-dev
             - libpng-dev
       env:
@@ -35,7 +33,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-6
-            - libcurl4-gnutls-dev
             - uuid-dev
             - libpng-dev
       env:
@@ -47,7 +44,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-6
-            - libcurl4-gnutls-dev
             - uuid-dev
             - libpng-dev
       env:
@@ -56,7 +52,6 @@ matrix:
       addons:
         apt:
           packages:
-            - libcurl4-gnutls-dev
             - uuid-dev
             - libpng-dev
       env:
@@ -65,7 +60,6 @@ matrix:
       addons:
         apt:
           packages:
-            - libcurl4-gnutls-dev
             - uuid-dev
             - libpng-dev
       env:
@@ -74,7 +68,6 @@ matrix:
       addons:
         apt:
           packages:
-            - libcurl4-gnutls-dev
             - uuid-dev
             - libpng-dev
       env:
@@ -83,7 +76,6 @@ matrix:
       addons:
         apt:
           packages:
-            - libcurl4-gnutls-dev
             - uuid-dev
             - libpng-dev
       env:
@@ -127,7 +119,7 @@ before_install:
 
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      brew install cmake libuv libupnp libtag
+      brew install cmake libupnp libtag asio
     fi
 
   ############################################################################
@@ -148,10 +140,6 @@ before_install:
 install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      wget https://github.com/libuv/libuv/archive/v1.9.1.tar.gz
-      tar xf v1.9.1.tar.gz
-      cd libuv-1.9.1 && ./autogen.sh && ./configure --disable-dependency-tracking --prefix=${DEPS_DIR}/local --disable-shared && make -j4 && make install
-      cd ..
       wget http://taglib.github.io/releases/taglib-1.11.tar.gz
       tar xf taglib-1.11.tar.gz
       cd taglib-1.11
