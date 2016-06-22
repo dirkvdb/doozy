@@ -23,7 +23,6 @@
 
 #include "audio/audioplaybackfactory.h"
 #include "upnp/upnputils.h"
-#include "upnp/upnp.uv.h"
 #include "upnp/upnp.http.reader.h"
 
 #include "typeconversions.h"
