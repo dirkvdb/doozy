@@ -141,8 +141,9 @@ install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       wget http://downloads.sourceforge.net/project/asio/asio/1.10.6%20%28Stable%29/asio-1.10.6.tar.bz2
+      wget https://raw.githubusercontent.com/dirkvdb/doozy/develop/dependencies/asio/gcc.patch
       tar xf asio-1.10.6.tar.bz2
-      cd asio-1.10.6 && ./configure --disable-dependency-tracking --without-boost --without-openssl --prefix=${DEPS_DIR}/local --disable-shared && make -j4 && make install
+      cd asio-1.10.6 && patch -p1 < ../gcc.patch && autoreconf --force --install && ./configure --disable-dependency-tracking --without-boost --without-openssl --prefix=${DEPS_DIR}/local --disable-shared && make -j4 && make install
       cd ..
       wget http://taglib.github.io/releases/taglib-1.11.tar.gz
       tar xf taglib-1.11.tar.gz
