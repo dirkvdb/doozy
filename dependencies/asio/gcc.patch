@@ -1,18 +1,14 @@
---- asio/src/examples/cpp11/Makefile.am	2015-03-23 22:08:33.000000000 +0100
-+++ asio/src/examples/cpp11/Makefile.am.mod	2016-06-23 21:16:09.000000000 +0200
-@@ -20,7 +20,6 @@
- 	echo/blocking_tcp_echo_server \
- 	echo/blocking_udp_echo_client \
- 	echo/blocking_udp_echo_server \
--	futures/daytime_client \
- 	http/server/http_server
- 
- if HAVE_BOOST_COROUTINE
-@@ -43,7 +42,6 @@
- echo_blocking_tcp_echo_server_SOURCES = echo/blocking_tcp_echo_server.cpp
- echo_blocking_udp_echo_client_SOURCES = echo/blocking_udp_echo_client.cpp
- echo_blocking_udp_echo_server_SOURCES = echo/blocking_udp_echo_server.cpp
--futures_daytime_client_SOURCES = futures/daytime_client.cpp
- http_server_http_server_SOURCES = \
- 	http/server/connection.cpp \
- 	http/server/connection_manager.cpp \
+--- asio-1.10.6/src/Makefile.am	2015-03-23 21:28:30.000000000 +0100
++++ asio-1.10.6/src/Makefile.am.mod	2016-06-24 11:55:11.649058500 +0200
+@@ -1,11 +1,3 @@
+-if STANDALONE
+-SUBDIRS = examples/cpp11 tests
+-else
+-SUBDIRS = examples/cpp03 tests
+-endif
+-
+-DIST_SUBDIRS = examples/cpp03 examples/cpp11 tests
+-
+ EXTRA_DIST = \
+ 	Makefile.mgw \
+ 	Makefile.msc \
