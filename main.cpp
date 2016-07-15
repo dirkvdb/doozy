@@ -65,12 +65,10 @@ void printUsage()
 
 int main(int argc, char **argv)
 {
-#if !defined(WIN32) && !defined(__MINGW32__)
     if (!set_signal_handlers())
     {
         return -1;
     }
-#endif
 
 #ifndef ANDROID
     if (!setlocale(LC_CTYPE, ""))
@@ -127,6 +125,8 @@ int main(int argc, char **argv)
     }
 }
 
+#if !defined(WIN32) && !defined(__MINGW32__)
+
 static void sigterm(int signo)
 {
     try
@@ -140,15 +140,16 @@ static void sigterm(int signo)
     }
 }
 
-#if !defined(WIN32) && !defined(__MINGW32__)
 static void segFaultHandler(int /*signo*/, siginfo_t* /*pInfo*/, void* /*pContext*/)
 {
     utils::printBackTrace();
     exit(EXIT_FAILURE);
 }
+#endif
 
 static bool set_signal_handlers()
 {
+#if !defined(WIN32) && !defined(__MINGW32__)
     struct sigaction sa;
 
     sa.sa_flags = 0;
@@ -197,7 +198,7 @@ static bool set_signal_handlers()
         return false;
     }
 
+#endif
+
     return true;
 }
-
-#endif
