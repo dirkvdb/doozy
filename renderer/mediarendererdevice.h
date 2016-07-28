@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "utils/timer.h"
 #include "utils/workerthread.h"
 
@@ -33,6 +31,8 @@
 #include "audio/audioplaybackinterface.h"
 #include "playqueue.h"
 #include "doozyconfig.h"
+
+#include <asio.hpp>
 
 namespace upnp
 {
@@ -92,9 +92,8 @@ private:
     void StartCecTimer();
     void AbortCecTimer();
 
+    asio::io_service                            m_io;
     RendererSettings                            m_settings;
-    std::condition_variable                     m_condition;
-    std::mutex                                  m_mutex;
     bool                                        m_stop;
 
     PlayQueue                                   m_queue;

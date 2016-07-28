@@ -115,7 +115,7 @@ void TurnOffCecDevice(const std::string& dev)
 MediaRendererDevice::MediaRendererDevice(RendererSettings& settings)
 : m_settings(settings)
 , m_playback(PlaybackFactory::create("Custom", "Doozy", m_settings.getAudioOutput(), m_settings.getAudioDevice(), m_queue))
-, m_rootDevice(180s)
+, m_rootDevice(180s, m_io)
 , m_connectionManager(m_rootDevice, *this)
 , m_renderingControl(m_rootDevice, *this)
 , m_avTransport(m_rootDevice, *this)
@@ -165,6 +165,7 @@ void MediaRendererDevice::start()
         m_rootDevice.ControlActionRequested = std::bind(&MediaRendererDevice::onControlActionRequest, this, _1);
         m_rootDevice.EventSubscriptionRequested = std::bind(&MediaRendererDevice::onEventSubscriptionRequest, this, _1);
 
+        log::info("m_rootDevice.initialize");
         m_rootDevice.initialize();
         auto webroot = m_rootDevice.getWebrootUrl();
 
@@ -182,10 +183,7 @@ void MediaRendererDevice::start()
 
         setInitialValues();
 
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_condition.wait(lock, [this] () { return m_stop == true; });
-
-        m_rootDevice.uninitialize();
+        m_io.run();
     }
     catch(std::exception& e)
     {
@@ -201,10 +199,6 @@ void MediaRendererDevice::stop()
     m_rootDevice.EventSubscriptionRequested = nullptr;
 
     m_rootDevice.uninitialize();
-
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_stop = true;
-    m_condition.notify_all();
 }
 
 void MediaRendererDevice::setInitialValues()
@@ -233,19 +227,8 @@ void MediaRendererDevice::setInitialValues()
     m_supportedProtocols.push_back(ProtocolInfo("http-get:*:audio/x-wav:*"));
 #endif
 
-    std::stringstream ss;
-    for (auto& protocol : m_supportedProtocols)
-    {
-        if (ss.tellp() > 0)
-        {
-            ss << ',';
-        }
-
-        ss << protocol.toString();
-    }
-
     m_connectionManager.setVariable(ConnectionManager::Variable::SourceProtocolInfo, "");
-    m_connectionManager.setVariable(ConnectionManager::Variable::SinkProtocolInfo, ss.str());
+    m_connectionManager.setVariable(ConnectionManager::Variable::SinkProtocolInfo, stringops::join(m_supportedProtocols, ","));
     m_connectionManager.setVariable(ConnectionManager::Variable::CurrentConnectionIds, "0");
     m_connectionManager.setVariable(ConnectionManager::Variable::ArgumentTypeConnectionStatus, "OK");
 
@@ -269,7 +252,7 @@ void MediaRendererDevice::setInitialValues()
 void MediaRendererDevice::setTransportVariable(uint32_t instanceId, AVTransport::Variable var, const std::string& value)
 {
     // TODO: avoid copies
-    m_rootDevice.ioService().post([=] () {
+    m_io.post([=] () {
         m_avTransport.setInstanceVariable(instanceId, var, value);
     });
 }

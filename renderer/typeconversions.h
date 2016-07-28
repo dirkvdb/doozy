@@ -21,9 +21,6 @@
 
 #include "audio/audioplaybackinterface.h"
 
-namespace doozy
-{
-
 inline std::ostream& operator<< (std::ostream& os, const audio::PlaybackState& state)
 {
     switch (state)
@@ -49,6 +46,9 @@ inline std::ostream& operator<< (std::ostream& os, const audio::PlaybackAction& 
 
     return os;
 }
+
+namespace doozy
+{
 
 template <typename T>
 inline std::string toString(const T& t)

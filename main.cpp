@@ -102,6 +102,8 @@ int main(int argc, char **argv)
         }
     }
 
+    stringops::trim(deviceType);
+
     if (deviceType.empty())
     {
         std::cerr << "No device type provided" << std::endl;
