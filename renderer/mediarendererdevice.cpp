@@ -14,6 +14,9 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+#include "typeconversions.h"
+#include "upnp/upnp.protocolinfo.h"
+
 #include "mediarendererdevice.h"
 
 #include "utils/log.h"
@@ -25,7 +28,6 @@
 #include "upnp/upnputils.h"
 #include "upnp/upnp.http.reader.h"
 
-#include "typeconversions.h"
 #include "audioconfig.h"
 #include "devicedescriptions.h"
 
