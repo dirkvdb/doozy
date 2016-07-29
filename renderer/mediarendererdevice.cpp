@@ -171,17 +171,29 @@ void MediaRendererDevice::start()
         m_rootDevice.initialize();
         auto webroot = m_rootDevice.getWebrootUrl();
 
-        auto udn                = "uuid:" + m_settings.getUdn();
-        auto friendlyName       = m_settings.getFriendlyName();
-        auto description        = fmt::format(s_mediaRendererDevice, friendlyName, udn, webroot);
+        Device deviceInfo;
+        deviceInfo.type         = DeviceType(DeviceType::MediaRenderer, 1);
+        deviceInfo.udn          = "uuid:" + m_settings.getUdn();
+        deviceInfo.friendlyName = m_settings.getFriendlyName();
+        auto description        = fmt::format(s_mediaRendererDevice, deviceInfo.friendlyName, deviceInfo.udn, webroot);
 
-        log::info("FriendlyName = {}", friendlyName);
+        log::info("FriendlyName = {}", deviceInfo.friendlyName);
         log::info("AudioOutput = {}", m_settings.getAudioOutput());
         log::info("AudioDevice = {}", m_settings.getAudioDevice());
 
         m_rootDevice.addFileToHttpServer("/RenderingControlDesc.xml", "text/xml", s_rendererControlService);
         m_rootDevice.addFileToHttpServer("/ConnectionManagerDesc.xml", "text/xml", s_connectionManagerService);
         m_rootDevice.addFileToHttpServer("/AVTransportDesc.xml", "text/xml", s_avTransportService);
+
+        Service rc;
+        rc.type = ServiceType(ServiceType::RenderingControl, 1);
+        deviceInfo.services.emplace(rc.type.type, rc);
+
+        Service av;
+        av.type = ServiceType(ServiceType::AVTransport, 1);
+        deviceInfo.services.emplace(av.type.type, av);
+
+        m_rootDevice.registerDevice(s_mediaRendererDevice, deviceInfo);
 
         setInitialValues();
 
