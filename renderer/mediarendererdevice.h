@@ -55,28 +55,28 @@ public:
 
     ~MediaRendererDevice();
 
-    void start();
-    void stop();
+    void start(const std::string& networkInterface) override;
+    void stop() override;
 
     // IConnectionManager
-    virtual void prepareForConnection(const upnp::ProtocolInfo& protocolInfo, upnp::ConnectionManager::ConnectionInfo& info);
-    virtual void connectionComplete(int32_t connectionId);
-    virtual upnp::ConnectionManager::ConnectionInfo getCurrentConnectionInfo(int32_t connectionId);
+    void prepareForConnection(const upnp::ProtocolInfo& protocolInfo, upnp::ConnectionManager::ConnectionInfo& info) override;
+    void connectionComplete(int32_t connectionId) override;
+    upnp::ConnectionManager::ConnectionInfo getCurrentConnectionInfo(int32_t connectionId) override;
 
     // IRenderingControl
-    virtual void selectPreset(uint32_t instanceId, const std::string& name);
-    virtual void setVolume(uint32_t instanceId, upnp::RenderingControl::Channel channel, uint16_t value);
-    virtual void setMute(uint32_t instanceId, upnp::RenderingControl::Channel channel, bool enabled);
+    void selectPreset(uint32_t instanceId, const std::string& name) override;
+    void setVolume(uint32_t instanceId, upnp::RenderingControl::Channel channel, uint16_t value) override;
+    void setMute(uint32_t instanceId, upnp::RenderingControl::Channel channel, bool enabled) override;
 
     //IAVTransport
-    virtual void setAVTransportURI(uint32_t instanceId, const std::string& uri, const std::string& metaData);
-    virtual void setNextAVTransportURI(uint32_t instanceId, const std::string& uri, const std::string& metaData);
-    virtual void stop(uint32_t instanceId);
-    virtual void play(uint32_t instanceId, const std::string& speed);
-    virtual void seek(uint32_t instanceId, upnp::AVTransport::SeekMode mode, const std::string& target);
-    virtual void next(uint32_t instanceId);
-    virtual void previous(uint32_t instanceId);
-    virtual void pause(uint32_t instanceId);
+    void setAVTransportURI(uint32_t instanceId, const std::string& uri, const std::string& metaData) override;
+    void setNextAVTransportURI(uint32_t instanceId, const std::string& uri, const std::string& metaData) override;
+    void stop(uint32_t instanceId) override;
+    void play(uint32_t instanceId, const std::string& speed) override;
+    void seek(uint32_t instanceId, upnp::AVTransport::SeekMode mode, const std::string& target) override;
+    void next(uint32_t instanceId) override;
+    void previous(uint32_t instanceId) override;
+    void pause(uint32_t instanceId) override;
 
 private:
     void setInitialValues();

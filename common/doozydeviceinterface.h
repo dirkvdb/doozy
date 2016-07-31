@@ -14,9 +14,9 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#ifndef DOOZY_DEVICE_INTERFACE_H
-#define DOOZY_DEVICE_INTERFACE_H
+#pragma once
 
+#include <string>
 
 namespace doozy
 {
@@ -26,11 +26,9 @@ class IDevice
 public:
     virtual ~IDevice() = default;
 
-    virtual void start() = 0;
+    virtual void start(const std::string& networkInterface) = 0;
     virtual void stop() = 0;
 };
 
 }
-
-#endif
 

@@ -158,7 +158,7 @@ MediaRendererDevice::MediaRendererDevice(RendererSettings& settings)
 
 MediaRendererDevice::~MediaRendererDevice() = default;
 
-void MediaRendererDevice::start()
+void MediaRendererDevice::start(const std::string& networkInterface)
 {
     try
     {
@@ -168,13 +168,23 @@ void MediaRendererDevice::start()
         m_rootDevice.EventSubscriptionRequested = std::bind(&MediaRendererDevice::onEventSubscriptionRequest, this, _1);
 
         log::info("m_rootDevice.initialize");
-        m_rootDevice.initialize();
+
+        if (networkInterface.empty())
+        {
+            m_rootDevice.initialize();
+        }
+        else
+        {
+            m_rootDevice.initialize("en0");
+        }
+
         auto webroot = m_rootDevice.getWebrootUrl();
 
         Device deviceInfo;
         deviceInfo.type         = DeviceType(DeviceType::MediaRenderer, 1);
         deviceInfo.udn          = "uuid:" + m_settings.getUdn();
         deviceInfo.friendlyName = m_settings.getFriendlyName();
+        deviceInfo.location     = "/rootdesc.xml";
         auto description        = fmt::format(s_mediaRendererDevice, deviceInfo.friendlyName, deviceInfo.udn, webroot);
 
         log::info("FriendlyName = {}", deviceInfo.friendlyName);
@@ -193,7 +203,7 @@ void MediaRendererDevice::start()
         av.type = ServiceType(ServiceType::AVTransport, 1);
         deviceInfo.services.emplace(av.type.type, av);
 
-        m_rootDevice.registerDevice(s_mediaRendererDevice, deviceInfo);
+        m_rootDevice.registerDevice(description, deviceInfo);
 
         setInitialValues();
 

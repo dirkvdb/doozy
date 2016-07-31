@@ -57,8 +57,14 @@ void printUsage()
     std::cout   << "Usage: " PACKAGE_NAME " [options]" << std::endl << std::endl
                 << "Options:" << std::endl
                 << "  -t<s>   : device type (" << stringops::join(supportedDevices, "|") << ")" << std::endl
+                << "  -i<s>   : network interface (" << "the name of the network interface to use" << ")" << std::endl
                 << "  -f<s>   : config file" << std::endl
                 << "  -h      : display this help" << std::endl;
+}
+
+std::string getOptArg(const char* arg)
+{
+    return arg == nullptr ? "" : stringops::trim(arg);
 }
 
 }
@@ -81,16 +87,20 @@ int main(int argc, char **argv)
     int32_t option;
     std::string configFile;
     std::string deviceType;
+    std::string netInterface;
 
-    while ((option = getopt(argc, argv, "f:t:")) != -1)
+    while ((option = getopt(argc, argv, "f:t:i:")) != -1)
     {
         switch (option)
         {
         case 't':
-            deviceType = optarg != nullptr ? optarg : "";
+            deviceType = getOptArg(optarg);
+            break;
+        case 'i':
+            netInterface = getOptArg(optarg);
             break;
         case 'f':
-            configFile = optarg != nullptr ? optarg : "";
+            configFile = getOptArg(optarg);
             break;
         case 'h':
             printUsage();
@@ -101,8 +111,6 @@ int main(int argc, char **argv)
             return EXIT_FAILURE;
         }
     }
-
-    stringops::trim(deviceType);
 
     if (deviceType.empty())
     {
@@ -115,7 +123,7 @@ int main(int argc, char **argv)
     {
         g_deviceInstance = doozy::DeviceFactory::createDevice(deviceType, configFile);
         log::info("Doozy {}", deviceType);
-        g_deviceInstance->start();
+        g_deviceInstance->start(netInterface);
         log::info("Bye");
 
         return EXIT_SUCCESS;
