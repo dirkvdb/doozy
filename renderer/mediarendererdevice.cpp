@@ -312,7 +312,7 @@ std::string MediaRendererDevice::onControlActionRequest(const upnp::ActionReques
 
     //log::debug(request.action);
 
-    switch (serviceIdUrnStringToService(request.serviceType))
+    switch (serviceTypeUrnStringToService(request.serviceType).type)
     {
     case ServiceType::AVTransport:
         return m_avTransport.onAction(request.actionName, request.action).toString();
