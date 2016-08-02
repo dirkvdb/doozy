@@ -167,8 +167,6 @@ void MediaRendererDevice::start(const std::string& networkInterface)
         m_rootDevice.ControlActionRequested = std::bind(&MediaRendererDevice::onControlActionRequest, this, _1);
         m_rootDevice.EventSubscriptionRequested = std::bind(&MediaRendererDevice::onEventSubscriptionRequest, this, _1);
 
-        log::info("m_rootDevice.initialize");
-
         if (networkInterface.empty())
         {
             m_rootDevice.initialize();
@@ -288,18 +286,20 @@ upnp::SubscriptionResponse MediaRendererDevice::onEventSubscriptionRequest(const
     upnp::SubscriptionResponse response;
     response.timeout = request.timeout;
 
-    switch (serviceIdUrnStringToService(request.sid))
+    if (request.url == "/AVTransport/evt")
     {
-    case ServiceType::AVTransport:
         response.initialEvent = m_avTransport.getSubscriptionResponse();
-        break;
-    case ServiceType::RenderingControl:
+    }
+    else if (request.url == "/RenderingControl/evt")
+    {
         response.initialEvent = m_renderingControl.getSubscriptionResponse();
-        break;
-    case ServiceType::ConnectionManager:
+    }
+    else if (request.url == "/ConnectionManager/evt")
+    {
         response.initialEvent = m_connectionManager.getSubscriptionResponse();
-        break;
-    default:
+    }
+    else
+    {
         log::warn("Invalid event subscription request: {}", request.sid);
     }
 
