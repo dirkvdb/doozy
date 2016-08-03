@@ -321,7 +321,7 @@ std::string MediaRendererDevice::onControlActionRequest(const upnp::ActionReques
     case ServiceType::ConnectionManager:
         return m_connectionManager.onAction(request.actionName, request.action).toString();
     default:
-        throw InvalidSubscriptionIdException();
+        throw InvalidSubscriptionId();
     }
 }
 
@@ -380,7 +380,7 @@ void MediaRendererDevice::setVolume(uint32_t instanceId, RenderingControl::Chann
 
     if (value > 100 || channel != RenderingControl::Channel::Master)
     {
-        throw InvalidArgumentsServiceException();
+        throw InvalidArgumentsService();
     }
 
     m_playback->setVolume(value);
