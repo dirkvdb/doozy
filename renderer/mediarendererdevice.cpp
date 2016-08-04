@@ -380,7 +380,7 @@ void MediaRendererDevice::setVolume(uint32_t instanceId, RenderingControl::Chann
 
     if (value > 100 || channel != RenderingControl::Channel::Master)
     {
-        throw InvalidArgumentsService();
+        throw InvalidArguments();
     }
 
     m_playback->setVolume(value);
