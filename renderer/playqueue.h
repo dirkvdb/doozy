@@ -55,10 +55,8 @@ public:
     void setAlbumArtUri(const std::string& uri);
     void setAlbumArtUri(const std::string& uri, upnp::dlna::ProfileId profile);
 
-    void setAlbumArt(std::vector<uint8_t>&& data);
-    void setAlbumArt(const std::vector<uint8_t>& data);
-    void setAlbumArtThumb(std::vector<uint8_t>&& data);
-    void setAlbumArtThumb(const std::vector<uint8_t>& data);
+    void setAlbumArt(std::vector<uint8_t> data);
+    void setAlbumArtThumb(std::vector<uint8_t> data);
 
 private:
     std::string             m_trackUri;

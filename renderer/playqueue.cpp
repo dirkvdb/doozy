@@ -103,24 +103,14 @@ void PlayQueueItem::setAlbumArtUri(const std::string& uri, upnp::dlna::ProfileId
     m_item.setAlbumArt(profile, uri);
 }
 
-void PlayQueueItem::setAlbumArt(std::vector<uint8_t>&& data)
+void PlayQueueItem::setAlbumArt(std::vector<uint8_t> data)
 {
     m_albumArt = std::move(data);
 }
 
-void PlayQueueItem::setAlbumArt(const std::vector<uint8_t>& data)
-{
-    m_albumArt = data;
-}
-
-void PlayQueueItem::setAlbumArtThumb(std::vector<uint8_t>&& data)
+void PlayQueueItem::setAlbumArtThumb(std::vector<uint8_t> data)
 {
     m_albumArtThumb = std::move(data);
-}
-
-void PlayQueueItem::setAlbumArtThumb(const std::vector<uint8_t>& data)
-{
-    m_albumArtThumb = data;
 }
 
 static void addMetaIfExists(Item& item, Property prop, uint32_t value)
@@ -222,7 +212,7 @@ static std::vector<std::string> getTracksFromUri(const std::string& transportUri
     {
         upnp::http::Reader client;
         client.open(transportUri);
-        
+
         auto m3ufile = client.readAllData();
         std::string m3uString(m3ufile.begin(), m3ufile.end());
         auto uris = audio::M3uParser::parseFileContents(m3uString);
