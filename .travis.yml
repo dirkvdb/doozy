@@ -151,9 +151,9 @@ install:
       cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_DIR}/local .
       make -j4 install
       cd ..
-      wget ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.23.tar.gz
-      tar xf libpng-1.6.23.tar.gz
-      cd libpng-1.6.23 && ./configure --prefix=${DEPS_DIR}/local --disable-dependency-tracking && make install
+      wget ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.26.tar.gz
+      tar xf libpng-1.6.26.tar.gz
+      cd libpng-1.6.26 && ./configure --prefix=${DEPS_DIR}/local --disable-dependency-tracking && make install
       cd ..
     fi
   - cd ${TRAVIS_BUILD_DIR}
