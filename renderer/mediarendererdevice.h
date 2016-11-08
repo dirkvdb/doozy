@@ -19,6 +19,7 @@
 #include "utils/timer.h"
 #include "utils/workerthread.h"
 
+#include "upnp/asio.h"
 #include "upnp/upnp.rootdevice.h"
 #include "upnp/upnp.actionresponse.h"
 #include "upnp/upnp.renderingcontrol.service.h"
@@ -31,8 +32,6 @@
 #include "audio/audioplaybackinterface.h"
 #include "playqueue.h"
 #include "doozyconfig.h"
-
-#include <asio.hpp>
 
 namespace upnp
 {

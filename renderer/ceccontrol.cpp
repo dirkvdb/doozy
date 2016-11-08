@@ -37,7 +37,7 @@ CecControl::CecControl(std::string device)
 {
     snprintf(m_config.strDeviceName, 13, "Doozy");
 
-    m_callbacks.CBCecLogMessage = &cecLog;
+    //m_callbacks.CBCecLogMessage = &cecLog;
     m_config.bActivateSource = 0;
     m_config.callbacks = &m_callbacks;
     m_config.deviceTypes.Add(CEC::CEC_DEVICE_TYPE_RECORDING_DEVICE);

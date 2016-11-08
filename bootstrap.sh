@@ -26,34 +26,34 @@ BUILD_GENERATOR="Unix Makefiles"
 PWD=`pwd`
 
 if [ "$1" = "native" ]; then
-    export ARMARCH=native
+    export ARCH=native
     BUILD_GENERATOR="Unix Makefiles"
 elif [ "$1" = "nativegcc6" ]; then
-    export ARMARCH=gcc
+    export ARCH=gcc
     BUILD_GENERATOR="Unix Makefiles"
 elif [ "$1" = "mingw" ]; then
-    export ARMARCH=mingw
+    export ARCH=mingw
     BUILD_GENERATOR="MSYS Makefiles"
 elif [ "$1" = "archarmv6" ]; then
-    export ARMARCH=armv6
+    export ARCH=armv6
     export PATH="/opt/x-tools6h/arm-unknown-linux-gnueabihf/bin:$PATH"
     export CROSS=arm-unknown-linux-gnueabihf-
     export CFLAGS="-march=armv6j -mfpu=vfp -mfloat-abi=hard -marm -O3"
     export HOST="arm-linux-gnueabi"
 elif [ "$1" = "archarmv7" ]; then
-    export ARMARCH=armv7
+    export ARCH=armv7
     export PATH="/opt/x-tools7h/arm-unknown-linux-gnueabihf/bin:$PATH"
     export CROSS=arm-unknown-linux-gnueabihf-
     export CFLAGS="-march=armv7-a -mfpu=vfpv3 -mfloat-abi=hard -O3"
     export HOST="arm-linux-gnueabi"
 elif [ "$1" = "macv6" ]; then
-    export ARMARCH=armv6
+    export ARCH=armv6
     export PATH="/usr/local/linaro/arm-linux-gnueabihf-raspbian/bin/:$PATH"
     export CROSS=arm-linux-gnueabihf-
     export CFLAGS="-march=armv6j -mfpu=vfp -mfloat-abi=hard -marm -O3"
     export HOST="arm-linux-gnueabi"
 elif [ "$1" = "android" ]; then
-    export ARMARCH=androidv7
+    export ARCH=androidv7
     TOOLCHAIN="/Users/dirk/android-toolchain"
     export SYSROOT="$TOOLCHAIN/sysroot"
     export PATH="$TOOLCHAIN/bin/:$PATH"
@@ -68,8 +68,8 @@ else
 fi
 
 # cross compile dependencies
-checkresult rm -rf ../build/dependencies
-checkresult mkdir -p ../build/dependencies
-cd ../build/dependencies
-checkresult cmake -G "${BUILD_GENERATOR}" -DCMAKE_PREFIX_PATH=${PWD}/local -DCMAKE_TOOLCHAIN_FILE=../../dependencies/toolchain-${ARMARCH}.make -DCMAKE_BUILD_TYPE=Release ../../dependencies
+checkresult rm -rf ./build/dependencies
+checkresult mkdir -p ./build/dependencies
+cd ./build/dependencies
+checkresult cmake -G "${BUILD_GENERATOR}" -DCMAKE_PREFIX_PATH=${PWD}/local -DCMAKE_TOOLCHAIN_FILE=../../dependencies/toolchain-${ARCH}.make -DCMAKE_BUILD_TYPE=Release ../../dependencies
 checkresult cmake --build .

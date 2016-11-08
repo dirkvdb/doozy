@@ -10,10 +10,6 @@ function checkresult {
     return $status
 }
 
-checkresult rm -rf ./build
-cd dependencies
-checkresult ./build.sh native
-cd ..
 checkresult mkdir -p ./build/ninja
 cd ./build/ninja
 checkresult cmake -G Ninja -DLOCAL_DEPS=ON ../..

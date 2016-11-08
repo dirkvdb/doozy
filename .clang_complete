@@ -1,0 +1,6 @@
+-Imodules/utils/inc
+-Imodules/image/inc
+-Imodules/audio/inc
+-Imodules/upnp/inc
+-Imodules/upnp/src
+-I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1
