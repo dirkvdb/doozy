@@ -111,7 +111,7 @@ before_install:
 
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      brew install cmake libupnp libtag
+      brew install libtag boost
       git clone -b headers https://github.com/vinniefalco/Beast.git
       cp -r ./Beast/include/beast /usr/local/include/
     fi
