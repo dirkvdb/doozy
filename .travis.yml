@@ -112,7 +112,7 @@ before_install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       brew install libtag
-      git clone -b b19 https://github.com/vinniefalco/Beast.git
+      git clone https://github.com/vinniefalco/Beast.git
       cp -r ./Beast/include/beast /usr/local/include/
     fi
 
