@@ -9,7 +9,7 @@ ENDIF ()
 
 EXTERNALPROJECT_ADD(${NAME}
     URL https://github.com/kcat/openal-soft/archive/${PACKAGE}.tar.gz TIMEOUT 30
-    INSTALL_DIR ${CMAKE_BINARY_DIR}/local
+    INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
     PATCH_COMMAND patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/disableoss.patch
     CMAKE_ARGS ${EXTRA_OPTS}
         -G ${CMAKE_GENERATOR}

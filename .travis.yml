@@ -143,7 +143,7 @@ install:
         cd boost_1_62_0 && echo "using gcc : ${COMPILER} : g++-${COMPILER} : <cxxflags>\"-std=c++14\" ;" > user-config.jam &&  ./bootstrap.sh && ./b2 address-model=64 toolset=gcc architecture=x86 variant=release link=static threading=multi --with-system --prefix=${DEPS_DIR}/local --user-config=./user-config.jam install 1> /dev/null
       fi
       cd ..
-      git clone -b b19 https://github.com/vinniefalco/Beast.git
+      git clone https://github.com/vinniefalco/Beast.git
       cp -r ./Beast/include/beast ${DEPS_DIR}/local/include/
       wget http://taglib.github.io/releases/taglib-1.11.tar.gz
       tar xf taglib-1.11.tar.gz

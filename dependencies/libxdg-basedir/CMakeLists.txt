@@ -10,7 +10,7 @@ ENDIF ()
 
 EXTERNALPROJECT_ADD(${NAME}
     URL https://github.com/devnev/${NAME}/archive/${PACKAGE}.tar.gz TIMEOUT 30
-    INSTALL_DIR ${CMAKE_BINARY_DIR}/local
+    INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
     PATCH_COMMAND autoreconf --force --install
     CONFIGURE_COMMAND ${CROSS_ARGS} <SOURCE_DIR>/configure ${EXTRA_ARGS} --disable-dependency-tracking --prefix=<INSTALL_DIR> --disable-shared
 )

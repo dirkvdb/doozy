@@ -43,7 +43,7 @@ ENDIF ()
 
 EXTERNALPROJECT_ADD(${NAME}
     URL http://www.ffmpeg.org/releases/${PACKAGE}.tar.bz2 TIMEOUT 240
-    INSTALL_DIR ${CMAKE_BINARY_DIR}/local
+    INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
     CONFIGURE_COMMAND <SOURCE_DIR>/configure ${TARGETSETTING} ${COMPSETTING} ${ARCHSETTING} ${DBGSETTING} --prefix=<INSTALL_DIR> --disable-shared --disable-avdevice --disable-doc --disable-htmlpages --disable-manpages --disable-programs
         --disable-encoders --disable-muxers --disable-decoders --disable-swscale --disable-iconv
         --enable-gpl --enable-network

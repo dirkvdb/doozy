@@ -68,8 +68,7 @@ else
 fi
 
 # cross compile dependencies
-checkresult rm -rf ./build/dependencies
 checkresult mkdir -p ./build/dependencies
 cd ./build/dependencies
-checkresult cmake -G "${BUILD_GENERATOR}" -DCMAKE_PREFIX_PATH=${PWD}/local -DCMAKE_TOOLCHAIN_FILE=../../dependencies/toolchain-${ARCH}.make -DCMAKE_BUILD_TYPE=Release ../../dependencies
+checkresult cmake -G "${BUILD_GENERATOR}" -DCMAKE_PREFIX_PATH=${PWD}/../local -DCMAKE_INSTALL_PREFIX=${PWD}/../local -DCMAKE_TOOLCHAIN_FILE=../../dependencies/toolchain-${ARCH}.make -DCMAKE_BUILD_TYPE=Release ../../dependencies
 checkresult cmake --build .

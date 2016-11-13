@@ -11,18 +11,14 @@ ELSE ()
     SET(VARIANT release)
 ENDIF()
 
-IF (WIN32)
-    SET(USER_CONFIG user-config-msvc.jam)
-    SET(TOOLSET msvc-14.0)
-    SET(BUILD_CMD b2)
-    SET(TARBALL_EXTENSION 7z)
-    SET(CONFIGURE_CMD bootstrap.bat)
-    SET(PLATFORM_OPTIONS --layout=tagged)
-ELSE ()
+IF (MINGW OR UNIX)
     SET(BUILD_CMD ./b2)
     IF (APPLE)
         SET(USER_CONFIG user-config-clang.jam)
         SET(TOOLSET clang)
+    ELSEIF (MINGW AND CMAKE_CROSSCOMPILING)
+        SET(USER_CONFIG user-config-mingw.jam)
+        SET(TOOLSET gcc-mingw)
     ELSE ()
         SET(USER_CONFIG user-config-gcc.jam)
         SET(TOOLSET gcc)
@@ -30,6 +26,14 @@ ELSE ()
 
     SET(CONFIGURE_CMD "./bootstrap.sh")
     SET(TARBALL_EXTENSION tar.bz2)
+    SET(PLATFORM_OPTIONS --layout=system)
+ELSE ()
+    SET(USER_CONFIG user-config-msvc.jam)
+    SET(TOOLSET msvc-14.0)
+    SET(BUILD_CMD b2)
+    SET(TARBALL_EXTENSION 7z)
+    SET(CONFIGURE_CMD bootstrap.bat)
+    SET(PLATFORM_OPTIONS --layout=tagged)
 ENDIF ()
 
 IF(HOST MATCHES ".*-musl")
@@ -41,7 +45,6 @@ EXTERNALPROJECT_ADD(${NAME}
     DEPENDS zlib
     URL http://downloads.sourceforge.net/project/${NAME}/${NAME}/${VERSION}/${NAME}_${VERSION_UNDERSCORE}.${TARBALL_EXTENSION} TIMEOUT 6000
     BUILD_IN_SOURCE 1
-    INSTALL_DIR ${CMAKE_BINARY_DIR}/local
     CONFIGURE_COMMAND ${CONFIGURE_CMD}
     BUILD_COMMAND ${BUILD_CMD}
         --user-config=${CMAKE_CURRENT_SOURCE_DIR}/${USER_CONFIG}
@@ -52,11 +55,14 @@ EXTERNALPROJECT_ADD(${NAME}
         link=static
         threading=multi
         runtime-link=static
+        --with-iostreams
         --with-system
+        --with-filesystem
+        --with-program_options
         -s NO_BZIP2=1
         -s ZLIB_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib
         -s ZLIB_INCLUDE=${CMAKE_INSTALL_PREFIX}/include
         ${PLATFORM_OPTIONS}
-        --prefix=<INSTALL_DIR> install
+        --prefix=${CMAKE_INSTALL_PREFIX} install
     INSTALL_COMMAND ""
 )

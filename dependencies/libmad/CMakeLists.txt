@@ -26,7 +26,7 @@ ENDIF ()
 
 EXTERNALPROJECT_ADD(${NAME}
     URL http://sourceforge.net/projects/mad/files/${NAME}/${VERSION}/${PACKAGE}.tar.gz TIMEOUT 30
-    INSTALL_DIR ${CMAKE_BINARY_DIR}/local
+    INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
     CONFIGURE_COMMAND WANT_AUTOMAKE=latest <SOURCE_DIR>/configure ${CROSS_ARGS} --disable-dependency-tracking --disable-debugging --host=${HOST} ${FPM} --prefix=<INSTALL_DIR> --disable-shared
     PATCH_COMMAND patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/libmad-0.15.1b-remove-force-mem.patch && patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/musl.patch && touch NEWS AUTHORS ChangeLog && WANT_AUTOMAKE=latest autoreconf --force --install
 )

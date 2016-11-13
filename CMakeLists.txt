@@ -45,10 +45,6 @@ IF (SANITIZE_UNDEFINED)
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined -fsanitize=shift -fsanitize=return -fsanitize=null -fsanitize=signed-integer-overflow -fsanitize=integer-divide-by-zero -ftrapv")
 ENDIF ()
 
-IF (LOCAL_DEPS)
-    SET (PKG_CONFIG_USE_CMAKE_PREFIX_PATH ON)
-    SET (CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build/dependencies/local)
-ENDIF ()
 
 IF (STATIC_BINARY)
     ADD_DEFINITIONS("-DAL_LIBTYPE_STATIC")

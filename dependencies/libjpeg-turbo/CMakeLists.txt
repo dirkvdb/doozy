@@ -10,7 +10,7 @@ ENDIF ()
 
 EXTERNALPROJECT_ADD(${NAME}
     URL http://sourceforge.net/projects/${NAME}/files/${VERSION}/${PACKAGE}.tar.gz/download TIMEOUT 30
-    INSTALL_DIR ${CMAKE_BINARY_DIR}/local
+    INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
     PATCH_COMMAND WANT_AUTOMAKE=latest autoreconf --force --install
     CONFIGURE_COMMAND WANT_AUTOMAKE=latest <SOURCE_DIR>/configure ${BUILD} ${CROSS_ARGS} ${NASMOPT} --disable-dependency-tracking --host=${HOST} --prefix=<INSTALL_DIR> --disable-shared
 )

@@ -12,5 +12,6 @@ function checkresult {
 
 checkresult mkdir -p ./build/ninja
 cd ./build/ninja
-checkresult cmake -G Ninja -DLOCAL_DEPS=ON ../..
+PWD=`pwd`
+checkresult cmake -G Ninja -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON -DCMAKE_PREFIX_PATH=${PWD}/../local ../..
 checkresult ninja
