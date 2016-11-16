@@ -23,7 +23,6 @@ fi
 #fi
 
 BUILD_GENERATOR="Unix Makefiles"
-PWD=`pwd`
 
 if [ "$1" = "native" ]; then
     export ARCH=native
@@ -33,7 +32,7 @@ elif [ "$1" = "nativegcc6" ]; then
     BUILD_GENERATOR="Unix Makefiles"
 elif [ "$1" = "mingw" ]; then
     export ARCH=mingw
-    BUILD_GENERATOR="Ninja"
+    BUILD_GENERATOR="Unix Makefiles"
 elif [ "$1" = "archarmv6" ]; then
     export ARCH=armv6
     export PATH="/opt/x-tools6h/arm-unknown-linux-gnueabihf/bin:$PATH"
@@ -70,5 +69,6 @@ fi
 # cross compile dependencies
 checkresult mkdir -p ./build/dependencies
 cd ./build/dependencies
-checkresult cmake -G "${BUILD_GENERATOR}" -DCMAKE_PREFIX_PATH=${PWD}/../local -DCMAKE_INSTALL_PREFIX=${PWD}/../local -DCMAKE_TOOLCHAIN_FILE=../../dependencies/toolchain-${ARCH}.make -DCMAKE_BUILD_TYPE=Release ../../dependencies
+PWD=`pwd`
+checkresult cmake -G "${BUILD_GENERATOR}" -DCMAKE_PREFIX_PATH=${PWD}/../local -DCMAKE_INSTALL_PREFIX=${PWD}/../local -DCMAKE_TOOLCHAIN_FILE=${PWD}/../../dependencies/toolchain-${ARCH}.make -DCMAKE_BUILD_TYPE=Release ../../dependencies
 checkresult cmake --build .

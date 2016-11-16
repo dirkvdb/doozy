@@ -15,7 +15,7 @@ IF (CMAKE_CROSSCOMPILING)
     SET(HOST_ARGS --host=${HOST})
 ENDIF ()
 
-IF (NOT HOST MATCHES "^.*musl.*" AND NOT MINGW)
+IF (NOT HOST MATCHES "^.*musl.*" AND NOT MING)
     # musl toolchain is used for static builds. libcec only builds shared library
     IF (NOT CMAKE_COMPILER_IS_GNUCC AND NOT APPLE)
         # gcc fails to compile libcec
@@ -25,7 +25,7 @@ IF (NOT HOST MATCHES "^.*musl.*" AND NOT MINGW)
     ADD_SUBDIRECTORY(libxdg-basedir)
 ENDIF ()
 
-IF (NOT HOST MATCHES "^.*mingw.*" AND NOT MINGW AND NOT CMAKE_SYSTEM_NAME MATCHES "Darwin")
+IF (UNIX AND NOT APPLE)
     ADD_SUBDIRECTORY(libunwind)
 ENDIF ()
 

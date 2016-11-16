@@ -8,5 +8,13 @@ EXTERNALPROJECT_ADD(${NAME}
     DEPENDS zlib
     URL http://sourceforge.net/projects/${NAME}/files/libpng16/${MAJOR}.${MINOR}.${REVISION}/${PACKAGE}.tar.gz TIMEOUT 30
     INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
-    CONFIGURE_COMMAND WANT_AUTOMAKE=latest <SOURCE_DIR>/configure ${BUILD} ${CROSS_ARGS} --disable-dependency-tracking --host=${HOST} --prefix=<INSTALL_DIR> --disable-shared
+    CMAKE_ARGS -G ${CMAKE_GENERATOR}
+               -DPNG_SHARED=OFF
+               -DPNG_STATIC=ON
+               -DPNG_TESTS=OFF
+               -DCMAKE_BUILD_TYPE=Release
+               -DCMAKE_PREFIX_PATH=<INSTALL_DIR>
+               -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+               -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+               -DZLIB_ROOT=<INSTALL_DIR>
 )

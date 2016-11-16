@@ -25,6 +25,11 @@ INCLUDE(CPack)
 
 SET(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
+message (STATUS "Host: ${CMAKE_HOST_SYSTEM}")
+message (STATUS "Target: ${CMAKE_SYSTEM_NAME}")
+message (STATUS "Cross compiling: ${CMAKE_CROSSCOMPILING}")
+message (STATUS "Pkg-config root: $ENV{PKG_CONFIG_SYSROOT_DIR}")
+
 OPTION(DOOZY_RENDERER "Renderer device support" ON)
 OPTION(DOOZY_SERVER "Server device support" OFF)
 OPTION(DOOZY_CONTROLPOINT "Controlpoint device support" OFF)

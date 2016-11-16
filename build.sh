@@ -10,8 +10,53 @@ function checkresult {
     return $status
 }
 
+if [ "$#" -ne 1 ]; then
+    echo "No toolchain provided. Choices: archarmv6|archarmv7|macv6|android|native|nativegcc6|mingw"
+    exit 1
+fi
+
+if [ "$1" = "native" ]; then
+    export ARCH=native
+elif [ "$1" = "nativegcc6" ]; then
+    export ARCH=gcc
+elif [ "$1" = "mingw" ]; then
+    export ARCH=mingw
+elif [ "$1" = "archarmv6" ]; then
+    export ARCH=armv6
+    export PATH="/opt/x-tools6h/arm-unknown-linux-gnueabihf/bin:$PATH"
+    export CROSS=arm-unknown-linux-gnueabihf-
+    export CFLAGS="-march=armv6j -mfpu=vfp -mfloat-abi=hard -marm -O3"
+    export HOST="arm-linux-gnueabi"
+elif [ "$1" = "archarmv7" ]; then
+    export ARCH=armv7
+    export PATH="/opt/x-tools7h/arm-unknown-linux-gnueabihf/bin:$PATH"
+    export CROSS=arm-unknown-linux-gnueabihf-
+    export CFLAGS="-march=armv7-a -mfpu=vfpv3 -mfloat-abi=hard -O3"
+    export HOST="arm-linux-gnueabi"
+elif [ "$1" = "macv6" ]; then
+    export ARCH=armv6
+    export PATH="/usr/local/linaro/arm-linux-gnueabihf-raspbian/bin/:$PATH"
+    export CROSS=arm-linux-gnueabihf-
+    export CFLAGS="-march=armv6j -mfpu=vfp -mfloat-abi=hard -marm -O3"
+    export HOST="arm-linux-gnueabi"
+elif [ "$1" = "android" ]; then
+    export ARCH=androidv7
+    TOOLCHAIN="/Users/dirk/android-toolchain"
+    export SYSROOT="$TOOLCHAIN/sysroot"
+    export PATH="$TOOLCHAIN/bin/:$PATH"
+    export CROSS=arm-linux-androideabi-
+    export CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=vfp -O3"
+    export CXXFLAGS="-fexceptions -frtti -DANDROID -DBACKWARD_SYSTEM_UNKNOWN"
+    export HOST="arm-linux-androideabi"
+    export LDFLAGS="$LDFLAGS -march=armv7-a -Wl,--fix-cortex-a8"
+else
+    echo "Unknown toolchain provided: $1. Choices: archarmv6|archarmv7|macv6|android|native|nativegcc6|mingw"
+    exit 1
+fi
+
 checkresult mkdir -p ./build/ninja
 cd ./build/ninja
 PWD=`pwd`
-checkresult cmake -G Ninja -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON -DCMAKE_PREFIX_PATH=${PWD}/../local ../..
+export PKG_CONFIG_SYSROOT_DIR=${PWD}/../local
+checkresult cmake -G Ninja -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON -DCMAKE_PREFIX_PATH=${PWD}/../local -DCMAKE_INSTALL_PREFIX=${PWD}/../local -DCMAKE_TOOLCHAIN_FILE=${PWD}/../../dependencies/toolchain-${ARCH}.make -DCMAKE_BUILD_TYPE=Release ../..
 checkresult ninja

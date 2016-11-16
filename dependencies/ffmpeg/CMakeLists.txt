@@ -21,9 +21,9 @@ IF (CMAKE_CROSSCOMPILING)
 
         # make sure gas-preprocessor.pl is in the path
         SET($ENV{PATH} "$ENV{PATH}:${CMAKE_CURRENT_SOURCE_DIR}")
-    ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    ELSEIF (MINGW)
         SET(ARCHSETTING --arch=x86_64)
-        SET(COMPSETTING --enable-cross-compile --cross-prefix=${CROSS})
+        SET(COMPSETTING --enable-cross-compile --cross-prefix=${CROSS_COMPILE})
         SET(TARGETSETTING --target-os=mingw32)
     ELSE ()
         SET(TARGETSETTING --target-os=linux)
