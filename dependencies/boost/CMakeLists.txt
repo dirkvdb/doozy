@@ -55,10 +55,7 @@ EXTERNALPROJECT_ADD(${NAME}
         link=static
         threading=multi
         runtime-link=static
-        --with-iostreams
         --with-system
-        --with-filesystem
-        --with-program_options
         -s NO_BZIP2=1
         -s ZLIB_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib
         -s ZLIB_INCLUDE=${CMAKE_INSTALL_PREFIX}/include
