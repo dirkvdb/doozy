@@ -53,5 +53,7 @@ ADD_LIBRARY(doozyrenderer
 )
 
 TARGET_LINK_LIBRARIES(doozyrenderer
+    audio
+    upnpframework
     ${LIBCEC_LIBRARIES}
 )
