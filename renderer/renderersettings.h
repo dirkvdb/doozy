@@ -27,7 +27,7 @@ namespace doozy
 class RendererSettings
 {
 public:
-    virtual ~RendererSettings() {}
+    virtual ~RendererSettings() = default;
 
     void loadFromFile(const std::string& filepath);
 

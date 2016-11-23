@@ -1,40 +1,21 @@
-PKG_CHECK_MODULES(LIBCEC_PKG libcec)
-IF (LIBCEC_PKG_FOUND)
-    OPTION(HAVE_LIBCEC "CEC support" ON)
+pkg_check_modules(LIBCEC_PKG libcec)
+if (LIBCEC_PKG_FOUND)
+    option(HAVE_LIBCEC "CEC support" ON)
 
-    FIND_PATH(LIBCEC_INCLUDE_DIR
+    find_path(LIBCEC_INCLUDE_DIR
         NAMES cec.h
         PATHS ${LIBCEC_PKG_INCLUDE_DIRS}
     )
 
-    FIND_LIBRARY(LIBCEC_LIBRARY
+    find_library(LIBCEC_LIBRARY
         NAMES ${LIBCEC_PKG_LIBRARIES}
         PATHS ${LIBCEC_PKG_LIBRARY_DIRS}
     )
 
-    SET(LIBCEC_LIBRARIES ${LIBCEC_LIBRARY} -ldl)
-ENDIF ()
+    set(LIBCEC_LIBRARIES ${LIBCEC_LIBRARY} -ldl)
+endif ()
 
-INCLUDE_DIRECTORIES(SYSTEM
-    ${LIBCEC_INCLUDE_DIR}
-)
-
-INCLUDE_DIRECTORIES(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/..
-    ${AUDIO_INCLUDE_DIRS}
-    ${IMAGE_INCLUDE_DIRS}
-    ${UTILS_INCLUDE_DIRS}
-    ${UPNPFRAMEWORK_INCLUDE_DIRS}
-)
-
-INCLUDE_DIRECTORIES(SYSTEM
-    ${UPNPFRAMEWORK_SYS_INCLUDE_DIRS}
-)
-
-SET (RENDERER_INCLUDE_DIRS ${LIBCEC_INCLUDE_DIR})
-
-SET (RENDERER_SRC
+set (RENDERER_SRC
     devicedescriptions.h
     renderersettings.h          renderersettings.cpp
     mediarendererdevice.h       mediarendererdevice.cpp
@@ -42,18 +23,27 @@ SET (RENDERER_SRC
     typeconversions.h
 )
 
-IF (HAVE_LIBCEC)
-    LIST(APPEND RENDERER_SRC
-        ceccontrol.h ceccontrol.cpp
-    )
-ENDIF ()
+if (HAVE_LIBCEC)
+    list(APPEND RENDERER_SRC ceccontrol.h ceccontrol.cpp)
+endif ()
 
-ADD_LIBRARY(doozyrenderer
+add_library(doozyrenderer
     ${RENDERER_SRC}
 )
 
-TARGET_LINK_LIBRARIES(doozyrenderer
+target_include_directories(doozyrenderer PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_include_directories(doozyrenderer SYSTEM PRIVATE
+    ${LIBCEC_INCLUDE_DIR}
+)
+
+target_link_libraries(doozyrenderer
     audio
+    image
     upnpframework
     ${LIBCEC_LIBRARIES}
 )

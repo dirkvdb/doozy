@@ -1,170 +1,145 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
-CMAKE_POLICY(VERSION 3.1)
-ENABLE_TESTING()
+cmake_minimum_required(VERSION 3.1)
+cmake_policy(VERSION 3.1)
+enable_testing()
 
-FIND_PACKAGE(PkgConfig)
+find_package(PkgConfig)
 
-PROJECT(doozy)
-SET(PACKAGE "doozy")
-SET(PACKAGE_NAME "Doozy")
-SET(PACKAGE_VERSION_MAJOR 0)
-SET(PACKAGE_VERSION_MINOR 0)
-SET(PACKAGE_VERSION_PATCH 1)
-SET(PACKAGE_LOCALE_DIR ${CMAKE_INSTALL_PREFIX}/share/locale)
+project(doozy)
+set(PACKAGE "doozy")
+set(PACKAGE_NAME "Doozy")
+set(PACKAGE_VERSION_MAJOR 0)
+set(PACKAGE_VERSION_MINOR 0)
+set(PACKAGE_VERSION_PATCH 1)
+set(PACKAGE_LOCALE_DIR ${CMAKE_INSTALL_PREFIX}/share/locale)
 
-SET(CPACK_PACKAGE_NAME ${PACKAGE})
-SET(CPACK_PACKAGE_VERSION_MAJOR ${PACKAGE_VERSION_MAJOR})
-SET(CPACK_PACKAGE_VERSION_MINOR ${PACKAGE_VERSION_MINOR})
-SET(CPACK_PACKAGE_VERSION_PATCH ${PACKAGE_VERSION_PATCH})
-SET(CPACK_SOURCE_GENERATOR "TBZ2")
-SET(CPACK_PACKAGE_FILE_NAME $CPACK_PACKAGE_NAME)
-SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}-bin")
-SET(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-SET(CPACK_SOURCE_IGNORE_FILES "/build/;/debug/;/release/;/dist/;/gfx/;/include/;/lib/;/web/;/.git/;/server/;/renderer/;/controlpoint/;/tags;~$;${CPACK_SOURCE_IGNORE_FILES}")
-INCLUDE(CPack)
+set(CPACK_PACKAGE_NAME ${PACKAGE})
+set(CPACK_PACKAGE_VERSION_MAJOR ${PACKAGE_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PACKAGE_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PACKAGE_VERSION_PATCH})
+set(CPACK_SOURCE_GENERATOR "TBZ2")
+set(CPACK_PACKAGE_FILE_NAME $CPACK_PACKAGE_NAME)
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}-bin")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+set(CPACK_SOURCE_IGNORE_FILES "/build/;/debug/;/release/;/dist/;/gfx/;/include/;/lib/;/web/;/.git/;/server/;/renderer/;/controlpoint/;/tags;~$;${CPACK_SOURCE_IGNORE_FILES}")
+include(CPack)
 
-SET(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
-message (STATUS "Host: ${CMAKE_HOST_SYSTEM}")
-message (STATUS "Target: ${CMAKE_SYSTEM_NAME}")
-message (STATUS "Cross compiling: ${CMAKE_CROSSCOMPILING}")
-message (STATUS "Pkg-config root: $ENV{PKG_CONFIG_SYSROOT_DIR}")
+message(STATUS "Host: ${CMAKE_HOST_SYSTEM}")
+message(STATUS "Target: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "Cross compiling: ${CMAKE_CROSSCOMPILING}")
+message(STATUS "Pkg-config root: $ENV{PKG_CONFIG_SYSROOT_DIR}")
 
-OPTION(DOOZY_RENDERER "Renderer device support" ON)
-OPTION(DOOZY_SERVER "Server device support" OFF)
-OPTION(DOOZY_CONTROLPOINT "Controlpoint device support" OFF)
-OPTION(STATIC_BINARY "Build static binary" OFF)
-OPTION(SHARED_LIBRARY "Create single shared library containing all dependencies" OFF)
-OPTION(ENABLE_TESTS "build unit tests" ON)
-OPTION(LOCAL_DEPS "force usage of locally build dependencies" OFF)
-OPTION(SANITIZE_ADDRESS "Build with address sanitizer (detect invalid memory access and memory leaks)" OFF)
-OPTION(SANITIZE_UNDEFINED "Build with undefined behavior sanitizer (detect integer overflow, bad shifts, ...)" OFF)
+option(DOOZY_RENDERER "Renderer device support" ON)
+option(DOOZY_SERVER "Server device support" OFF)
+option(DOOZY_CONTROLPOINT "Controlpoint device support" OFF)
+option(STATIC_BINARY "Build static binary" OFF)
+option(SHARED_LIBRARY "Create single shared library containing all dependencies" OFF)
+option(ENABLE_TESTS "build unit tests" ON)
+option(LOCAL_DEPS "force usage of locally build dependencies" OFF)
+option(SANITIZE_ADDRESS "Build with address sanitizer (detect invalid memory access and memory leaks)" OFF)
+option(SANITIZE_UNDEFINED "Build with undefined behavior sanitizer (detect integer overflow, bad shifts, ...)" OFF)
+option(USE_GOLD_LINKER "Use Gnu gold linker instead of GNU ld")
 
-IF (SANITIZE_ADDRESS)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-ENDIF ()
+if (SANITIZE_ADDRESS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+endif ()
 
-IF (SANITIZE_UNDEFINED)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fsanitize=shift -fsanitize=return -fsanitize=null -fsanitize=signed-integer-overflow -fsanitize=integer-divide-by-zero -ftrapv")
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined -fsanitize=shift -fsanitize=return -fsanitize=null -fsanitize=signed-integer-overflow -fsanitize=integer-divide-by-zero -ftrapv")
-ENDIF ()
+if (SANITIZE_UNDEFINED)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fsanitize=shift -fsanitize=return -fsanitize=null -fsanitize=signed-integer-overflow -fsanitize=integer-divide-by-zero -ftrapv")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined -fsanitize=shift -fsanitize=return -fsanitize=null -fsanitize=signed-integer-overflow -fsanitize=integer-divide-by-zero -ftrapv")
+endif ()
 
 
-IF (STATIC_BINARY)
-    ADD_DEFINITIONS("-DAL_LIBTYPE_STATIC")
-ENDIF ()
+if (STATIC_BINARY)
+    add_definitions("-DAL_LIBTYPE_STATIC")
+endif ()
 
 set(CMAKE_CXX_STANDARD 14)
-IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND APPLE)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-ENDIF ()
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif ()
 
-OPTION(USE_GOLD_LINKER "Use Gnu gold linker instead of GNU ld")
-IF (USE_GOLD_LINKER)
-    EXECUTE_PROCESS(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
-    IF (NOT "${LD_VERSION}" MATCHES "GNU gold")
-        MESSAGE(FATAL_ERROR "GNU gold linker isn't available.")
-    ENDIF ()
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
-    MESSAGE(STATUS "Using GNU gold linker")
-ENDIF ()
+if (USE_GOLD_LINKER)
+    execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
+    if (NOT "${LD_VERSION}" MATCHES "GNU gold")
+        message(FATAL_ERROR "GNU gold linker isn't available.")
+    endif ()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
+    message(STATUS "Using GNU gold linker")
+endif ()
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors")
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
-#SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
-#SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} -flto")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
+#set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} -flto")
 
-SET(CMAKE_XCODE_ATTRIBUTE_GCC_VERSION "com.apple.compilers.llvm.clang.1_0")
-SET(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14")
-SET(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+set(CMAKE_XCODE_ATTRIBUTE_GCC_VERSION "com.apple.compilers.llvm.clang.1_0")
+set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14")
+set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
 
-ADD_CUSTOM_TARGET(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/CMakeUninstall.cmake)
+add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/CMakeUninstall.cmake)
 
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
+include_directories(${CMAKE_BINARY_DIR})
 
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 
-ADD_SUBDIRECTORY(modules/utils)
-ADD_SUBDIRECTORY(modules/audio)
+add_subdirectory(modules/utils)
+add_subdirectory(modules/audio)
+add_subdirectory(modules/image)
+add_subdirectory(modules/upnp)
 
-ADD_SUBDIRECTORY(modules/image)
-GET_DIRECTORY_PROPERTY(IMAGE_INCLUDE_DIRS       DIRECTORY modules/image DEFINITION IMAGE_INCLUDE_DIRS)
-ADD_SUBDIRECTORY(modules/upnp)
+if (DOOZY_RENDERER)
+    add_subdirectory(renderer)
+endif ()
 
-IF (DOOZY_RENDERER)
-    ADD_SUBDIRECTORY(renderer)
-    GET_DIRECTORY_PROPERTY(RENDERER_INCLUDE_DIRS  DIRECTORY renderer DEFINITION RENDERER_INCLUDE_DIRS)
-ENDIF ()
+if (DOOZY_CONTROLPOINT)
+    add_subdirectory(controlpoint)
+endif ()
 
-IF (DOOZY_CONTROLPOINT)
-    ADD_SUBDIRECTORY(controlpoint)
-ENDIF ()
+if (DOOZY_SERVER)
+    add_subdirectory(modules/sqlpp11)
+    add_subdirectory(modules/sqlpp11-connector-sqlite3)
+    add_subdirectory(server)
+endif ()
 
-IF (DOOZY_SERVER)
-    ADD_SUBDIRECTORY(modules/sqlpp11)
-    ADD_SUBDIRECTORY(modules/sqlpp11-connector-sqlite3)
+if (DOOZY_SERVER)
+    list(APPEND LINK_LIBS doozyserver)
+endif ()
 
-    ADD_SUBDIRECTORY(server)
-    GET_DIRECTORY_PROPERTY(SERVER_LIBRARIES     DIRECTORY server DEFINITION SERVER_LIBRARIES)
-ENDIF ()
+if (DOOZY_RENDERER)
+    list(APPEND LINK_LIBS doozyrenderer)
+endif ()
 
-INCLUDE_DIRECTORIES(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${AUDIO_INCLUDE_DIRS}
-    ${UTILS_INCLUDE_DIRS}
-    ${UPNPFRAMEWORK_INCLUDE_DIRS}
-)
+if (MINGW)
+    list (APPEND LINK_LIBS ws2_32)
+endif ()
 
-INCLUDE_DIRECTORIES(SYSTEM
-    ${UTILS_INCLUDE_DIRS}
-    ${UPNPFRAMEWORK_SYS_INCLUDE_DIRS}
-)
-
-LINK_DIRECTORIES(
-    ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-SET(LINK_LIBS
-    doozyrenderer
-    ${SERVER_LIBRARIES}
-    image
-    audio
-    upnpframework
-)
-
-IF (MINGW)
-    SET (LINK_LIBS ${LINK_LIBS} -lws2_32)
-ENDIF()
-
-LIST(REVERSE LINK_LIBS)
-LIST(REMOVE_DUPLICATES LINK_LIBS)
-LIST(REVERSE LINK_LIBS)
-
-SET(DOOZY_SOURCES
+set(DOOZY_SOURCES
     common/doozydeviceinterface.h
     common/doozydevicefactory.h common/doozydevicefactory.cpp
     common/settings.h common/settings.cpp
     common/devicedescriptions.h
 )
 
-ADD_EXECUTABLE(doozy
+add_executable(doozy
     main.cpp
     ${DOOZY_SOURCES}
 )
 
-TARGET_LINK_LIBRARIES(doozy ${LINK_LIBS})
-INSTALL(TARGETS doozy RUNTIME DESTINATION bin)
+target_link_libraries(doozy ${LINK_LIBS})
+install(TARGETS doozy RUNTIME DESTINATION bin)
 
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/doozyconfig.h.in ${CMAKE_BINARY_DIR}/doozyconfig.h)
-CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/CMakeUninstall.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/CMakeUninstall.cmake" IMMEDIATE @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doozyconfig.h.in ${CMAKE_BINARY_DIR}/doozyconfig.h)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/CMakeUninstall.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/CMakeUninstall.cmake" IMMEDIATE @ONLY)
 
-IF (SHARED_LIBRARY)
-    ADD_LIBRARY(doozylib SHARED ${DOOZY_SOURCES})
-    TARGET_LINK_LIBRARIES(doozylib "-Wl,--whole-archive" ${LINK_LIBS} "-Wl,--no-whole-archive")
-ENDIF ()
+if (SHARED_LIBRARY)
+    add_library(doozylib SHARED ${DOOZY_SOURCES})
+    target_link_libraries(doozylib "-Wl,--whole-archive" ${LINK_LIBS} "-Wl,--no-whole-archive")
+endif ()
 
-IF (ENABLE_TESTS)
-    ADD_SUBDIRECTORY(test)
-ENDIF ()
+if (ENABLE_TESTS)
+    add_subdirectory(test)
+endif ()

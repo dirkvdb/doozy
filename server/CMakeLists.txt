@@ -1,31 +1,7 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+find_package(PkgConfig)
+pkg_check_modules(SQLITE sqlite3 REQUIRED)
 
-FIND_PACKAGE(PkgConfig)
-PKG_CHECK_MODULES(SQLITE sqlite3 REQUIRED)
-
-INCLUDE_DIRECTORIES(SYSTEM
-    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11-connector-sqlite3/include
-)
-
-INCLUDE_DIRECTORIES(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/..
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${IMAGE_INCLUDE_DIRS}
-    ${AUDIO_INCLUDE_DIRS}
-    ${UTILS_INCLUDE_DIRS}
-    ${SQLITE_INCLUDE_DIRS}
-    ${UPNPFRAMEWORK_INCLUDE_DIRS}
-)
-
-LINK_DIRECTORIES(
-    ${SQLITE_LINK_DIRECTORIES}
-)
-
-SET (SERVER_LIBRARIES doozyserver sqlpp11-connector-sqlite3 ${SQLITE_LIBRARIES})
-
-ADD_LIBRARY(doozyserver
+add_library(doozyserver
     filerequesthandler.h				filerequesthandler.cpp
     mediaserverdevice.h                 mediaserverdevice.cpp
     mimetypes.h                         mimetypes.cpp
@@ -40,5 +16,19 @@ ADD_LIBRARY(doozyserver
     library/scanner.h                   library/scanner.cpp
 )
 
-SOURCE_GROUP(library REGULAR_EXPRESSION library/)
+target_include_directories(doozyserver PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:include>
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+target_include_directories(doozyserver SYSTEM PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11-connector-sqlite3/include
+    ${SQLITE_INCLUDE_DIRS}
+    ${UPNPFRAMEWORK_INCLUDE_DIRS}
+)
+
+source_group(library REGULAR_EXPRESSION library/)
 
