@@ -59,6 +59,7 @@ void printUsage()
                 << "  -t<s>   : device type (" << stringops::join(supportedDevices, "|") << ")" << std::endl
                 << "  -i<s>   : network interface (" << "the name of the network interface to use" << ")" << std::endl
                 << "  -f<s>   : config file" << std::endl
+                << "  -d      : show debug logging" << std::endl
                 << "  -h      : display this help" << std::endl;
 }
 
@@ -85,16 +86,20 @@ int main(int argc, char **argv)
 #endif
 
     int32_t option;
+    bool debugLog = false;
     std::string configFile;
     std::string deviceType;
     std::string netInterface;
 
-    while ((option = getopt(argc, argv, "f:t:i:")) != -1)
+    while ((option = getopt(argc, argv, "f:t:i:d")) != -1)
     {
         switch (option)
         {
         case 't':
             deviceType = getOptArg(optarg);
+            break;
+        case 'd':
+            debugLog = true;
             break;
         case 'i':
             netInterface = getOptArg(optarg);
@@ -121,6 +126,8 @@ int main(int argc, char **argv)
 
     try
     {
+        log::setFilter(debugLog ? log::Level::Debug : log::Level::Info);
+
         g_deviceInstance = doozy::DeviceFactory::createDevice(deviceType, configFile);
         log::info("Doozy {}", deviceType);
         g_deviceInstance->start(netInterface);
