@@ -242,7 +242,7 @@ void PlayQueue::setCurrentUri(const std::string& avTransportUri)
     {
         log::debug("Add item: {} : {}", uri, avTransportUri);
         auto item = std::make_shared<PlayQueueItem>(uri, avTransportUri);
-        items.emplace_back(item);
+        items.push_back(item);
 
         if (first)
         {
@@ -342,7 +342,7 @@ std::shared_ptr<audio::ITrack> PlayQueue::dequeueNextTrack()
 
     if (avTransportUriChange)
     {
-        CurrentTransportUriChanged(m_currenURITracks.front()->getAVTransportUri());
+        CurrentTransportUriChanged(track->getAVTransportUri());
         NextTransportUriChanged("");
     }
 

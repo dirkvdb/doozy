@@ -6,11 +6,6 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/doozytestconfig.h.in ${CMAKE_BINARY_D
 INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
-    ${UTILS_INCLUDE_DIRS}
-    ${AUDIO_INCLUDE_DIRS}
-    ${RENDERER_INCLUDE_DIRS}
-    ${UPNPFRAMEWORK_INCLUDE_DIRS}
-    ${SERVER_INCLUDE_DIRS}
 )
 
 INCLUDE_DIRECTORIES(SYSTEM
@@ -40,16 +35,23 @@ SET (TEST_INFRA
     ../common/settings.cpp
 )
 
-IF (UPNP_SERVER)
+IF (DOOZY_SERVER)
     SET (SERVER_TESTS
         librarytest.cpp
         librarydatabasetest.cpp
     )
 ENDIF ()
 
+IF (DOOZY_RENDERER)
+    SET (RENDERER_TESTS
+        renderer.playqueuetest.cpp
+    )
+ENDIF ()
+
 ADD_EXECUTABLE(doozytest
     ${TEST_INFRA}
     ${SERVER_TESTS}
+    ${RENDERER_TESTS}
 )
 
 IF (HAVE_LIBCEC)

@@ -36,6 +36,7 @@
 #endif
 
 #include <sstream>
+#include <limits>
 
 using namespace utils;
 using namespace upnp;
@@ -261,14 +262,33 @@ void MediaRendererDevice::setInitialValues()
     m_renderingControl.setVolume(0, RenderingControl::Channel::Master, m_playback->getVolume());
     m_renderingControl.setMute(0, RenderingControl::Channel::Master, m_playback->getMute());
 
-    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTransportActions, toString(m_playback->getAvailableActions()));
-    m_avTransport.setInstanceVariable(0, AVTransport::Variable::PlaybackStorageMedium, "NETWORK");
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::TransportState, AVTransport::Service::toString(PlaybackStateToTransportState(m_playback->getState())));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::TransportStatus, AVTransport::Service::toString(AVTransport::Status::Ok));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::PlaybackStorageMedium, "NETWORK");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::RecordStorageMedium, "NOT_IMPLEMENTED");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::PossiblePlaybackStorageMedia, "NONE,NETWORK");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::PossibleRecordStorageMedia, "NOT_IMPLEMENTED");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::TransportPlaySpeed, "1");
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentPlayMode, AVTransport::Service::toString(AVTransport::PlayMode::Normal));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::TransportPlaySpeed, "1");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::RecordMediumWriteStatus, "NOT_IMPLEMENTED");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentRecordQualityMode, "NOT_IMPLEMENTED");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::PossibleRecordQualityModes, "NOT_IMPLEMENTED");
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::NumberOfTracks, std::to_string(m_queue.getNumberOfTracks()));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrack, "0");
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackDuration, durationToString(0s));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentMediaDuration, "NOT_IMPLEMENTEDº");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackMetaData, "");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTrackURI, "");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::AVTransportURI, "");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::AVTransportURIMetaData, "");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::NextAVTransportURI, "");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::NextAVTransportURIMetaData, "");
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::RelativeTimePosition, durationToString(0s));
     m_avTransport.setInstanceVariable(0, AVTransport::Variable::AbsoluteTimePosition, "NOT_IMPLEMENTED");
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::RelativeCounterPosition, std::to_string(std::numeric_limits<int32_t>::max()));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::AbsoluteTimePosition, std::to_string(std::numeric_limits<int32_t>::max()));
+    m_avTransport.setInstanceVariable(0, AVTransport::Variable::CurrentTransportActions, toString(m_playback->getAvailableActions()));
 }
 
 void MediaRendererDevice::setTransportVariable(uint32_t instanceId, AVTransport::Variable var, const std::string& value)
@@ -281,7 +301,7 @@ void MediaRendererDevice::setTransportVariable(uint32_t instanceId, AVTransport:
 
 upnp::SubscriptionResponse MediaRendererDevice::onEventSubscriptionRequest(const upnp::SubscriptionRequest& request)
 {
-    //log::debug("Renderer: event subscription request {}", request.ServiceId);
+    log::debug("Renderer: event subscription request {} {}", request.sid, request.url);
 
     upnp::SubscriptionResponse response;
     response.timeout = request.timeout;
@@ -308,7 +328,7 @@ upnp::SubscriptionResponse MediaRendererDevice::onEventSubscriptionRequest(const
 
 std::string MediaRendererDevice::onControlActionRequest(const upnp::ActionRequest& request)
 {
-    //log::debug("Renderer: action request: {}", pRequest->ActionName);
+    log::debug("Renderer: action request: {}", request.actionName);
 
     //log::debug(request.action);
 
