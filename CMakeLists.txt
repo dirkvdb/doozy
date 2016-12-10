@@ -127,6 +127,8 @@ set(DOOZY_SOURCES
 add_executable(doozy
     main.cpp
     ${DOOZY_SOURCES}
+
+    .travis.yml
 )
 
 target_link_libraries(doozy ${LINK_LIBS})

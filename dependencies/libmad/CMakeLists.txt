@@ -28,7 +28,12 @@ EXTERNALPROJECT_ADD(${NAME}
     URL http://sourceforge.net/projects/mad/files/${NAME}/${VERSION}/${PACKAGE}.tar.gz TIMEOUT 30
     INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
     CONFIGURE_COMMAND WANT_AUTOMAKE=latest <SOURCE_DIR>/configure ${CROSS_ARGS} --disable-dependency-tracking --disable-debugging --host=${HOST} ${FPM} --prefix=<INSTALL_DIR> --disable-shared
-    PATCH_COMMAND patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/libmad-0.15.1b-remove-force-mem.patch && patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/musl.patch && touch NEWS AUTHORS ChangeLog && WANT_AUTOMAKE=latest autoreconf --force --install
+    PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/libmad.patch &&
+                  patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/frame_length.diff &&
+                  patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/amd64-64bit.diff &&
+                  patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/optimize.diff &&
+                  patch -p0 -i ${CMAKE_CURRENT_SOURCE_DIR}/musl.patch &&
+                  touch NEWS AUTHORS ChangeLog && autoconf
 )
 
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/mad.pc ${CMAKE_BINARY_DIR}/local/lib/pkgconfig/mad.pc @ONLY)
