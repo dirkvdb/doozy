@@ -25,7 +25,7 @@
 #include "utils/readerfactory.h"
 
 #include "audio/audioplaybackfactory.h"
-#include "upnp/upnputils.h"
+#include "upnp/upnp.utils.h"
 #include "upnp/upnp.http.reader.h"
 
 #include "audioconfig.h"
