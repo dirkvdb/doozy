@@ -95,24 +95,19 @@ add_subdirectory(modules/upnp)
 
 if (DOOZY_RENDERER)
     add_subdirectory(renderer)
+    list(APPEND LINK_LIBS doozyrenderer)
 endif ()
 
 if (DOOZY_CONTROLPOINT)
     add_subdirectory(controlpoint)
+    list(APPEND LINK_LIBS doozycontrolpoint)
 endif ()
 
 if (DOOZY_SERVER)
     add_subdirectory(modules/sqlpp11)
     add_subdirectory(modules/sqlpp11-connector-sqlite3)
     add_subdirectory(server)
-endif ()
-
-if (DOOZY_SERVER)
     list(APPEND LINK_LIBS doozyserver)
-endif ()
-
-if (DOOZY_RENDERER)
-    list(APPEND LINK_LIBS doozyrenderer)
 endif ()
 
 if (MINGW)

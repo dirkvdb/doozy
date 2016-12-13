@@ -15,46 +15,44 @@
 //    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-#ifndef DOOZY_H
-#define DOOZY_H
+#pragma once
 
 #include <iostream>
 #include <condition_variable>
 #include <mutex>
 
-#include "gen-cpp/ControlPoint.h"
+#include "upnp/asio.h"
+#include "upnp/upnp.clientinterface.h"
+#include "upnp/upnp.http.server.h"
+#include "upnp/upnp.devicescanner.h"
+#include "upnp/upnp.controlpoint.h"
+#include "upnp/upnp.http.types.h"
 
-#include "upnp/upnpclient.h"
-#include "upnp/upnpwebserver.h"
-#include "upnp/upnpdevicescanner.h"
-#include "upnp/upnpcontrolpoint.h"
-#include "upnp/upnpmediaserver.h"
+#include "common/doozydeviceinterface.h"
 
 namespace doozy
 {
 
-class ControlPoint : public rpc::ControlPointIf
+class ControlPoint : public IDevice
 {
 public:
     ControlPoint();
-    void run();
-    void stop();
-    
-    void GetRenderers(rpc::DeviceResponse& response) override;
-    void GetServers(rpc::DeviceResponse& response) override;
-    void Browse(rpc::BrowseResponse& response, const rpc::BrowseRequest& request) override;
-    void Play(const rpc::PlayRequest& request) override;
-    void GetRendererStatus(doozy::rpc::RendererStatus& status, const doozy::rpc::Device& dev) override;
-    
+
+    void start(const std::string& networkInterface) override;
+    void stop() override;
+
 private:
-    upnp::Client                        m_Client;
-    upnp::ControlPoint                  m_Cp;
-    upnp::MediaServer                   m_MediaServer;
-    upnp::DeviceScanner                 m_RendererScanner;
-    upnp::DeviceScanner                 m_ServerScanner;
-    std::unique_ptr<upnp::WebServer>    m_Webserver;
+    void handleRequest(const upnp::http::Request& req, std::function<void(upnp::http::StatusCode, std::string)> cb);
+
+    void browse(std::string_view udn, std::string_view containerId, std::function<void(upnp::http::StatusCode, std::string)> cb);
+
+    asio::io_service                    m_io;
+    std::unique_ptr<upnp::IClient>      m_client;
+    upnp::ControlPoint                  m_cp;
+    upnp::DeviceScanner                 m_rendererScanner;
+    upnp::DeviceScanner                 m_serverScanner;
+    upnp::http::Server                  m_webServer;
 };
-    
+
 }
 
-#endif

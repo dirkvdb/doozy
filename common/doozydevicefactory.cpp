@@ -26,6 +26,10 @@
 #include "renderer/mediarendererdevice.h"
 #endif
 
+#if DOOZY_CONTROLPOINT
+#include "controlpoint/doozycontrolpoint.h"
+#endif
+
 #include "utils/log.h"
 
 namespace doozy
@@ -51,6 +55,12 @@ std::unique_ptr<IDevice> createDevice(const std::string& deviceType, const std::
         RendererSettings settings;
         settings.loadFromFile(configFile);
         return std::make_unique<MediaRendererDevice>(settings);
+    }
+#endif
+#if DOOZY_CONTROLPOINT
+    if (deviceType == "controlpoint")
+    {
+        return std::make_unique<ControlPoint>();
     }
 #endif
 
