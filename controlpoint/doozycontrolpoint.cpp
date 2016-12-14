@@ -236,30 +236,48 @@ void ControlPoint::browse(std::string_view udn, std::string_view containerId, st
     });
 }
 
-//static rpc::ItemClass::type convertClass(upnp::Class c)
-//{
-//    switch (c)
-//    {
-//        case upnp::Class::Container:
-//            return rpc::ItemClass::Container;
-//        case upnp::Class::AudioContainer:
-//            return rpc::ItemClass::AudioContainer;
-//        case upnp::Class::VideoContainer:
-//            return rpc::ItemClass::VideoContainer;
-//        case upnp::Class::ImageContainer:
-//            return rpc::ItemClass::ImageContainer;
-//        case upnp::Class::Video:
-//            return rpc::ItemClass::VideoItem;
-//        case upnp::Class::Audio:
-//            return rpc::ItemClass::AudioItem;
-//        case upnp::Class::Image:
-//            return rpc::ItemClass::ImageItem;
-//        case upnp::Class::Generic:
-//            return rpc::ItemClass::Item;
-//        default:
-//            return rpc::ItemClass::Unknown;
-//    }
-//}
+void ControlPoint::play(std::string_view rendererUdn,
+                        std::string_view serverUdn,
+                        std::string_view containerId,
+                        std::function<void(upnp::http::StatusCode, std::string)> cb)
+{
+    log::info("play {} {} {}", rendererUdn, serverUdn, containerId);
+
+    m_cp.setRendererDevice(m_rendererScanner.getDevice(rendererUdn), [this, cb, id = containerId.to_string(), server = serverUdn.to_string()] (upnp::Status s) {
+        if (!s)
+        {
+            cb(upnp::http::StatusCode::InternalServerError, "");
+            return;
+        }
+
+        auto mediaServer = std::make_shared<upnp::MediaServer>(*m_client);
+        mediaServer->setDevice(m_serverScanner.getDevice(server), [=] (upnp::Status s) {
+            if (!s)
+            {
+                cb(upnp::http::StatusCode::InternalServerError, "");
+                return;
+            }
+
+            mediaServer->getItemsInContainer(id, [=] (upnp::Status s, const std::vector<upnp::Item>& items) {
+                if (!s)
+                {
+                    cb(upnp::http::StatusCode::InternalServerError, "");
+                    return;
+                }
+
+                m_cp.playItemsAsPlaylist(*mediaServer, items, [=] (upnp::Status s) {
+                    if (!s)
+                    {
+                        cb(upnp::http::StatusCode::InternalServerError, "");
+                        return;
+                    }
+
+                    cb(upnp::http::StatusCode::Ok, "");
+                });
+            });
+        });
+    });
+}
 
 //static rpc::Action::type convertAction(upnp::MediaRenderer::Action action)
 //{
@@ -275,17 +293,6 @@ void ControlPoint::browse(std::string_view udn, std::string_view containerId, st
 //    }
 //}
 
-
-
-//void ControlPoint::Play(const rpc::PlayRequest& request)
-//{
-//    log::info("play %s %s %s", request.rendererudn, request.serverudn, request.containerid);
-
-//    m_Cp.setRendererDevice(m_RendererScanner.getDevice(request.rendererudn));
-//    m_MediaServer.setDevice(m_ServerScanner.getDevice(request.serverudn));
-//    m_Cp.playItems(m_MediaServer, m_MediaServer.getItemsInContainer(request.containerid));
-//}
-    
 //void ControlPoint::GetRendererStatus(doozy::rpc::RendererStatus& status, const doozy::rpc::Device& dev)
 //{
 //    upnp::MediaRenderer renderer(m_Client);
