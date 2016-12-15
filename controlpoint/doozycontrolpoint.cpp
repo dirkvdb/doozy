@@ -22,6 +22,7 @@
 
 #include "utils/stringoperations.h"
 
+#include <algorithm>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 
@@ -30,6 +31,17 @@ using namespace utils::stringops;
 
 namespace doozy
 {
+
+struct JsonData
+{
+    JsonData()
+    : writer(sb)
+    {
+    }
+
+    rapidjson::StringBuffer sb;
+    rapidjson::Writer<rapidjson::StringBuffer> writer;
+};
 
 ControlPoint::ControlPoint()
 : m_client(upnp::factory::createClient(m_io))
@@ -88,6 +100,21 @@ void ControlPoint::stop()
     m_client->uninitialize();
 }
 
+static std::string_view getParam(const std::vector<std::pair<std::string, std::string>>& params, std::string_view name)
+{
+    auto iter = std::find_if(params.begin(), params.end(), [name] (const auto& param) {
+        return param.first == name;
+    });
+
+    if (iter == params.end())
+    {
+        throw std::invalid_argument("Param not found: " + name.to_string());
+    }
+
+    log::info(iter->second);
+    return iter->second;
+}
+
 static std::string getDevices(const upnp::DeviceScanner& scanner, const char* name)
 {
     const auto devs = scanner.getDevices();
@@ -127,36 +154,50 @@ void ControlPoint::handleRequest(const upnp::http::Request& req, std::function<v
         "{}";
 
     log::info("Request: {}", req.url());
-    std::string response;
 
-    if (req.url() == "/getservers")
+    try
     {
-        cb(upnp::http::StatusCode::Ok, getDevices(m_serverScanner, "servers"));
-    }
-    else if (req.url() == "/getrenderers")
-    {
-        cb(upnp::http::StatusCode::Ok, getDevices(m_rendererScanner, "renderers"));
-    }
-    else if (utils::stringops::startsWith(req.url(), "/browse"))
-    {
-        auto params = upnp::http::Server::getQueryParameters(req.url());
-        if (params.size() != 2)
+        if (req.url() == "/servers")
+        {
+            cb(upnp::http::StatusCode::Ok, getDevices(m_serverScanner, "servers"));
+        }
+        else if (req.url() == "/renderers")
+        {
+            cb(upnp::http::StatusCode::Ok, getDevices(m_rendererScanner, "renderers"));
+        }
+        else if (utils::stringops::startsWith(req.url(), "/browse"))
+        {
+            auto params = upnp::http::Server::getQueryParameters(req.url());
+            browse(getParam(params, "udn"), getParam(params, "id"), cb);
+        }
+        else if (utils::stringops::startsWith(req.url(), "/rendererstatus"))
+        {
+            auto params = upnp::http::Server::getQueryParameters(req.url());
+            getRendererStatus(getParam(params, "udn"), cb);
+        }
+        else if (utils::stringops::startsWith(req.url(), "/play"))
+        {
+            auto params = upnp::http::Server::getQueryParameters(req.url());
+            play(getParam(params, "rendererudn"),
+                 getParam(params, "serverudn"),
+                 getParam(params, "id"), cb);
+        }
+        else
         {
             cb(upnp::http::StatusCode::BadRequest, "");
-            return;
         }
-
-        browse(params[0].second, params[1].second, cb);
     }
-    else
+    catch (const std::invalid_argument& e)
     {
+        log::error(e.what());
         cb(upnp::http::StatusCode::BadRequest, "");
     }
 }
 
 void ControlPoint::browse(std::string_view udn, std::string_view containerId, std::function<void(upnp::http::StatusCode, std::string)> cb)
 {
-    log::debug("browse {} {}", udn, containerId);
+    auto s = udn.to_string();
+    log::debug("browse {} {}", udn.to_string(), containerId.to_string());
 
     auto mediaServer = std::make_shared<upnp::MediaServer>(*m_client);
     mediaServer->setDevice(m_serverScanner.getDevice(udn), [this, cb, mediaServer, id = containerId.to_string()] (upnp::Status s) {
@@ -166,23 +207,12 @@ void ControlPoint::browse(std::string_view udn, std::string_view containerId, st
             return;
         }
 
-        struct JsonData
-        {
-            JsonData()
-            : writer(sb)
-            {
-            }
-
-            rapidjson::StringBuffer sb;
-            rapidjson::Writer<rapidjson::StringBuffer> writer;
-        };
-
         auto jsonData = std::make_shared<JsonData>();
         jsonData->writer.StartObject();
         jsonData->writer.Key("items");
         jsonData->writer.StartArray();
 
-        mediaServer->getAllInContainer(id, [jsonData, cb] (upnp::Status s, const std::vector<upnp::Item>& items) {
+        mediaServer->getAllInContainer(id, [jsonData, mediaServer, cb] (upnp::Status s, const std::vector<upnp::Item>& items) {
             if (!s)
             {
                 cb(upnp::http::StatusCode::InternalServerError, "");
@@ -241,11 +271,12 @@ void ControlPoint::play(std::string_view rendererUdn,
                         std::string_view containerId,
                         std::function<void(upnp::http::StatusCode, std::string)> cb)
 {
-    log::info("play {} {} {}", rendererUdn, serverUdn, containerId);
+    log::info("play {} {} {}", rendererUdn.data(), serverUdn.data(), containerId.data());
 
     m_cp.setRendererDevice(m_rendererScanner.getDevice(rendererUdn), [this, cb, id = containerId.to_string(), server = serverUdn.to_string()] (upnp::Status s) {
         if (!s)
         {
+            log::error("Failed to set renderer device: {}", s.what());
             cb(upnp::http::StatusCode::InternalServerError, "");
             return;
         }
@@ -254,58 +285,97 @@ void ControlPoint::play(std::string_view rendererUdn,
         mediaServer->setDevice(m_serverScanner.getDevice(server), [=] (upnp::Status s) {
             if (!s)
             {
+                log::error("Failed to set server device: {}", s.what());
                 cb(upnp::http::StatusCode::InternalServerError, "");
                 return;
             }
 
-            mediaServer->getItemsInContainer(id, [=] (upnp::Status s, const std::vector<upnp::Item>& items) {
+            auto playListItems = std::make_shared<std::vector<upnp::Item>>();
+            mediaServer->getItemsInContainer(id, [=] (const upnp::Status& s, const std::vector<upnp::Item>& items) {
                 if (!s)
                 {
+                    log::error("Failed to obtain items for playback: {}", s.what());
                     cb(upnp::http::StatusCode::InternalServerError, "");
                     return;
                 }
 
-                m_cp.playItemsAsPlaylist(*mediaServer, items, [=] (upnp::Status s) {
-                    if (!s)
-                    {
-                        cb(upnp::http::StatusCode::InternalServerError, "");
-                        return;
-                    }
+                if (items.empty())
+                {
+                    m_cp.playItemsAsPlaylist(*mediaServer, *playListItems, [=] (const upnp::Status& s) {
+                        if (!s)
+                        {
+                            log::error("Failed to play playlist: {}", s.what());
+                            cb(upnp::http::StatusCode::InternalServerError, "");
+                            return;
+                        }
 
-                    cb(upnp::http::StatusCode::Ok, "");
-                });
+                        cb(upnp::http::StatusCode::Ok, "");
+                    });
+                }
+                else
+                {
+                    for (auto& item : items)
+                    {
+                        playListItems->emplace_back(item);
+                    }
+                }
             });
         });
     });
 }
 
-//static rpc::Action::type convertAction(upnp::MediaRenderer::Action action)
-//{
-//    switch (action)
-//    {
-//        case upnp::MediaRenderer::Action::Play:     return rpc::Action::Play;
-//        case upnp::MediaRenderer::Action::Next:     return rpc::Action::Next;
-//        case upnp::MediaRenderer::Action::Previous: return rpc::Action::Previous;
-//        case upnp::MediaRenderer::Action::Seek:     return rpc::Action::Seek;
-//        case upnp::MediaRenderer::Action::Stop:     return rpc::Action::Stop;
-//        case upnp::MediaRenderer::Action::Pause:    return rpc::Action::Pause;
-//        default: return rpc::Action::Stop; // huh? :-)
-//    }
-//}
+void ControlPoint::getRendererStatus(std::string_view udn, std::function<void(upnp::http::StatusCode, std::string)> cb)
+{
+    auto renderer = std::make_shared<upnp::MediaRenderer>(*m_client);
+    renderer->useDefaultConnection();
 
-//void ControlPoint::GetRendererStatus(doozy::rpc::RendererStatus& status, const doozy::rpc::Device& dev)
-//{
-//    upnp::MediaRenderer renderer(m_Client);
-//    renderer.setDevice(m_RendererScanner.getDevice(dev.udn));
-    
-//    auto item = renderer.getCurrentTrackInfo();
-//    auto actions = renderer.getAvailableActions();
-//    std::transform(actions.begin(), actions.end(), status.availableActions.begin(), [] (upnp::MediaRenderer::Action a) {
-//        return convertAction(a);
-//    });
-    
-//    status.title = item->getTitle();
-//    status.artist = item->getMetaData(upnp::Property::Artist);
-//}
+    renderer->setDevice(m_rendererScanner.getDevice(udn), [this, renderer, cb] (upnp::Status s) {
+        if (!s)
+        {
+            log::error("Failed to set renderer device: {}", s.what());
+            cb(upnp::http::StatusCode::InternalServerError, "");
+            return;
+        }
+
+        renderer->getCurrentTrackInfo([=] (upnp::Status s, const upnp::Item& item) {
+            if (!s)
+            {
+                log::error("Failed to get current track info: {}", s.what());
+                cb(upnp::http::StatusCode::InternalServerError, "");
+                return;
+            }
+
+            renderer->getAvailableActions([renderer, cb, item] (upnp::Status s, const std::set<upnp::MediaRenderer::Action>& actions) {
+                if (!s)
+                {
+                    log::error("Failed to get available renderer actions: {}", s.what());
+                    cb(upnp::http::StatusCode::InternalServerError, "");
+                    return;
+                }
+
+                JsonData jsonData;
+                jsonData.writer.StartObject();
+
+                jsonData.writer.Key("title");
+                jsonData.writer.String(item.getTitle());
+                jsonData.writer.Key("artist");
+                jsonData.writer.String(item.getMetaData(upnp::Property::Artist));
+
+                jsonData.writer.Key("actions");
+                jsonData.writer.StartArray();
+                for (auto& action : actions)
+                {
+                    jsonData.writer.String(upnp::MediaRenderer::actionToString(action));
+                }
+                jsonData.writer.EndArray();
+
+                jsonData.writer.EndObject();
+                assert(jsonData.writer.IsComplete());
+
+                cb(upnp::http::StatusCode::Ok, jsonData.sb.GetString());
+            });
+        });
+    });
+}
     
 }

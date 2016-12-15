@@ -53,6 +53,9 @@ private:
               std::string_view containerId,
               std::function<void(upnp::http::StatusCode, std::string)> cb);
 
+    void getRendererStatus(std::string_view udn,
+                           std::function<void(upnp::http::StatusCode, std::string)> cb);
+
     asio::io_service                    m_io;
     std::unique_ptr<upnp::IClient>      m_client;
     upnp::ControlPoint                  m_cp;
