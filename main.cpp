@@ -16,22 +16,18 @@
 
 #define _XOPEN_SOURCE
 
-#include <csignal>
+#include "utils/log.h"
+#include "utils/stringoperations.h"
+#include "doozyconfig.h"
+#include "settings.h"
+#include "doozydeviceinterface.h"
+#include "doozydevicefactory.h"
+
 #include <cerrno>
 #include <string>
 #include <cstring>
 #include <iostream>
 #include <unistd.h>
-
-#include "utils/log.h"
-#include "utils/backtrace.h"
-#include "utils/stringoperations.h"
-#include "doozyconfig.h"
-#include "common/settings.h"
-#include "common/doozydeviceinterface.h"
-#include "common/doozydevicefactory.h"
-
-static bool set_signal_handlers();
 
 using namespace utils;
 
@@ -72,11 +68,6 @@ std::string getOptArg(const char* arg)
 
 int main(int argc, char **argv)
 {
-    if (!set_signal_handlers())
-    {
-        return -1;
-    }
-
 #ifndef ANDROID
     if (!setlocale(LC_CTYPE, ""))
     {
@@ -140,82 +131,4 @@ int main(int argc, char **argv)
         log::error(e.what());
         return EXIT_FAILURE;
     }
-}
-
-#if !defined(WIN32) && !defined(__MINGW32__)
-
-static void sigterm(int signo)
-{
-    try
-    {
-        log::info("Sigterm {}", signo);
-        g_deviceInstance->stop();
-    }
-    catch (std::exception& e)
-    {
-        log::error(e.what());
-    }
-}
-
-static void segFaultHandler(int /*signo*/, siginfo_t* /*pInfo*/, void* /*pContext*/)
-{
-    utils::printBackTrace();
-    exit(EXIT_FAILURE);
-}
-#endif
-
-static bool set_signal_handlers()
-{
-#if !defined(WIN32) && !defined(__MINGW32__)
-    struct sigaction sa;
-
-    sa.sa_flags = 0;
-    sa.sa_handler = sigterm;
-    sigemptyset(&sa.sa_mask);
-    sigaddset(&sa.sa_mask, SIGQUIT);
-    sigaddset(&sa.sa_mask, SIGTERM);
-
-    if (sigaction(SIGINT, &sa, nullptr) < 0)
-    {
-        log::error("Can't catch SIGINT: {}", strerror(errno));
-        return false;
-    }
-
-    sa.sa_flags = 0;
-    sa.sa_handler = sigterm;
-    sigemptyset(&sa.sa_mask);
-    sigaddset(&sa.sa_mask, SIGINT);
-    sigaddset(&sa.sa_mask, SIGTERM);
-
-    if (sigaction(SIGQUIT, &sa, nullptr) < 0)
-    {
-        log::error("Can't catch SIGQUIT: {}", strerror(errno));
-        return false;
-    }
-
-    sa.sa_handler = sigterm;
-    sigemptyset(&sa.sa_mask);
-    sigaddset(&sa.sa_mask, SIGINT);
-    sigaddset(&sa.sa_mask, SIGQUIT);
-    sa.sa_flags = 0;
-
-    if (sigaction(SIGTERM, &sa, nullptr) < 0)
-    {
-        log::error("Can't catch SIGTERM: {}", strerror(errno));
-        return false;
-    }
-
-    sigemptyset(&sa.sa_mask);
-    sa.sa_sigaction = segFaultHandler;
-    sa.sa_flags = SA_RESTART | SA_SIGINFO;
-
-    if (sigaction(SIGSEGV, &sa, nullptr) < 0)
-    {
-        log::error("Can't catch SIGSEGV: {}", strerror(errno));
-        return false;
-    }
-
-#endif
-
-    return true;
 }

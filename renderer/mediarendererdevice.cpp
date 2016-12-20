@@ -20,6 +20,7 @@
 #include "mediarendererdevice.h"
 
 #include "utils/log.h"
+#include "utils/backtrace.h"
 #include "utils/stringoperations.h"
 #include "utils/fileoperations.h"
 #include "utils/readerfactory.h"
@@ -159,6 +160,24 @@ MediaRendererDevice::MediaRendererDevice(RendererSettings& settings)
 
 MediaRendererDevice::~MediaRendererDevice() = default;
 
+void MediaRendererDevice::signalHandler(const boost::system::error_code& error, int signo)
+{
+    if (!error)
+    {
+        if (signo == SIGSEGV)
+        {
+            log::critical("Segmentation fault");
+            utils::printBackTrace();
+            exit(EXIT_FAILURE);
+        }
+        else
+        {
+            log::info("Termination requested, stop renderer");
+            stop();
+        }
+    }
+}
+
 void MediaRendererDevice::start(const std::string& networkInterface)
 {
     try
@@ -206,7 +225,11 @@ void MediaRendererDevice::start(const std::string& networkInterface)
 
         setInitialValues();
 
+        asio::signal_set signals(m_io, SIGINT, SIGTERM, SIGSEGV);
+        signals.async_wait([this] (const auto& error, auto signo) { signalHandler(error, signo); });
+
         m_io.run();
+        log::debug("Renderer ready");
     }
     catch(std::exception& e)
     {

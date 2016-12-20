@@ -19,7 +19,7 @@
 
 #include <string>
 #include <vector>
-#include "common/settings.h"
+#include "settings.h"
 
 namespace doozy
 {

@@ -33,7 +33,6 @@ add_library(doozyrenderer
 
 target_include_directories(doozyrenderer PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
     $<INSTALL_INTERFACE:include>
 )
 
@@ -45,5 +44,6 @@ target_link_libraries(doozyrenderer
     audio
     image
     upnpframework
+    doozycommon
     ${LIBCEC_LIBRARIES}
 )

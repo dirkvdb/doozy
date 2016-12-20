@@ -33,6 +33,7 @@
 #include "playqueue.h"
 #include "doozyconfig.h"
 
+
 namespace upnp
 {
 class WebServer;
@@ -90,6 +91,8 @@ private:
     void CheckCecState(audio::PlaybackState state);
     void StartCecTimer();
     void AbortCecTimer();
+
+    void signalHandler(const boost::system::error_code& error, int signal_number);
 
     asio::io_service                            m_io;
     RendererSettings                            m_settings;

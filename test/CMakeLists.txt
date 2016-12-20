@@ -1,72 +1,51 @@
-SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-SET(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/testdata)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+set(TEST_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/testdata)
 
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/doozytestconfig.h.in ${CMAKE_BINARY_DIR}/doozytestconfig.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doozytestconfig.h.in ${CMAKE_BINARY_DIR}/doozytestconfig.h)
 
-INCLUDE_DIRECTORIES(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/..
+include_directories(SYSTEM
+    ${CMAKE_CURRENT_SOURCE_DIR}/testframework
 )
 
-INCLUDE_DIRECTORIES(SYSTEM
-    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../modules/sqlpp11-connector-sqlite3/include
-)
+if (DOOZY_RENDERER)
+    list(APPEND LINK_LIBS doozyrenderer)
+    set(RENDERER_TESTS renderer.playqueuetest.cpp renderertest.cpp)
+endif ()
 
-LINK_DIRECTORIES(
-    ${SERVER_LIBRARY_DIRS}
-)
+if (DOOZY_SERVER)
+    list(APPEND LINK_LIBS doozyserver)
+    set(SERVER_TESTS librarytest.cpp librarydatabasetest.cpp)
+endif ()
 
-SET(LINK_LIBS
-    audio
-    image
-    utils
-    upnpframework
-    ${SERVER_LIBRARIES}
-    doozyrenderer
-)
-
-SET (TEST_INFRA
-    gmock-gtest-all.cpp
+set(TEST_INFRA
+    testframework/gmock-gtest-all.cpp
+    ../doozydevicefactory
     eventnotification.h
     eventlistenermock.h
     settingsmocks.h
     main.cpp
-    ../common/settings.cpp
 )
 
-IF (DOOZY_SERVER)
-    SET (SERVER_TESTS
-        librarytest.cpp
-        librarydatabasetest.cpp
-    )
-ENDIF ()
-
-IF (DOOZY_RENDERER)
-    SET (RENDERER_TESTS
-        renderer.playqueuetest.cpp
-    )
-ENDIF ()
-
-ADD_EXECUTABLE(doozytest
+add_executable(doozytest
     ${TEST_INFRA}
     ${SERVER_TESTS}
     ${RENDERER_TESTS}
 )
 
-IF (HAVE_LIBCEC)
-    ADD_EXECUTABLE(cectest
+if (HAVE_LIBCEC)
+    add_executable(cectest
         cectest.cpp
     )
 
-    TARGET_LINK_LIBRARIES(cectest
+    target_link_libraries(cectest
         doozyrenderer
         utils
     )
-ENDIF ()
+endif ()
 
-TARGET_LINK_LIBRARIES(doozytest
+target_link_libraries(doozytest
 	${LINK_LIBS}
+    doozycommon
 )
 
-ADD_TEST(NAME DoozyTests COMMAND doozytest)
+add_test(NAME DoozyTests COMMAND doozytest)

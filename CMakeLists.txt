@@ -32,7 +32,7 @@ message(STATUS "Pkg-config root: $ENV{PKG_CONFIG_SYSROOT_DIR}")
 
 option(DOOZY_RENDERER "Renderer device support" ON)
 option(DOOZY_SERVER "Server device support" OFF)
-option(DOOZY_CONTROLPOINT "Controlpoint device support" OFF)
+option(DOOZY_CONTROLPOINT "Controlpoint device support" ON)
 option(STATIC_BINARY "Build static binary" OFF)
 option(SHARED_LIBRARY "Create single shared library containing all dependencies" OFF)
 option(ENABLE_TESTS "build unit tests" ON)
@@ -114,21 +114,15 @@ if (MINGW)
     list (APPEND LINK_LIBS ws2_32)
 endif ()
 
-set(DOOZY_SOURCES
-    common/doozydeviceinterface.h
-    common/doozydevicefactory.h common/doozydevicefactory.cpp
-    common/settings.h common/settings.cpp
-    common/devicedescriptions.h
-)
+add_subdirectory(common)
 
 add_executable(doozy
     main.cpp
-    ${DOOZY_SOURCES}
-
+    doozydevicefactory.h doozydevicefactory.cpp
     .travis.yml
 )
 
-target_link_libraries(doozy ${LINK_LIBS})
+target_link_libraries(doozy doozycommon ${LINK_LIBS})
 install(TARGETS doozy RUNTIME DESTINATION bin)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doozyconfig.h.in ${CMAKE_BINARY_DIR}/doozyconfig.h)
