@@ -134,7 +134,7 @@ before_install:
 install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      wget http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.bz2 TIMEOUT 6000
+      wget http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.bz2
       tar xf boost_1_62_0.tar.bz2
       echo "Build boost using ${CXX}"
       if [[ "${CXX}" == "clang-${COMPILER}" ]]; then
