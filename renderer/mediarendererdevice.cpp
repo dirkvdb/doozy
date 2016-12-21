@@ -226,7 +226,7 @@ void MediaRendererDevice::start(const std::string& networkInterface)
         setInitialValues();
 
         asio::signal_set signals(m_io, SIGINT, SIGTERM, SIGSEGV);
-        signals.async_wait([this] (const auto& error, auto signo) { signalHandler(error, signo); });
+        signals.async_wait([this] (const auto& error, auto signo) { this->signalHandler(error, signo); });
 
         m_io.run();
         log::debug("Renderer ready");
