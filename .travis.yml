@@ -12,6 +12,7 @@ matrix:
           packages:
             - g++-5
             - uuid-dev
+            - rapidjson-dev
       env:
         - COMPILER=5 BUILD_TYPE=Debug
     - compiler: gcc
@@ -22,6 +23,7 @@ matrix:
           packages:
             - g++-5
             - uuid-dev
+            - rapidjson-dev
       env:
         - COMPILER=5 BUILD_TYPE=Release
     - compiler: gcc
@@ -32,6 +34,7 @@ matrix:
           packages:
             - g++-6
             - uuid-dev
+            - rapidjson-dev
       env:
         - COMPILER=6 BUILD_TYPE=Debug
     - compiler: gcc
@@ -42,6 +45,7 @@ matrix:
           packages:
             - g++-6
             - uuid-dev
+            - rapidjson-dev
       env:
         - COMPILER=6 BUILD_TYPE=Release
     - compiler: clang
@@ -49,6 +53,7 @@ matrix:
         apt:
           packages:
             - uuid-dev
+            - rapidjson-dev
       env:
         - COMPILER=3.7 LLVM_VERSION=3.7.1 BUILD_TYPE=Debug
     - compiler: clang
@@ -56,6 +61,7 @@ matrix:
         apt:
           packages:
             - uuid-dev
+            - rapidjson-dev
       env:
         - COMPILER=3.7 LLVM_VERSION=3.7.1 BUILD_TYPE=Release
     - compiler: clang
@@ -63,6 +69,7 @@ matrix:
         apt:
           packages:
             - uuid-dev
+            - rapidjson-dev
       env:
         - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Debug
     - compiler: clang
@@ -70,6 +77,7 @@ matrix:
         apt:
           packages:
             - uuid-dev
+            - rapidjson-dev            
       env:
         - COMPILER=3.8 LLVM_VERSION=3.8.0 BUILD_TYPE=Release
     - compiler: clang
@@ -111,7 +119,7 @@ before_install:
 
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      brew install libtag
+      brew install libtag rapidjson
       git clone https://github.com/vinniefalco/Beast.git
       cp -r ./Beast/include/beast /usr/local/include/
     fi
