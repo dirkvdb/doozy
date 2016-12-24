@@ -43,6 +43,16 @@ struct JsonData
     rapidjson::Writer<rapidjson::StringBuffer> writer;
 };
 
+static const std::string s_okResponse =
+    "HTTP/1.1 200 OK\r\n"
+    "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
+    "CONTENT-LENGTH: {}\r\n"
+    "Access-Control-Allow-Origin: *\r\n"
+    "CONTENT-TYPE: text/html\r\n"
+    "\r\n"
+    "{}";
+
+
 ControlPoint::ControlPoint()
 : m_client(upnp::factory::createClient(m_io))
 , m_cp(*m_client)
@@ -115,7 +125,7 @@ static std::string_view getParam(const std::vector<std::pair<std::string, std::s
     return iter->second;
 }
 
-static std::string getDevices(const upnp::DeviceScanner& scanner, const char* name)
+static std::string getDevices(const upnp::DeviceScanner& scanner)
 {
     const auto devs = scanner.getDevices();
 
@@ -123,7 +133,7 @@ static std::string getDevices(const upnp::DeviceScanner& scanner, const char* na
     rapidjson::Writer<rapidjson::StringBuffer> writer(s);
 
     writer.StartObject();
-    writer.Key(name);
+    writer.Key("devices");
     writer.StartArray();
     for (auto& dev : devs)
     {
@@ -145,25 +155,19 @@ static std::string getDevices(const upnp::DeviceScanner& scanner, const char* na
 
 void ControlPoint::handleRequest(const upnp::http::Request& req, std::function<void(upnp::http::StatusCode, std::string)> cb)
 {
-    static const std::string okResponse =
-        "HTTP/1.1 200 OK\r\n"
-        "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
-        "CONTENT-LENGTH: {}\r\n"
-        "CONTENT-TYPE: text/html\r\n"
-        "\r\n"
-        "{}";
-
     log::info("Request: {}", req.url());
 
     try
     {
         if (req.url() == "/servers")
         {
-            cb(upnp::http::StatusCode::Ok, getDevices(m_serverScanner, "servers"));
+            auto devs = getDevices(m_serverScanner);
+            cb(upnp::http::StatusCode::Ok, fmt::format(s_okResponse, devs.size(), devs));
         }
         else if (req.url() == "/renderers")
         {
-            cb(upnp::http::StatusCode::Ok, getDevices(m_rendererScanner, "renderers"));
+            auto devs = getDevices(m_rendererScanner);
+            cb(upnp::http::StatusCode::Ok, fmt::format(s_okResponse, devs.size(), devs));
         }
         else if (utils::stringops::startsWith(req.url(), "/browse"))
         {
@@ -200,7 +204,14 @@ void ControlPoint::browse(std::string_view udn, std::string_view containerId, st
     log::debug("browse {} {}", udn.to_string(), containerId.to_string());
 
     auto mediaServer = std::make_shared<upnp::MediaServer>(*m_client);
-    mediaServer->setDevice(m_serverScanner.getDevice(udn), [this, cb, mediaServer, id = containerId.to_string()] (upnp::Status s) {
+    auto dev = m_serverScanner.getDevice(udn);
+    if (!dev)
+    {
+        cb(upnp::http::StatusCode::BadRequest, "");
+        return;
+    }
+
+    mediaServer->setDevice(dev, [this, cb, mediaServer, id = containerId.to_string()] (upnp::Status s) {
         if (!s)
         {
             cb(upnp::http::StatusCode::InternalServerError, "");
@@ -226,7 +237,7 @@ void ControlPoint::browse(std::string_view udn, std::string_view containerId, st
 
                 assert(jsonData->writer.IsComplete());
 
-                cb(upnp::http::StatusCode::Ok, jsonData->sb.GetString());
+                cb(upnp::http::StatusCode::Ok, fmt::format(s_okResponse, jsonData->sb.GetSize(), jsonData->sb.GetString()));
                 return;
             }
 
