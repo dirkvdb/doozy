@@ -42,19 +42,19 @@ public:
     void stop() override;
 
 private:
-    void handleRequest(const upnp::http::Request& req, std::function<void(upnp::http::StatusCode, std::string)> cb);
+    bool handleRequest(const upnp::http::Request& req, std::function<void(std::string)> cb);
 
     void browse(std::string_view udn,
                 std::string_view containerId,
-                std::function<void(upnp::http::StatusCode, std::string)> cb);
+                std::function<void(std::string)> cb);
 
     void play(std::string_view rendererUdn,
               std::string_view serverUdn,
               std::string_view containerId,
-              std::function<void(upnp::http::StatusCode, std::string)> cb);
+              std::function<void(std::string)> cb);
 
     void getRendererStatus(std::string_view udn,
-                           std::function<void(upnp::http::StatusCode, std::string)> cb);
+                           std::function<void(std::string)> cb);
 
     asio::io_service                    m_io;
     std::unique_ptr<upnp::IClient>      m_client;

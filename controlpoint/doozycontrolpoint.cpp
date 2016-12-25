@@ -52,6 +52,21 @@ static const std::string s_okResponse =
     "\r\n"
     "{}";
 
+static const std::string s_badRequestResponse =
+    "HTTP/1.1 400 Bad Request\r\n"
+    "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
+    "CONTENT-LENGTH: 0\r\n"
+    "Access-Control-Allow-Origin: *\r\n"
+    "\r\n"
+    "{}";
+
+static const std::string s_errorResponse =
+    "HTTP/1.1 500 Internal Server Error\r\n"
+    "SERVER: Darwin/15.4.0, UPnP/1.0\r\n"
+    "CONTENT-LENGTH: 0\r\n"
+    "Access-Control-Allow-Origin: *\r\n"
+    "\r\n"
+    "{}";
 
 ControlPoint::ControlPoint()
 : m_client(upnp::factory::createClient(m_io))
@@ -60,8 +75,8 @@ ControlPoint::ControlPoint()
 , m_serverScanner(*m_client, upnp::DeviceType(upnp::DeviceType::MediaServer, 1))
 , m_webServer(m_io)
 {
-    m_webServer.setRequestHandler(upnp::http::Method::Get, [this] (const upnp::http::Request& req, std::function<void(upnp::http::StatusCode, std::string)> cb) {
-        handleRequest(req, cb);
+    m_webServer.setRequestHandler(upnp::http::Method::Get, [this] (const upnp::http::Request& req, std::function<void(std::string)> cb) {
+        return handleRequest(req, cb);
     });
 }
 
@@ -153,7 +168,7 @@ static std::string getDevices(const upnp::DeviceScanner& scanner)
     return s.GetString();
 }
 
-void ControlPoint::handleRequest(const upnp::http::Request& req, std::function<void(upnp::http::StatusCode, std::string)> cb)
+bool ControlPoint::handleRequest(const upnp::http::Request& req, std::function<void(std::string)> cb)
 {
     log::info("Request: {}", req.url());
 
@@ -162,24 +177,24 @@ void ControlPoint::handleRequest(const upnp::http::Request& req, std::function<v
         if (req.url() == "/servers")
         {
             auto devs = getDevices(m_serverScanner);
-            cb(upnp::http::StatusCode::Ok, fmt::format(s_okResponse, devs.size(), devs));
+            cb(fmt::format(s_okResponse, devs.size(), devs));
         }
         else if (req.url() == "/renderers")
         {
             auto devs = getDevices(m_rendererScanner);
-            cb(upnp::http::StatusCode::Ok, fmt::format(s_okResponse, devs.size(), devs));
+            cb(fmt::format(s_okResponse, devs.size(), devs));
         }
-        else if (utils::stringops::startsWith(req.url(), "/browse"))
+        else if (utils::stringops::startsWith(req.url(), "/browse?"))
         {
             auto params = upnp::http::Server::getQueryParameters(req.url());
             browse(getParam(params, "udn"), getParam(params, "id"), cb);
         }
-        else if (utils::stringops::startsWith(req.url(), "/rendererstatus"))
+        else if (utils::stringops::startsWith(req.url(), "/rendererstatus?"))
         {
             auto params = upnp::http::Server::getQueryParameters(req.url());
             getRendererStatus(getParam(params, "udn"), cb);
         }
-        else if (utils::stringops::startsWith(req.url(), "/play"))
+        else if (utils::stringops::startsWith(req.url(), "/play?"))
         {
             auto params = upnp::http::Server::getQueryParameters(req.url());
             play(getParam(params, "rendererudn"),
@@ -188,17 +203,19 @@ void ControlPoint::handleRequest(const upnp::http::Request& req, std::function<v
         }
         else
         {
-            cb(upnp::http::StatusCode::BadRequest, "");
+            return false;
         }
     }
     catch (const std::invalid_argument& e)
     {
         log::error(e.what());
-        cb(upnp::http::StatusCode::BadRequest, "");
+        cb(s_badRequestResponse);
     }
+
+    return true;
 }
 
-void ControlPoint::browse(std::string_view udn, std::string_view containerId, std::function<void(upnp::http::StatusCode, std::string)> cb)
+void ControlPoint::browse(std::string_view udn, std::string_view containerId, std::function<void(std::string)> cb)
 {
     auto s = udn.to_string();
     log::debug("browse {} {}", udn.to_string(), containerId.to_string());
@@ -207,14 +224,14 @@ void ControlPoint::browse(std::string_view udn, std::string_view containerId, st
     auto dev = m_serverScanner.getDevice(udn);
     if (!dev)
     {
-        cb(upnp::http::StatusCode::BadRequest, "");
+        cb(s_badRequestResponse);
         return;
     }
 
     mediaServer->setDevice(dev, [this, cb, mediaServer, id = containerId.to_string()] (upnp::Status s) {
         if (!s)
         {
-            cb(upnp::http::StatusCode::InternalServerError, "");
+            cb(s_errorResponse);
             return;
         }
 
@@ -226,7 +243,7 @@ void ControlPoint::browse(std::string_view udn, std::string_view containerId, st
         mediaServer->getAllInContainer(id, [jsonData, mediaServer, cb] (upnp::Status s, const std::vector<upnp::Item>& items) {
             if (!s)
             {
-                cb(upnp::http::StatusCode::InternalServerError, "");
+                cb(s_errorResponse);
                 return;
             }
 
@@ -237,7 +254,7 @@ void ControlPoint::browse(std::string_view udn, std::string_view containerId, st
 
                 assert(jsonData->writer.IsComplete());
 
-                cb(upnp::http::StatusCode::Ok, fmt::format(s_okResponse, jsonData->sb.GetSize(), jsonData->sb.GetString()));
+                cb(fmt::format(s_okResponse, jsonData->sb.GetSize(), jsonData->sb.GetString()));
                 return;
             }
 
@@ -280,7 +297,7 @@ void ControlPoint::browse(std::string_view udn, std::string_view containerId, st
 void ControlPoint::play(std::string_view rendererUdn,
                         std::string_view serverUdn,
                         std::string_view containerId,
-                        std::function<void(upnp::http::StatusCode, std::string)> cb)
+                        std::function<void(std::string)> cb)
 {
     log::info("play {} {} {}", rendererUdn.data(), serverUdn.data(), containerId.data());
 
@@ -288,7 +305,7 @@ void ControlPoint::play(std::string_view rendererUdn,
         if (!s)
         {
             log::error("Failed to set renderer device: {}", s.what());
-            cb(upnp::http::StatusCode::InternalServerError, "");
+            cb(s_errorResponse);
             return;
         }
 
@@ -297,7 +314,7 @@ void ControlPoint::play(std::string_view rendererUdn,
             if (!s)
             {
                 log::error("Failed to set server device: {}", s.what());
-                cb(upnp::http::StatusCode::InternalServerError, "");
+                cb(s_errorResponse);
                 return;
             }
 
@@ -306,7 +323,7 @@ void ControlPoint::play(std::string_view rendererUdn,
                 if (!s)
                 {
                     log::error("Failed to obtain items for playback: {}", s.what());
-                    cb(upnp::http::StatusCode::InternalServerError, "");
+                    cb(s_errorResponse);
                     return;
                 }
 
@@ -316,11 +333,11 @@ void ControlPoint::play(std::string_view rendererUdn,
                         if (!s)
                         {
                             log::error("Failed to play playlist: {}", s.what());
-                            cb(upnp::http::StatusCode::InternalServerError, "");
+                            cb(s_errorResponse);
                             return;
                         }
 
-                        cb(upnp::http::StatusCode::Ok, "");
+                        cb(fmt::format(s_okResponse, 0, ""));
                     });
                 }
                 else
@@ -335,7 +352,7 @@ void ControlPoint::play(std::string_view rendererUdn,
     });
 }
 
-void ControlPoint::getRendererStatus(std::string_view udn, std::function<void(upnp::http::StatusCode, std::string)> cb)
+void ControlPoint::getRendererStatus(std::string_view udn, std::function<void(std::string)> cb)
 {
     auto renderer = std::make_shared<upnp::MediaRenderer>(*m_client);
     renderer->useDefaultConnection();
@@ -344,7 +361,7 @@ void ControlPoint::getRendererStatus(std::string_view udn, std::function<void(up
         if (!s)
         {
             log::error("Failed to set renderer device: {}", s.what());
-            cb(upnp::http::StatusCode::InternalServerError, "");
+            cb(s_errorResponse);
             return;
         }
 
@@ -352,7 +369,7 @@ void ControlPoint::getRendererStatus(std::string_view udn, std::function<void(up
             if (!s)
             {
                 log::error("Failed to get current track info: {}", s.what());
-                cb(upnp::http::StatusCode::InternalServerError, "");
+                cb(s_errorResponse);
                 return;
             }
 
@@ -360,7 +377,7 @@ void ControlPoint::getRendererStatus(std::string_view udn, std::function<void(up
                 if (!s)
                 {
                     log::error("Failed to get available renderer actions: {}", s.what());
-                    cb(upnp::http::StatusCode::InternalServerError, "");
+                    cb(s_errorResponse);
                     return;
                 }
 
@@ -383,7 +400,7 @@ void ControlPoint::getRendererStatus(std::string_view udn, std::function<void(up
                 jsonData.writer.EndObject();
                 assert(jsonData.writer.IsComplete());
 
-                cb(upnp::http::StatusCode::Ok, jsonData.sb.GetString());
+                cb(fmt::format(s_okResponse, jsonData.sb.GetSize(), jsonData.sb.GetString()));
             });
         });
     });
