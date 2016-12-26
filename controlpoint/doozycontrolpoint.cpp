@@ -301,7 +301,15 @@ void ControlPoint::play(std::string_view rendererUdn,
 {
     log::info("play {} {} {}", rendererUdn.data(), serverUdn.data(), containerId.data());
 
-    m_cp.setRendererDevice(m_rendererScanner.getDevice(rendererUdn), [this, cb, id = containerId.to_string(), server = serverUdn.to_string()] (upnp::Status s) {
+    auto rendererDev = m_rendererScanner.getDevice(rendererUdn);
+    auto serverDev = m_serverScanner.getDevice(serverUdn);
+    if (!rendererDev || !serverDev)
+    {
+        cb(s_badRequestResponse);
+        return;
+    }
+
+    m_cp.setRendererDevice(rendererDev, [this, cb, id = containerId.to_string(), serverDev] (upnp::Status s) {
         if (!s)
         {
             log::error("Failed to set renderer device: {}", s.what());
@@ -310,7 +318,7 @@ void ControlPoint::play(std::string_view rendererUdn,
         }
 
         auto mediaServer = std::make_shared<upnp::MediaServer>(*m_client);
-        mediaServer->setDevice(m_serverScanner.getDevice(server), [=] (upnp::Status s) {
+        mediaServer->setDevice(serverDev, [=] (upnp::Status s) {
             if (!s)
             {
                 log::error("Failed to set server device: {}", s.what());

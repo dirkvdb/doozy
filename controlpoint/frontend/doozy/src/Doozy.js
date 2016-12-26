@@ -1,155 +1,38 @@
 import React from 'react';
+import { connect } from 'react-redux'
+
+import * as cp from './ControlPoint'
+import { ConnectedRendererButton, ConnectedServerButton } from './DeviceButton'
 
 import AppBar from 'material-ui/AppBar';
-import Popover from 'material-ui/Popover';
-import RaisedButton from 'material-ui/RaisedButton';
-import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
 import Drawer from 'material-ui/Drawer';
 import {GridList, GridTile} from 'material-ui/GridList';
 
-import Computer from 'material-ui/svg-icons/hardware/computer';
-import Speaker from 'material-ui/svg-icons/hardware/speaker';
-
 const styles = {
     appbarbuttons: {
         margin: 5,
-    },
-    appbarbutton: {
-        marginRight: 8,
     }
 };
-
-var serverip = '192.168.1.10';
-
-async function getDevices(type) {
-    try {
-        let response = await fetch('http://' + serverip + ':4444/' + type);
-        let responseJson = await response.json();
-        return responseJson.devices;
-    } catch(error) {
-        console.error(error);
-    }
-}
-
-async function getItems(udn, id) {
-    try {
-        let response = await fetch('http://' + serverip + ':4444/browse?udn=' + udn + '&id=' + id);
-        let responseJson = await response.json();
-        return responseJson.items;
-    } catch(error) {
-        console.error(error);
-    }
-}
-
-async function play(server, renderer, id) {
-    try {
-        let response = await fetch('http://' + serverip + ':4444/play?serverudn=' + server + '&rendererudn=' + renderer + '&id=' + id);
-        return response;
-    } catch(error) {
-        console.error(error);
-    }
-}
-
-class DevicePopover extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            open: false,
-            buttonText: '',
-            items: []
-        };
-    }
-
-    componentDidMount() {
-        this.handleResize()
-        window.addEventListener("resize", this.handleResize.bind(this));
-
-        var self = this;
-        getDevices(this.props.type)
-            .then(function(devices) {
-                self.setState({items: devices});
-            });
-    }
-
-    handleResize () {
-        var width = window.innerWidth;
-        this.setState({buttonText: width > 500 ? this.props.name : ''});
-    }
-
-    handleTouchTap = (event) => {
-        // This prevents ghost click.
-        event.preventDefault();
-
-        this.setState({
-            open: true,
-            anchorEl: event.currentTarget
-        });
-    };
-
-    handleRequestClose = () => {
-        this.setState({open: false});
-    };
-
-    handleDeviceSelected = (event, menuItem, index) => {
-        this.props.onDeviceSelected({udn: menuItem.key, name: menuItem.props.primaryText});
-        this.setState({open: false});
-    };
-
-    render() {
-        return (
-            <RaisedButton style={styles.appbarbutton}
-                onTouchTap={this.handleTouchTap}
-                label={this.state.buttonText}
-                icon={this.props.type === 'servers' ? <Computer/> : <Speaker/>}
-            >
-                <Popover
-                   open={this.state.open}
-                   anchorEl={this.state.anchorEl}
-                   anchorOrigin={{horizontal: 'left', vertical: 'bottom'}}
-                   targetOrigin={{horizontal: 'left', vertical: 'top'}}
-                   onRequestClose={this.handleRequestClose}
-                >
-                   <Menu onItemTouchTap={this.handleDeviceSelected}>
-                       {this.state.items.map((item) => {
-                           return <MenuItem key={item.udn} primaryText={item.name} />
-                       })}
-                   </Menu>
-                </Popover>
-            </RaisedButton>
-        );
-    }
-}
 
 class Doozy extends React.Component {
     constructor(props) {
         super(props);
 
-        try {
-            var server = JSON.parse(localStorage.getItem('server') || {name: 'Servers'});
-            var renderer = JSON.parse(localStorage.getItem('renderer') || {name: 'Renderers'});
-        } catch (error) {
-            server = {name: 'Servers'}
-            renderer = {name: 'Renderers'}
-        }
-
-        console.log(server);
-        console.log(renderer);
-
         this.state = {
             open: false,
-            server: server,
-            renderer: renderer,
             gridcols: 2,
             items: []
         };
     }
 
     componentDidMount() {
-        if (typeof this.state.server.udn !== "undefined") {
+        console.log('Doozy::componentDidMount')
+        console.log(this.props.server)
+
+        if (typeof this.props.server !== "undefined" && this.props.server.udn !== "") {
             var self = this;
-            getItems(this.state.server.udn, '0')
+            cp.getItems(this.props.controlPointUrl, this.props.server.udn, '0')
                 .then(function(items) {
                     self.setState({items: items});
                 });
@@ -166,13 +49,12 @@ class Doozy extends React.Component {
 
     handleServerChange(device) {
         console.log('Server selected: ' + device.udn + ' '+ JSON.stringify(device));
-        localStorage.setItem('server', JSON.stringify(device));
 
         this.setState({items: []});
         this.setState({server: device});
 
         var self = this;
-        getItems(device.udn, '0')
+        cp.getItems(this.props.controlPointUrl, device.udn, '0')
             .then(function(items) {
                 self.setState({items: items});
             });
@@ -180,7 +62,6 @@ class Doozy extends React.Component {
 
     handleRendererChange(device) {
         console.log('Renderer selected: ' + device.udn);
-        localStorage.setItem('renderer', JSON.stringify(device));
         this.setState({renderer: device});
     }
 
@@ -189,7 +70,7 @@ class Doozy extends React.Component {
 
         if (item.class === 'object.container.album.musicAlbum') {
             if (this.state.renderer) {
-                play(this.state.server.udn, this.state.renderer.udn, item.id);
+                cp.play(this.props.controlPointUrl, this.props.server.udn, this.props.renderer.udn, item.id);
             }
 
             return;
@@ -198,7 +79,7 @@ class Doozy extends React.Component {
         this.setState({items: []});
 
         var self = this;
-        getItems(this.state.server.udn, item.id)
+        cp.getItems(this.props.controlPointUrl, this.state.server.udn, item.id)
             .then(function(items) {
                 self.setState({items: items});
             });
@@ -212,8 +93,8 @@ class Doozy extends React.Component {
                     onLeftIconButtonTouchTap={this.handleToggle.bind(this)}
                     iconElementRight={
                         <div style={styles.appbarbuttons}>
-                            <DevicePopover name={this.state.renderer.name} type='renderers' onDeviceSelected={this.handleRendererChange.bind(this)}/>
-                            <DevicePopover name={this.state.server.name} type='servers' onDeviceSelected={this.handleServerChange.bind(this)}/>
+                            <ConnectedRendererButton/>
+                            <ConnectedServerButton/>
                         </div>
                     }
                 />
@@ -241,4 +122,19 @@ class Doozy extends React.Component {
     }
 }
 
-export default Doozy;
+const mapStateToProps = (state) => {
+    return {controlPointUrl: state.controlPointUrl, server: state.server, renderer: state.renderer}
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        onServerSelected: (device) => {
+            //dispatch(selectServer(device))
+            console.log('Server selected')
+        }
+    }
+}
+
+const ConnectedDoozy = connect(mapStateToProps, mapDispatchToProps)(Doozy)
+
+export default ConnectedDoozy;
