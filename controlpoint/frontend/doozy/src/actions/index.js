@@ -14,7 +14,7 @@ export function selectRenderer(device) {
     }
 }
 
-export function selectServer(device) {
+function serverChanged(device) {
     return {
         type: SELECT_SERVER,
         udn: device.udn,
@@ -174,13 +174,10 @@ function playItem(id) {
 
 export function fetchItems(id) {
     return (dispatch, getState) => {
-        console.log('fetch items: OW YEAH')
         dispatch(requestItems())
 
         const server = getState().servers.active
         const cpUrl = getState().settings.controlPointUrl
-
-        console.log('fetch: ' + cpUrl + '/browse?udn=' + server.udn + '&id=' + id)
 
         return fetch(cpUrl + '/browse?udn=' + server.udn + '&id=' + id)
             .then(response => response.json())
@@ -198,3 +195,15 @@ export function selectItem(item) {
         }
     }
 }
+
+export function selectServer(device) {
+    return (dispatch, getState) => {
+        dispatch(serverChanged(device))
+        if (device.udn !== "") {
+            return dispatch(fetchItems("0"))
+        } else {
+            return Promise.resolve()
+        }
+    }
+}
+

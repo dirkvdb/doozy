@@ -271,21 +271,28 @@ void ControlPoint::browse(std::string_view udn, std::string_view containerId, st
                 jsonData->writer.Key("class");
                 jsonData->writer.String(item.getClassString());
 
-                std::string url;
-                if (item.getClass() == upnp::Class::AudioContainer)
+                auto url = item.getAlbumArtUri(upnp::dlna::ProfileId::JpegThumbnail);
+                if (url.empty() && item.getClass() == upnp::Class::AudioContainer)
                 {
                     url = item.getMetaData(upnp::Property::AlbumArt);
-                }
-
-                if (url.empty())
-                {
-                    url = item.getAlbumArtUri(upnp::dlna::ProfileId::JpegThumbnail);
                 }
 
                 if (!url.empty())
                 {
                     jsonData->writer.Key("thumbnailurl");
                     jsonData->writer.String(url);
+                }
+
+                auto artist = item.getMetaData(upnp::Property::AlbumArtist);
+                if (artist.empty())
+                {
+                    artist = item.getMetaData(upnp::Property::Artist);
+                }
+
+                if (!artist.empty())
+                {
+                    jsonData->writer.Key("artist");
+                    jsonData->writer.String(artist);
                 }
 
                 jsonData->writer.EndObject();
@@ -305,6 +312,7 @@ void ControlPoint::play(std::string_view rendererUdn,
     auto serverDev = m_serverScanner.getDevice(serverUdn);
     if (!rendererDev || !serverDev)
     {
+        log::error("Device not found: {}", rendererDev ? serverUdn : rendererUdn);
         cb(s_badRequestResponse);
         return;
     }

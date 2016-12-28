@@ -1,6 +1,9 @@
 import React from 'react';
 
 import {GridList, GridTile} from 'material-ui/GridList';
+import IconButton from 'material-ui/IconButton';
+import {white} from 'material-ui/styles/colors';
+import Play from 'material-ui/svg-icons/av/play-circle-outline';
 
 export default class Items extends React.Component {
     constructor(props) {
@@ -18,7 +21,14 @@ export default class Items extends React.Component {
                 cols={this.state.gridcols}
             >
                 {this.props.items.map((item) => {
-                    return <GridTile key={item.id} title={item.title} onTouchTap={() => this.props.onSelected(item)}>
+                    return <GridTile
+                                key={item.id}
+                                title={item.title}
+                                subtitle={item.artist}
+                                actionIcon={<IconButton> <Play color={white}/></IconButton>}
+                                onClick={() => console.log('CLICKED')}
+                                onTouchTap={() => this.props.onSelected(item)}
+                           >
                                <img src={item.thumbnailurl} role="presentation" />
                            </GridTile>;
                 })}
