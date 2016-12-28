@@ -1,8 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux'
 
-import * as actions from './Actions'
-import * as cp from './ControlPoint'
+import * as actions from '../actions'
 
 import Popover from 'material-ui/Popover';
 import RaisedButton from 'material-ui/RaisedButton';
@@ -23,8 +22,7 @@ class DeviceButton extends React.Component {
         super(props);
 
         this.state = {
-            open: false,
-            items: []
+            open: false
         };
     }
 
@@ -71,8 +69,8 @@ class DeviceButton extends React.Component {
                    onRequestClose={this.handleRequestClose}
                 >
                    <Menu onItemTouchTap={this.handleDeviceSelected.bind(this)}>
-                       {this.state.items.map((item) => {
-                           return <MenuItem key={item.udn} primaryText={item.name} />
+                       {this.props.devices.map((dev) => {
+                           return <MenuItem key={dev.udn} primaryText={dev.name} />
                        })}
                    </Menu>
                 </Popover>
@@ -87,18 +85,6 @@ class ServerButton extends DeviceButton {
         this.state.icon = <Computer/>
     }
 
-    componentDidMount() {
-        super.componentDidMount()
-
-        console.log(this.props.server)
-        console.log(this.props.renderer)
-
-        var self = this;
-        cp.getDevices(this.props.controlPointUrl, 'servers').then(function(devices) {
-            self.setState({items: devices});
-        });
-    }
-
     handleDeviceSelected(event, menuItem, index) {
         super.handleDeviceSelected(event, menuItem, index)
         this.props.onServerSelected({udn: menuItem.key, name: menuItem.props.primaryText})
@@ -111,15 +97,6 @@ class RendererButton extends DeviceButton {
         this.state.icon = <Speaker/>
     }
 
-    componentDidMount() {
-        super.componentDidMount()
-
-        var self = this;
-        cp.getDevices(this.props.controlPointUrl, 'renderers').then(function(devices) {
-            self.setState({items: devices});
-        });
-    }
-
     handleDeviceSelected(event, menuItem, index) {
         super.handleDeviceSelected(event, menuItem, index)
         this.props.onRendererSelected({udn: menuItem.key, name: menuItem.props.primaryText})
@@ -127,11 +104,17 @@ class RendererButton extends DeviceButton {
 }
 
 const mapStateToProps = (state) => {
-    return {name: state.server.name, controlPointUrl: state.controlPointUrl}
+    return {
+        name: state.servers.active.name,
+        devices: state.servers.available
+    }
 }
 
 const mapRStateToProps = (state) => {
-    return {name: state.renderer.name, controlPointUrl: state.controlPointUrl}
+    return {
+        name: state.renderers.active.name,
+        devices: state.renderers.available,
+    }
 }
 
 const mapDispatchToProps = (dispatch) => {

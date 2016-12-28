@@ -1,40 +1,23 @@
-import { createStore } from 'redux'
+import { createStore, applyMiddleware } from 'redux'
+import createLogger from 'redux-logger'
 import { persistStore, autoRehydrate } from 'redux-persist'
-import * as actions from './Actions'
+import doozy from './reducers'
 
-const initialState = {
-    controlPointUrl: 'http://192.168.1.10:4444',
-    server: {
-        name: 'Server',
-        udn: ''
-    },
-    renderer: {
-        name: 'Renderer',
-        udn: ''
-    }
-}
+import { fetchRenderers, fetchServers, fetchItems } from './actions'
 
-function doozy(state = initialState, action) {
-    switch (action.type) {
-    case actions.SELECT_SERVER:
-        return {...state, server: {udn: action.udn, name: action.name}}
-    case actions.SELECT_RENDERER:
-        return {...state, renderer: {udn: action.udn, name: action.name}}
-    case actions.SET_CONTROLPOINT_URL:
-        return {...state, controlPointUrl: action.url}
-    default:
-        return state
-    }
-}
+import thunkMiddleware from 'redux-thunk'
 
 const configureStore = () => {
-    const store = createStore(doozy, undefined, autoRehydrate())
-    persistStore(store)
+    const loggerMiddleware = createLogger()
+    const store = createStore(doozy, applyMiddleware(thunkMiddleware, loggerMiddleware), autoRehydrate())
+    persistStore(store, {}, () => {
+        store.dispatch(fetchRenderers(store.getState().settings.controlPointUrl))
+        store.dispatch(fetchServers(store.getState().settings.controlPointUrl))
 
-    console.log(store.getState())
-    store.subscribe(() =>
-        console.log(store.getState())
-    )
+        if (store.getState().servers.active.udn !== "" && store.getState().items.length === 0) {
+            store.dispatch(fetchItems("0"))
+        }
+    })
 
     return store
 }
