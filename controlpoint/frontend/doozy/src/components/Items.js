@@ -6,43 +6,58 @@ import {white} from 'material-ui/styles/colors';
 import Play from 'material-ui/svg-icons/av/play-circle-outline';
 
 export default class Items extends React.Component {
-    constructor(props) {
-        super(props);
+  constructor(props) {
+    super(props);
 
-        this.state = {
-            gridcols: 2,
-        };
-    }
+    this.state = {
+      gridcols: 2,
+      cellHeight: 'auto',
+    };
+  }
 
-    render() {
-        return (
-            <GridList
-                cellHeight={180}
-                cols={this.state.gridcols}
-            >
-                {this.props.items.map((item) => {
-                    return <GridTile
-                                key={item.id}
-                                title={item.title}
-                                subtitle={item.artist}
-                                actionIcon={<IconButton> <Play color={white}/></IconButton>}
-                                onClick={() => console.log('CLICKED')}
-                                onTouchTap={() => this.props.onSelected(item)}
-                           >
-                               <img src={item.thumbnailurl} role="presentation" />
-                           </GridTile>;
-                })}
-            </GridList>
-        );
-    }
+  componentDidMount() {
+    this.handleResize()
+    window.addEventListener("resize", this.handleResize.bind(this));
+  }
+
+  handleResize () {
+    let cols = Math.floor(window.innerWidth / 200)
+    let cellHeight = Math.floor(window.innerWidth / cols);
+    this.setState({gridcols: cols, cellHeight: cellHeight})
+  }
+
+  render() {
+    return (
+      <GridList
+        cellHeight={this.state.cellHeight}
+        cols={this.state.gridcols}
+      >
+        {this.props.items.map((item) => {
+          return <GridTile
+                    key={item.id}
+                    title={item.title}
+                    subtitle={item.artist}
+                    actionIcon={<IconButton>
+                                  <Play color={white} onTouchTap={() => this.props.onSelected(item)}/>
+                                </IconButton>
+                    }
+                 >
+                   <img src={item.thumbnailurl} role="presentation"
+                     onTouchTap={() => this.props.onSelected(item)}
+                   />
+                 </GridTile>;
+        })}
+      </GridList>
+    );
+  }
 }
 
 Items.propTypes = {
-    items: React.PropTypes.arrayOf(
-        React.PropTypes.shape({
-            id: React.PropTypes.string.isRequired,
-            title: React.PropTypes.string.isRequired,
-        })
-    ).isRequired,
-    onSelected: React.PropTypes.func.isRequired
+  items: React.PropTypes.arrayOf(
+    React.PropTypes.shape({
+      id: React.PropTypes.string.isRequired,
+      title: React.PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  onSelected: React.PropTypes.func.isRequired
 }

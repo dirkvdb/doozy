@@ -112,6 +112,30 @@ export function requestItemsFailed(error) {
     }
 }
 
+export const RENDERER_STATUS_REQUEST = 'RENDERER_STATUS_REQUEST'
+export const RENDERER_STATUS_SUCCESS = 'RENDERER_STATUS_SUCCESS'
+export const RENDERER_STATUS_FAILURE = 'RENDERER_STATUS_FAILURE'
+
+export function requestRendererStatus() {
+    return {
+        type: RENDERER_STATUS_REQUEST,
+    }
+}
+
+export function receiveRendererStatus(status) {
+    return {
+        type: RENDERER_STATUS_SUCCESS,
+        items: status,
+    }
+}
+
+export function requestRendererStatusFailed(error) {
+    return {
+        type: RENDERER_STATUS_FAILURE,
+        error: error
+    }
+}
+
 export const PLAY_REQUEST = 'PLAY_REQUEST'
 export const PLAY_SUCCESS = 'PLAY_SUCCESS'
 export const PLAY_FAILURE = 'PLAY_FAILURE'
@@ -155,6 +179,20 @@ export function fetchRenderers(cpUrl) {
             .then(response => response.json())
             .then(json => dispatch(receiveRenderers(json.devices)))
             .catch(error => dispatch(requestRenderersFailed()))
+      }
+}
+
+export function fetchRendererStatus() {
+    return function (dispatch, getState) {
+        dispatch(requestRendererStatus())
+
+        const cpUrl = getState().settings.controlPointUrl
+        const renderer = getState().renderers.active
+
+        return fetch(cpUrl + '/rendererstatus?udn=' + renderer.udn)
+            .then(response => response.json())
+            .then(json => dispatch(receiveRendererStatus(json)))
+            .catch(error => dispatch(requestRendererStatusFailed()))
       }
 }
 

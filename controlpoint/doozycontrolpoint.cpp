@@ -26,11 +26,12 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 
-using namespace utils;
-using namespace utils::stringops;
-
 namespace doozy
 {
+
+using namespace utils;
+using namespace utils::stringops;
+using namespace std::chrono_literals;
 
 struct JsonData
 {
@@ -380,42 +381,63 @@ void ControlPoint::getRendererStatus(std::string_view udn, std::function<void(st
             return;
         }
 
-        renderer->getCurrentTrackInfo([=] (upnp::Status s, const upnp::Item& item) {
+        renderer->getCurrentTrackPosition([=] (upnp::Status s, std::chrono::seconds position) {
             if (!s)
             {
-                log::error("Failed to get current track info: {}", s.what());
+                log::error("Failed to get current track position: {}", s.what());
                 cb(s_errorResponse);
                 return;
             }
 
-            renderer->getAvailableActions([renderer, cb, item] (upnp::Status s, const std::set<upnp::MediaRenderer::Action>& actions) {
+            renderer->getCurrentTrackInfo([=] (upnp::Status s, const upnp::Item& item) {
                 if (!s)
                 {
-                    log::error("Failed to get available renderer actions: {}", s.what());
+                    log::error("Failed to get current track info: {}", s.what());
                     cb(s_errorResponse);
                     return;
                 }
 
-                JsonData jsonData;
-                jsonData.writer.StartObject();
+                renderer->getAvailableActions([renderer, cb, position, item] (upnp::Status s, const std::set<upnp::MediaRenderer::Action>& actions) {
+                    if (!s)
+                    {
+                        log::error("Failed to get available renderer actions: {}", s.what());
+                        cb(s_errorResponse);
+                        return;
+                    }
 
-                jsonData.writer.Key("title");
-                jsonData.writer.String(item.getTitle());
-                jsonData.writer.Key("artist");
-                jsonData.writer.String(item.getMetaData(upnp::Property::Artist));
+                    JsonData jsonData;
+                    jsonData.writer.StartObject();
 
-                jsonData.writer.Key("actions");
-                jsonData.writer.StartArray();
-                for (auto& action : actions)
-                {
-                    jsonData.writer.String(upnp::MediaRenderer::actionToString(action));
-                }
-                jsonData.writer.EndArray();
+                    jsonData.writer.Key("title");
+                    jsonData.writer.String(item.getTitle());
+                    jsonData.writer.Key("artist");
+                    jsonData.writer.String(item.getMetaData(upnp::Property::Artist));
+                    jsonData.writer.Key("currentposition");
+                    jsonData.writer.String(std::to_string(position.count()));
 
-                jsonData.writer.EndObject();
-                assert(jsonData.writer.IsComplete());
+                    if (!item.getResources().empty())
+                    {
+                        auto duration = item.getResources().front().getDuration();
+                        if (duration > 0s)
+                        {
+                            jsonData.writer.Key("duration");
+                            jsonData.writer.String(std::to_string(duration.count()));
+                        }
+                    }
 
-                cb(fmt::format(s_okResponse, jsonData.sb.GetSize(), jsonData.sb.GetString()));
+                    jsonData.writer.Key("actions");
+                    jsonData.writer.StartArray();
+                    for (auto& action : actions)
+                    {
+                        jsonData.writer.String(upnp::MediaRenderer::actionToString(action));
+                    }
+                    jsonData.writer.EndArray();
+
+                    jsonData.writer.EndObject();
+                    assert(jsonData.writer.IsComplete());
+
+                    cb(fmt::format(s_okResponse, jsonData.sb.GetSize(), jsonData.sb.GetString()));
+                });
             });
         });
     });

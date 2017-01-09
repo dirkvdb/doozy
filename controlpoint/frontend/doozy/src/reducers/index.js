@@ -22,6 +22,13 @@ const initialState = {
     items: {
         isFetching: false,
         items: [],
+    },
+    nowplaying: {
+        title: '',
+        artist: '',
+        volume: 0,
+        duration: '',
+        currentPosition: '',
     }
 }
 
@@ -78,11 +85,25 @@ function renderers(state = initialState.renderers, action) {
     }
 }
 
+function nowplaying(state = initialState.nowplaying, action) {
+    switch (action.type) {
+        case Actions.RENDERER_STATUS_REQUEST:
+            return {...state}
+        case Actions.RENDERER_STATUS_SUCCESS:
+            return {...state, RENDERER_STATUS: action.status}
+        case Actions.RENDERER_STATUS_FAILURE:
+            return {...state, nowplaying: initialState.nowplaying}
+        default:
+            return state
+    }
+}
+
 const doozy = combineReducers({
     settings,
     renderers,
     servers,
-    items
+    items,
+    nowplaying,
 })
 
 export default doozy

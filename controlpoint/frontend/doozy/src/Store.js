@@ -3,7 +3,7 @@ import createLogger from 'redux-logger'
 import { persistStore, autoRehydrate } from 'redux-persist'
 import doozy from './reducers'
 
-import { fetchRenderers, fetchServers, fetchItems } from './actions'
+import { fetchRenderers, fetchServers, fetchItems, fetchRendererStatus } from './actions'
 
 import thunkMiddleware from 'redux-thunk'
 
@@ -18,6 +18,10 @@ const configureStore = () => {
             store.dispatch(fetchItems("0"))
         }
     })
+
+    // setInterval(() => {
+    //     fetchRendererStatus()
+    // }, 5000);
 
     return store
 }
