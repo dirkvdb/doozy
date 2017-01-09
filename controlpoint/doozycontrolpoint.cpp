@@ -90,7 +90,7 @@ void ControlPoint::start(const std::string& networkInterface)
         m_rendererScanner.start();
         m_rendererScanner.refresh();
 
-        m_webServer.start(asio::ip::tcp::endpoint(asio::ip::address_v4::any(), 4444));
+        m_webServer.start(asio::ip::tcp::endpoint(asio::ip::address_v4::any(), 5555));
 
         m_cp.setWebserver(m_webServer);
         m_cp.activate([] (const upnp::Status& s) {

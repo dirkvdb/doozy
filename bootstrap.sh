@@ -42,8 +42,6 @@ elif [ "$1" = "archarmv6" ]; then
 elif [ "$1" = "archarmv7" ]; then
     export ARCH=armv7
     export PATH="/opt/x-tools7h/arm-unknown-linux-gnueabihf/bin:$PATH"
-    export CROSS=arm-unknown-linux-gnueabihf-
-    export CFLAGS="-march=armv7-a -mfpu=vfpv3 -mfloat-abi=hard -O3"
     export HOST="arm-linux-gnueabi"
 elif [ "$1" = "macv6" ]; then
     export ARCH=armv6

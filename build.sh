@@ -29,10 +29,6 @@ elif [ "$1" = "archarmv6" ]; then
     export HOST="arm-linux-gnueabi"
 elif [ "$1" = "archarmv7" ]; then
     export ARCH=armv7
-    export PATH="/opt/x-tools7h/arm-unknown-linux-gnueabihf/bin:$PATH"
-    export CROSS=arm-unknown-linux-gnueabihf-
-    export CFLAGS="-march=armv7-a -mfpu=vfpv3 -mfloat-abi=hard -O3"
-    export HOST="arm-linux-gnueabi"
 elif [ "$1" = "macv6" ]; then
     export ARCH=armv6
     export PATH="/usr/local/linaro/arm-linux-gnueabihf-raspbian/bin/:$PATH"
@@ -58,5 +54,5 @@ checkresult mkdir -p ./build/ninja
 cd ./build/ninja
 PWD=`pwd`
 export PKG_CONFIG_SYSROOT_DIR=${PWD}/../local
-checkresult cmake -G Ninja -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON -DCMAKE_PREFIX_PATH=${PWD}/../local -DCMAKE_INSTALL_PREFIX=${PWD}/../local -DCMAKE_TOOLCHAIN_FILE=${PWD}/../../dependencies/toolchain-${ARCH}.make -DCMAKE_BUILD_TYPE=Release ../..
+checkresult cmake -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON -DCMAKE_PREFIX_PATH=${PWD}/../local -DCMAKE_INSTALL_PREFIX=${PWD}/../local -DCMAKE_TOOLCHAIN_FILE=${PWD}/../../dependencies/toolchain-${ARCH}.make -DCMAKE_BUILD_TYPE=Release ../..
 checkresult ninja

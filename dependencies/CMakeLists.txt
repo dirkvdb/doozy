@@ -17,11 +17,8 @@ ENDIF ()
 
 IF (NOT HOST MATCHES "^.*musl.*" AND NOT MINGW)
     # musl toolchain is used for static builds. libcec only builds shared library
-    IF (NOT CMAKE_COMPILER_IS_GNUCC AND NOT APPLE)
-        # gcc fails to compile libcec
-        ADD_SUBDIRECTORY(libplatform)
-        ADD_SUBDIRECTORY(libcec)
-    ENDIF ()
+    ADD_SUBDIRECTORY(libplatform)
+    ADD_SUBDIRECTORY(libcec)
     ADD_SUBDIRECTORY(libxdg-basedir)
 ENDIF ()
 

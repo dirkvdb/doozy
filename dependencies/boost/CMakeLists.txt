@@ -11,6 +11,9 @@ ELSE ()
     SET(VARIANT release)
 ENDIF()
 
+SET(ADDRESS_MODEL 64)
+SET(ARCHITECTURE x86)
+
 IF (MINGW OR UNIX)
     SET(BUILD_CMD ./b2)
     IF (APPLE)
@@ -41,6 +44,11 @@ IF(HOST MATCHES ".*-musl")
     SET(USER_CONFIG user-config-musl.jam)
 ENDIF ()
 
+IF (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm") 
+    SET(ADDRESS_MODEL 32)
+    SET(ARCHITECTURE arm)
+ENDIF ()
+
 EXTERNALPROJECT_ADD(${NAME}
     DEPENDS zlib
     URL http://downloads.sourceforge.net/project/${NAME}/${NAME}/${VERSION}/${NAME}_${VERSION_UNDERSCORE}.${TARBALL_EXTENSION} TIMEOUT 6000
@@ -48,8 +56,8 @@ EXTERNALPROJECT_ADD(${NAME}
     CONFIGURE_COMMAND ${CONFIGURE_CMD}
     BUILD_COMMAND ${BUILD_CMD}
         --user-config=${CMAKE_CURRENT_SOURCE_DIR}/${USER_CONFIG}
-        address-model=64
-        architecture=x86
+	address-model=${ADDRESS_MODEL}
+	architecture=${ARCHITECTURE}
         variant=${VARIANT}
         toolset=${TOOLSET}
         link=static
