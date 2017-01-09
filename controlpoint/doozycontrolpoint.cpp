@@ -92,7 +92,7 @@ void ControlPoint::start(const std::string& networkInterface)
         m_rendererScanner.refresh();
 
         m_webServer.start(asio::ip::tcp::endpoint(asio::ip::address_v4::any(), 5555));
-        log::info("Webserver listening url: %s", m_webServer.getWebRootUrl());
+        log::info("Webserver listening url: {}", m_webServer.getWebRootUrl());
 
         m_cp.setWebserver(m_webServer);
         m_cp.activate([] (const upnp::Status& s) {
