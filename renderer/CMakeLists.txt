@@ -12,6 +12,10 @@ if (LIBCEC_PKG_FOUND)
         PATHS ${LIBCEC_PKG_LIBRARY_DIRS}
     )
 
+    if (NOT LIBCEC_INCLUDE_DIR)
+        message(FATAL_ERROR "Failed to find cec headers in ${LIBCEC_PKG_INCLUDE_DIRS}")
+    endif ()
+
     set(LIBCEC_LIBRARIES ${LIBCEC_LIBRARY} ${CMAKE_DL_LIBS})
 endif ()
 

@@ -53,6 +53,6 @@ fi
 checkresult mkdir -p ./build/ninja
 cd ./build/ninja
 PWD=`pwd`
-export PKG_CONFIG_SYSROOT_DIR=${PWD}/../local
+#export PKG_CONFIG_SYSROOT_DIR=${PWD}/../local
 checkresult cmake -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON -DCMAKE_PREFIX_PATH=${PWD}/../local -DCMAKE_INSTALL_PREFIX=${PWD}/../local -DCMAKE_TOOLCHAIN_FILE=${PWD}/../../dependencies/toolchain-${ARCH}.make -DCMAKE_BUILD_TYPE=Release ../..
 checkresult ninja

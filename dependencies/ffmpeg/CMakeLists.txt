@@ -45,7 +45,8 @@ EXTERNALPROJECT_ADD(${NAME}
     INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
     CONFIGURE_COMMAND <SOURCE_DIR>/configure ${TARGETSETTING} ${COMPSETTING} ${ARCHSETTING} ${DBGSETTING} --prefix=<INSTALL_DIR> --disable-shared --disable-avdevice --disable-doc --disable-htmlpages --disable-manpages --disable-programs
         --disable-encoders --disable-muxers --disable-decoders --disable-swscale --disable-iconv
-        --enable-gpl --enable-network
+        --enable-gpl --enable-network --disable-libxcb --disable-xlib --disable-sdl2
+	--disable-vaapi --disable-vdpau
         --disable-everything
         --enable-protocol=http
         --enable-protocol=file
