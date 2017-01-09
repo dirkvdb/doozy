@@ -37,6 +37,10 @@ if (HAVE_LIBCEC)
         cectest.cpp
     )
 
+    target_include_directories(cectest SYSTEM PRIVATE
+        ${LIBCEC_INCLUDE_DIR}
+    )
+
     target_link_libraries(cectest
         doozyrenderer
         utils
@@ -44,7 +48,7 @@ if (HAVE_LIBCEC)
 endif ()
 
 target_link_libraries(doozytest
-	${LINK_LIBS}
+    ${LINK_LIBS}
     doozycommon
 )
 
