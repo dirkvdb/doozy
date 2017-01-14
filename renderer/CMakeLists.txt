@@ -14,9 +14,8 @@ if (NOT WITHOUT_CEC)
             message(FATAL_ERROR "Failed to find cec headers in ${LIBCEC_PKG_INCLUDE_DIRS}")
         endif ()
 
-        set (LIBCEC_INCLUDE_DIR ${LIBCEC_INCLUDE_DIR}/libcec PARENT_SCOPE)
-        set (LIBCEC_INCLUDE_DIR ${LIBCEC_INCLUDE_DIR}/libcec)
-
+        set(LIBCEC_INCLUDE_DIR ${LIBCEC_INCLUDE_DIR}/libcec PARENT_SCOPE)
+        set(LIBCEC_INCLUDE_DIR ${LIBCEC_INCLUDE_DIR}/libcec)
         set(LIBCEC_LIBRARIES ${LIBCEC_LIBRARY} ${CMAKE_DL_LIBS})
     endif ()
 endif ()

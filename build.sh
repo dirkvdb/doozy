@@ -21,12 +21,11 @@ platformopts=""
 if [[ "$platform" == 'Linux' ]]; then
     echo "Linux"
     platformopts="-DWITHOUT_CEC=OFF"
-elif [[ "$platform" == 'Darwin' ]]; then
+elif [[ "$platform" == 'Darwin' && "$1" = "native" ]]; then
     echo "Apple"
     platformopts="-DWITHOUT_CEC=ON"
 else
-    echo "Unknown platform: $platform"
-    exit 1
+    platformopts="-DWITHOUT_CEC=OFF"
 fi
 
 if [ "$1" = "native" ]; then
@@ -43,14 +42,7 @@ elif [ "$1" = "archarmv6" ]; then
     export HOST="arm-linux-gnueabi"
 elif [ "$1" = "armv7" ]; then
     export ARCH=armv7
-    #export PKG_CONFIG_SYSROOT_DIR=${pwd}/../local
     export PATH="/opt/x-tools7h/arm-unknown-linux-gnueabihf/bin:/opt/armv7-rpi2-linux-gnueabihf/bin/:$PATH"
-elif [ "$1" = "macv6" ]; then
-    export ARCH=armv6
-    export PATH="/usr/local/linaro/arm-linux-gnueabihf-raspbian/bin/:$PATH"
-    export CROSS=arm-linux-gnueabihf-
-    export CFLAGS="-march=armv6j -mfpu=vfp -mfloat-abi=hard -marm -O3"
-    export HOST="arm-linux-gnueabi"
 elif [ "$1" = "android" ]; then
     export ARCH=androidv7
     TOOLCHAIN="/Users/dirk/android-toolchain"
