@@ -20,6 +20,22 @@ set( RUN_HAVE_STD_REGEX
      "0"
      CACHE STRING "Result from TRY_RUN" FORCE)
 
+# RUN_HAVE_POSIX_REGEX
+#    indicates whether the executable would have been able to run on its
+#    target platform. If so, set RUN_HAVE_POSIX_REGEX to
+#    the exit code (in many cases 0 for success), otherwise enter "FAILED_TO_RUN".
+# The COMPILE_HAVE_POSIX_REGEX variable holds the build result for this TRY_RUN().
+#
+# Source file   : /Users/dirk/Projects/doozy/build/deps-armv7/benchmark/benchmark/src/benchmark/cmake/posix_regex.cpp
+# Executable    : /Users/dirk/Projects/doozy/build/deps-armv7/benchmark/benchmark/src/benchmark-build/CMakeFiles/cmTC_055fa-RUN_HAVE_POSIX_REGEX
+# Run arguments :
+#    Called from: [2]   /Users/dirk/Projects/doozy/build/deps-armv7/benchmark/benchmark/src/benchmark/cmake/CXXFeatureCheck.cmake
+#                 [1]   /Users/dirk/Projects/doozy/build/deps-armv7/benchmark/benchmark/src/benchmark/CMakeLists.txt
+
+set( RUN_HAVE_POSIX_REGEX
+     "1"
+     CACHE STRING "Result from TRY_RUN" FORCE)
+
 # RUN_HAVE_STEADY_CLOCK
 #    indicates whether the executable would have been able to run on its
 #    target platform. If so, set RUN_HAVE_STEADY_CLOCK to

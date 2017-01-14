@@ -1,0 +1,2 @@
+using gcc : arm : armv7-rpi2-linux-gnueabihf-g++ : <cxxflags>"-std=c++14 -fPIC" ;
+using zlib ;

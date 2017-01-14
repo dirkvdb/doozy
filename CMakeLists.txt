@@ -41,6 +41,8 @@ option(SANITIZE_ADDRESS "Build with address sanitizer (detect invalid memory acc
 option(SANITIZE_UNDEFINED "Build with undefined behavior sanitizer (detect integer overflow, bad shifts, ...)" OFF)
 option(USE_GOLD_LINKER "Use Gnu gold linker instead of GNU ld")
 
+option(WITHOUT_CEC "Disable libcec support" OFF)
+
 if (SANITIZE_ADDRESS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")

@@ -15,6 +15,20 @@ if [ "$#" -ne 1 ]; then
     exit 1
 fi
 
+platform=`uname`
+platformopts=""
+
+if [[ "$platform" == 'Linux' ]]; then
+    echo "Linux"
+    platformopts="-DWITHOUT_CEC=OFF"
+elif [[ "$platform" == 'Darwin' ]]; then
+    echo "Apple"
+    platformopts="-DWITHOUT_CEC=ON"
+else
+    echo "Unknown platform: $platform"
+    exit 1
+fi
+
 if [ "$1" = "native" ]; then
     export ARCH=native
 elif [ "$1" = "nativegcc6" ]; then
@@ -27,8 +41,10 @@ elif [ "$1" = "archarmv6" ]; then
     export CROSS=arm-unknown-linux-gnueabihf-
     export CFLAGS="-march=armv6j -mfpu=vfp -mfloat-abi=hard -marm -O3"
     export HOST="arm-linux-gnueabi"
-elif [ "$1" = "archarmv7" ]; then
+elif [ "$1" = "armv7" ]; then
     export ARCH=armv7
+    #export PKG_CONFIG_SYSROOT_DIR=${pwd}/../local
+    export PATH="/opt/x-tools7h/arm-unknown-linux-gnueabihf/bin:/opt/armv7-rpi2-linux-gnueabihf/bin/:$PATH"
 elif [ "$1" = "macv6" ]; then
     export ARCH=armv6
     export PATH="/usr/local/linaro/arm-linux-gnueabihf-raspbian/bin/:$PATH"
@@ -50,9 +66,15 @@ else
     exit 1
 fi
 
-checkresult mkdir -p ./build/ninja
-cd ./build/ninja
-PWD=`pwd`
-#export PKG_CONFIG_SYSROOT_DIR=${PWD}/../local
-checkresult cmake -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON -DCMAKE_PREFIX_PATH=${PWD}/../local -DCMAKE_INSTALL_PREFIX=${PWD}/../local -DCMAKE_TOOLCHAIN_FILE=${PWD}/../../dependencies/toolchain-${ARCH}.make -DCMAKE_BUILD_TYPE=Release ../..
-checkresult ninja
+checkresult mkdir -p ./build/ninja-${ARCH}
+cd ./build/ninja-${ARCH}
+pwd=`pwd`
+checkresult cmake \
+    $platformopts \
+    -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON \
+    -DCMAKE_PREFIX_PATH=${PWD}/../local-${ARCH} \
+    -DCMAKE_INSTALL_PREFIX=${pwd}/../local-${ARCH} \
+    -DCMAKE_TOOLCHAIN_FILE=${pwd}/../../dependencies/toolchain-${ARCH}.make \
+    -DOPENAL_INCLUDE_DIR=${pwd}/../local-${ARCH}/include \
+    -DCMAKE_BUILD_TYPE=Release ../..
+checkresult cmake --build .

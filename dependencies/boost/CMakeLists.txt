@@ -44,7 +44,8 @@ IF(HOST MATCHES ".*-musl")
     SET(USER_CONFIG user-config-musl.jam)
 ENDIF ()
 
-IF (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm") 
+IF (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm.*")
+    SET(USER_CONFIG user-config-gcc-arm.jam)
     SET(ADDRESS_MODEL 32)
     SET(ARCHITECTURE arm)
 ENDIF ()
@@ -56,8 +57,8 @@ EXTERNALPROJECT_ADD(${NAME}
     CONFIGURE_COMMAND ${CONFIGURE_CMD}
     BUILD_COMMAND ${BUILD_CMD}
         --user-config=${CMAKE_CURRENT_SOURCE_DIR}/${USER_CONFIG}
-	address-model=${ADDRESS_MODEL}
-	architecture=${ARCHITECTURE}
+        address-model=${ADDRESS_MODEL}
+        architecture=${ARCHITECTURE}
         variant=${VARIANT}
         toolset=${TOOLSET}
         link=static

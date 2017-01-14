@@ -1,22 +1,24 @@
-pkg_check_modules(LIBCEC_PKG libcec)
-if (LIBCEC_PKG_FOUND)
-    option(HAVE_LIBCEC "CEC support" ON)
+if (NOT WITHOUT_CEC)
+    pkg_check_modules(LIBCEC_PKG libcec)
+    if (LIBCEC_PKG_FOUND)
+        option(HAVE_LIBCEC "CEC support" ON)
 
-    find_path(LIBCEC_INCLUDE_DIR
-        NAMES cec.h
-        PATHS ${LIBCEC_PKG_INCLUDE_DIRS}
-    )
+        find_path(LIBCEC_INCLUDE_DIR NAMES libcec/cec.h HINTS ${LIBCEC_PKG_INCLUDE_DIRS})
 
-    find_library(LIBCEC_LIBRARY
-        NAMES ${LIBCEC_PKG_LIBRARIES}
-        PATHS ${LIBCEC_PKG_LIBRARY_DIRS}
-    )
+        find_library(LIBCEC_LIBRARY
+            NAMES ${LIBCEC_PKG_LIBRARIES}
+            HINTS ${LIBCEC_PKG_LIBRARY_DIRS}
+        )
 
-    if (NOT LIBCEC_INCLUDE_DIR)
-        message(FATAL_ERROR "Failed to find cec headers in ${LIBCEC_PKG_INCLUDE_DIRS}")
+        if (NOT LIBCEC_INCLUDE_DIR)
+            message(FATAL_ERROR "Failed to find cec headers in ${LIBCEC_PKG_INCLUDE_DIRS}")
+        endif ()
+
+        set (LIBCEC_INCLUDE_DIR ${LIBCEC_INCLUDE_DIR}/libcec PARENT_SCOPE)
+        set (LIBCEC_INCLUDE_DIR ${LIBCEC_INCLUDE_DIR}/libcec)
+
+        set(LIBCEC_LIBRARIES ${LIBCEC_LIBRARY} ${CMAKE_DL_LIBS})
     endif ()
-
-    set(LIBCEC_LIBRARIES ${LIBCEC_LIBRARY} ${CMAKE_DL_LIBS})
 endif ()
 
 set (RENDERER_SRC

@@ -26,7 +26,7 @@ IF (CMAKE_CROSSCOMPILING)
         SET(TARGETSETTING --target-os=mingw32)
     ELSE ()
         SET(TARGETSETTING --target-os=linux)
-        IF(HOST MATCHES "^arm-linux-.*")
+        IF(HOST MATCHES "^arm.*-linux-.*")
             SET(ARCHSETTING --arch=armel)
             SET(COMPSETTING --enable-cross-compile --enable-armv6 --cc=${CMAKE_C_COMPILER} --ar=${CMAKE_AR} --ranlib=${CMAKE_RANLIB})
         ELSE ()
@@ -46,7 +46,7 @@ EXTERNALPROJECT_ADD(${NAME}
     CONFIGURE_COMMAND <SOURCE_DIR>/configure ${TARGETSETTING} ${COMPSETTING} ${ARCHSETTING} ${DBGSETTING} --prefix=<INSTALL_DIR> --disable-shared --disable-avdevice --disable-doc --disable-htmlpages --disable-manpages --disable-programs
         --disable-encoders --disable-muxers --disable-decoders --disable-swscale --disable-iconv
         --enable-gpl --enable-network --disable-libxcb --disable-xlib --disable-sdl2
-	--disable-vaapi --disable-vdpau
+        --disable-vaapi --disable-vdpau
         --disable-everything
         --enable-protocol=http
         --enable-protocol=file

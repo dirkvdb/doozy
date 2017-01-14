@@ -5,6 +5,8 @@ INCLUDE(ExternalProject)
 message (STATUS "Host: ${CMAKE_HOST_SYSTEM}")
 message (STATUS "Target: ${CMAKE_SYSTEM_NAME}")
 message (STATUS "Cross compiling: ${CMAKE_CROSSCOMPILING}")
+message (STATUS "Host Processor: ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+message (STATUS "Processor: ${CMAKE_SYSTEM_PROCESSOR}")
 
 IF (CMAKE_CROSSCOMPILING)
     IF (HOST MATCHES i686-apple-darwin)
@@ -23,6 +25,7 @@ IF (NOT HOST MATCHES "^.*musl.*" AND NOT MINGW)
 ENDIF ()
 
 IF (UNIX AND NOT APPLE)
+    ADD_SUBDIRECTORY(libuuid)
     ADD_SUBDIRECTORY(libunwind)
 ENDIF ()
 
