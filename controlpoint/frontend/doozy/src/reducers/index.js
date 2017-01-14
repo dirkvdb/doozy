@@ -3,7 +3,7 @@ import * as Actions from '../actions'
 
 const initialState = {
     settings: {
-        controlPointUrl: 'http://localhost:4444',
+        controlPointUrl: 'http://localhost:5555',
     },
     servers: {
         active: {

@@ -26,6 +26,15 @@ export default class Items extends React.Component {
     this.setState({gridcols: cols, cellHeight: cellHeight})
   }
 
+  modifyUrl (url) {
+    if (url.endsWith('?scale=org')) {
+      // this is a twonky server, use optimal scale to avoid unnecessarily large images
+      return url.replace('org', this.state.cellHeight + 'x' + this.state.cellHeight)
+    }
+
+    return url
+  }
+
   render() {
     return (
       <GridList
@@ -42,7 +51,7 @@ export default class Items extends React.Component {
                                 </IconButton>
                     }
                  >
-                   <img src={item.thumbnailurl} role="presentation"
+                   <img src={this.modifyUrl(item.thumbnailurl)} role="presentation"
                      onTouchTap={() => this.props.onSelected(item)}
                    />
                  </GridTile>;
