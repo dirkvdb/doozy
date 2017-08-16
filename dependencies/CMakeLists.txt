@@ -30,6 +30,7 @@ IF (UNIX AND NOT APPLE)
 ENDIF ()
 
 ADD_SUBDIRECTORY(zlib)
+ADD_SUBDIRECTORY(fmt)
 ADD_SUBDIRECTORY(ffmpeg)
 ADD_SUBDIRECTORY(boost)
 ADD_SUBDIRECTORY(beast)
@@ -37,10 +38,7 @@ ADD_SUBDIRECTORY(libjpeg-turbo)
 ADD_SUBDIRECTORY(libmad)
 ADD_SUBDIRECTORY(rapidjson)
 
-IF (CMAKE_COMPILER_IS_GNUCC AND APPLE)
-    # homebrew gcc does not like coreaudio includes
-    MESSAGE(STATUS "No audio support when using gcc on apple")
-ELSE ()
+IF (NOT APPLE)
     ADD_SUBDIRECTORY(openal)
 ENDIF ()
 

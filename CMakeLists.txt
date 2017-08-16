@@ -4,7 +4,9 @@ enable_testing()
 
 find_package(PkgConfig)
 
-project(doozy)
+project(doozy LANGUAGES CXX)
+cmake_policy(SET CMP0069 NEW)
+
 set(PACKAGE "doozy")
 set(PACKAGE_NAME "Doozy")
 set(PACKAGE_VERSION_MAJOR 0)
@@ -61,6 +63,8 @@ endif ()
 add_definitions("-DCOMPILE_DEBUG_LOG")
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif ()

@@ -28,10 +28,6 @@ set (RENDERER_SRC
     typeconversions.h
 )
 
-if (HAVE_LIBCEC)
-    list(APPEND RENDERER_SRC ceccontrol.h ceccontrol.cpp)
-endif ()
-
 add_library(doozyrenderer
     ${RENDERER_SRC}
 )
@@ -41,14 +37,21 @@ target_include_directories(doozyrenderer PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-target_include_directories(doozyrenderer SYSTEM PRIVATE
-    ${LIBCEC_INCLUDE_DIR}
-)
-
 target_link_libraries(doozyrenderer
     audio
     image
     upnpframework
     doozycommon
-    ${LIBCEC_LIBRARIES}
 )
+
+if (HAVE_LIBCEC)
+    list(APPEND RENDERER_SRC ceccontrol.h ceccontrol.cpp)
+
+    target_include_directories(doozyrenderer SYSTEM PRIVATE
+        ${LIBCEC_INCLUDE_DIR}
+    )
+
+    target_link_libraries(doozyrenderer
+        ${LIBCEC_LIBRARIES}
+    )
+endif ()

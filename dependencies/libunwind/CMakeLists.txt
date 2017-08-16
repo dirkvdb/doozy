@@ -1,7 +1,8 @@
 SET(NAME libunwind)
 SET(MAJOR 1)
-SET(MINOR 1)
-SET(PACKAGE ${NAME}-${MAJOR}.${MINOR})
+SET(MINOR 2)
+SET(REVISION 1)
+SET(PACKAGE ${NAME}-${MAJOR}.${MINOR}.${REVISION})
 
 EXTERNALPROJECT_ADD(${NAME}
     URL http://download.savannah.gnu.org/releases/${NAME}/${PACKAGE}.tar.gz TIMEOUT 30

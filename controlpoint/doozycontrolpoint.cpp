@@ -81,7 +81,7 @@ ControlPoint::ControlPoint()
     });
 }
 
-void ControlPoint::start(const std::string& networkInterface)
+void ControlPoint::start(const std::string& /*networkInterface*/)
 {
     try
     {
@@ -133,7 +133,7 @@ static std::string_view getParam(const std::vector<std::pair<std::string, std::s
 
     if (iter == params.end())
     {
-        throw std::invalid_argument("Param not found: " + name.to_string());
+        throw std::invalid_argument("Param not found: " + std::string(name));
     }
 
     log::info(iter->second);
@@ -217,8 +217,7 @@ bool ControlPoint::handleRequest(const upnp::http::Request& req, std::function<v
 
 void ControlPoint::browse(std::string_view udn, std::string_view containerId, std::function<void(std::string)> cb)
 {
-    auto s = udn.to_string();
-    log::debug("browse {} {}", udn.to_string(), containerId.to_string());
+    log::debug("browse {} {}", udn, containerId);
 
     auto mediaServer = std::make_shared<upnp::MediaServer>(*m_client);
     auto dev = m_serverScanner.getDevice(udn);
@@ -228,7 +227,7 @@ void ControlPoint::browse(std::string_view udn, std::string_view containerId, st
         return;
     }
 
-    mediaServer->setDevice(dev, [this, cb, mediaServer, id = containerId.to_string()] (upnp::Status s) {
+    mediaServer->setDevice(dev, [cb, mediaServer, id = std::string(containerId)] (upnp::Status s) {
         if (!s)
         {
             cb(s_errorResponse);
@@ -317,7 +316,7 @@ void ControlPoint::play(std::string_view rendererUdn,
         return;
     }
 
-    m_cp.setRendererDevice(rendererDev, [this, cb, id = containerId.to_string(), serverDev] (upnp::Status s) {
+    m_cp.setRendererDevice(rendererDev, [this, cb, id = std::string(containerId), serverDev] (upnp::Status s) {
         if (!s)
         {
             log::error("Failed to set renderer device: {}", s.what());
@@ -373,7 +372,7 @@ void ControlPoint::getRendererStatus(std::string_view udn, std::function<void(st
     auto renderer = std::make_shared<upnp::MediaRenderer>(*m_client);
     renderer->useDefaultConnection();
 
-    renderer->setDevice(m_rendererScanner.getDevice(udn), [this, renderer, cb] (upnp::Status s) {
+    renderer->setDevice(m_rendererScanner.getDevice(udn), [renderer, cb] (upnp::Status s) {
         if (!s)
         {
             log::error("Failed to set renderer device: {}", s.what());
