@@ -5,6 +5,7 @@
             "includePath": [
                 "${workspaceRoot}",
                 "${workspaceRoot}/modules/upnp/inc",
+                "${workspaceRoot}/modules/upnp/src",
                 "${workspaceRoot}/modules/utils/inc",
                 "${workspaceRoot}/modules/utils/src",
                 "${workspaceRoot}/modules/audio/inc",
