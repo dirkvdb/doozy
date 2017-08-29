@@ -1,0 +1,1012 @@
+{
+  "variant": {
+    "label": "Debug",
+    "keywordSettings": {
+      "buildType": "debug"
+    },
+    "description": "Emit debug information without performing optimizations"
+  },
+  "activeEnvironments": [],
+  "codeModel": {
+    "configurations": [
+      {
+        "name": "Debug",
+        "projects": [
+          {
+            "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4",
+            "name": "doozy",
+            "sourceDirectory": "/Users/dirk/Projects/doozy",
+            "targets": [
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/doozy"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4",
+                "fileGroups": [
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "doozydevicefactory.h",
+                      ".travis.yml"
+                    ]
+                  },
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0   -std=c++1z",
+                    "defines": [
+                      "BOOST_NO_AUTO_PTR",
+                      "BOOST_THREAD_PROVIDES_FUTURE",
+                      "BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION",
+                      "COMPILE_DEBUG_LOG"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/common"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/common/.."
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/renderer"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/audio/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/image/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/upnp/inc"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "main.cpp",
+                      "doozydevicefactory.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "doozy",
+                "linkFlags": "-L/usr/local/opt/llvm/lib",
+                "linkLanguageFlags": "-stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0",
+                "linkLibraries": "common/libdoozycommon.a renderer/libdoozyrenderer.a controlpoint/libdoozycontrolpoint.a common/libdoozycommon.a modules/audio/libaudio.a ../local-clang4/lib/libtag.a ../local-clang4/lib/libavformat.a ../local-clang4/lib/libavcodec.a ../local-clang4/lib/libavutil.a ../local-clang4/lib/libswresample.a ../local-clang4/lib/libFLAC++.a ../local-clang4/lib/libFLAC.a ../local-clang4/lib/libFLAC++.a ../local-clang4/lib/libFLAC.a ../local-clang4/lib/libmad.a modules/image/libimage.a ../local-clang4/lib/libjpeg.a ../local-clang4/lib/libpng.a ../local-clang4/lib/libz.a modules/upnp/libupnpframework.a modules/utils/libutils.a ../local-clang4/lib/libfmt.a ../local-clang4/lib/libxdg-basedir.a ../local-clang4/lib/libboost_thread.a ../local-clang4/lib/libboost_chrono.a ../local-clang4/lib/libboost_system.a ../local-clang4/lib/libboost_date_time.a ../local-clang4/lib/libboost_atomic.a -framework CoreFoundation",
+                "linkerLanguage": "CXX",
+                "name": "doozy",
+                "sourceDirectory": "/Users/dirk/Projects/doozy",
+                "type": "EXECUTABLE"
+              },
+              {
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4",
+                "fileGroups": [
+                  {
+                    "isGenerated": true,
+                    "sources": [
+                      "build/ninja-clang4/CMakeFiles/uninstall",
+                      "build/ninja-clang4/CMakeFiles/uninstall.rule"
+                    ]
+                  }
+                ],
+                "fullName": "uninstall",
+                "name": "uninstall",
+                "sourceDirectory": "/Users/dirk/Projects/doozy",
+                "type": "UTILITY"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/utils/libutils.a"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/utils",
+                "fileGroups": [
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0   -std=c++1z",
+                    "defines": [
+                      "COMPILE_DEBUG_LOG",
+                      "HAVE_UTILS_CONFIG"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "src/bufferedreader.cpp",
+                      "src/fileoperations.cpp",
+                      "src/filereader.cpp",
+                      "src/log.cpp",
+                      "src/readerfactory.cpp",
+                      "src/threadpool.cpp",
+                      "src/trace.cpp",
+                      "src/workerthread.cpp",
+                      "src/backtrace.cpp"
+                    ]
+                  },
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "inc/utils/bufferedreader.h",
+                      "inc/utils/fileoperations.h",
+                      "inc/utils/filereader.h",
+                      "inc/utils/format.h",
+                      "inc/utils/functiontraits.h",
+                      "inc/utils/log.h",
+                      "inc/utils/numericoperations.h",
+                      "inc/utils/readerinterface.h",
+                      "inc/utils/readerfactory.h",
+                      "inc/utils/signal.h",
+                      "inc/utils/simplesubscriber.h",
+                      "inc/utils/stringoperations.h",
+                      "inc/utils/subscriber.h",
+                      "inc/utils/timeoperations.h",
+                      "inc/utils/timerthread.h",
+                      "inc/utils/threadpool.h",
+                      "inc/utils/trace.h",
+                      "inc/utils/workerthread.h",
+                      "inc/utils/backtrace.h"
+                    ]
+                  }
+                ],
+                "fullName": "libutils.a",
+                "linkerLanguage": "CXX",
+                "name": "utils",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/modules/utils",
+                "type": "STATIC_LIBRARY"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/utilstest"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/utils/test",
+                "fileGroups": [
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0   -std=c++1z",
+                    "defines": [
+                      "COMPILE_DEBUG_LOG",
+                      "HAVE_UTILS_CONFIG"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/test"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/test/.."
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "bufferedreadertest.cpp",
+                      "fileoperationstest.cpp",
+                      "gmock-gtest-all.cpp",
+                      "main.cpp",
+                      "signaltest.cpp",
+                      "stringoperationstest.cpp",
+                      "tracetest.cpp",
+                      "threadpooltest.cpp",
+                      "workerthreadtest.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "utilstest",
+                "linkFlags": "-L/usr/local/opt/llvm/lib",
+                "linkLanguageFlags": "-stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0",
+                "linkLibraries": "../libutils.a ../../../../local-clang4/lib/libfmt.a ../../../../local-clang4/lib/libxdg-basedir.a",
+                "linkerLanguage": "CXX",
+                "name": "utilstest",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/modules/utils/test",
+                "type": "EXECUTABLE"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/audio/libaudio.a"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/audio",
+                "fileGroups": [
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0   -std=c++1z",
+                    "defines": [
+                      "COMPILE_DEBUG_LOG",
+                      "CONSOLE_SUPPORTS_COLOR",
+                      "__STDC_CONSTANT_MACROS"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/audio/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include/taglib"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "src/audiodecoderfactory.cpp",
+                      "src/audioframe.cpp",
+                      "src/audiompegutils.cpp",
+                      "src/audioplaybackfactory.cpp",
+                      "src/audioplayback.cpp",
+                      "src/audiorendererfactory.cpp",
+                      "src/audiobuffer.cpp",
+                      "src/audiom3uparser.cpp",
+                      "src/audioffmpegdecoder.cpp",
+                      "src/audioresampler.cpp",
+                      "src/audioflacdecoder.cpp",
+                      "src/audiomaddecoder.cpp",
+                      "src/audiometadata.cpp",
+                      "src/audiotaglibiostream.cpp"
+                    ]
+                  },
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "src/audiobuffer.h",
+                      "inc/audio/audiodecoder.h",
+                      "inc/audio/audiodecoderfactory.h",
+                      "inc/audio/audioformat.h",
+                      "inc/audio/audioframe.h",
+                      "inc/audio/audiompegutils.h",
+                      "inc/audio/audioplaybackinterface.h",
+                      "inc/audio/audioplaybackfactory.h",
+                      "src/audioplayback.h",
+                      "inc/audio/audioplaylistinterface.h",
+                      "inc/audio/audiorenderer.h",
+                      "inc/audio/audiorendererfactory.h",
+                      "inc/audio/audiotrackinterface.h",
+                      "inc/audio/audiom3uparser.h",
+                      ".travis.yml",
+                      "src/audioffmpegdecoder.h",
+                      "src/audioresampler.h",
+                      "src/audioflacdecoder.h",
+                      "src/audiomaddecoder.h",
+                      "inc/audio/audiometadata.h",
+                      "src/audiotaglibiostream.h"
+                    ]
+                  }
+                ],
+                "fullName": "libaudio.a",
+                "linkerLanguage": "CXX",
+                "name": "audio",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/modules/audio",
+                "type": "STATIC_LIBRARY"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/audiotest"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/audio/test",
+                "fileGroups": [
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0   -std=c++1z",
+                    "defines": [
+                      "COMPILE_DEBUG_LOG",
+                      "CONSOLE_SUPPORTS_COLOR",
+                      "__STDC_CONSTANT_MACROS"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/audio/test"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/audio/inc"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "gmock-gtest-all.cpp",
+                      "main.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "audiotest",
+                "linkFlags": "-L/usr/local/opt/llvm/lib",
+                "linkLanguageFlags": "-stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0",
+                "linkLibraries": "../../utils/libutils.a ../libaudio.a ../../utils/libutils.a ../../../../local-clang4/lib/libfmt.a ../../../../local-clang4/lib/libxdg-basedir.a ../../../../local-clang4/lib/libtag.a ../../../../local-clang4/lib/libavformat.a ../../../../local-clang4/lib/libavcodec.a ../../../../local-clang4/lib/libavutil.a ../../../../local-clang4/lib/libswresample.a ../../../../local-clang4/lib/libFLAC++.a ../../../../local-clang4/lib/libFLAC.a ../../../../local-clang4/lib/libFLAC++.a ../../../../local-clang4/lib/libFLAC.a ../../../../local-clang4/lib/libmad.a ../../../../local-clang4/lib/libz.a",
+                "linkerLanguage": "CXX",
+                "name": "audiotest",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/modules/audio/test",
+                "type": "EXECUTABLE"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/image/libimage.a"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/image",
+                "fileGroups": [
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0   -std=c++1z",
+                    "defines": [
+                      "COMPILE_DEBUG_LOG"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/image/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "src/imagefactory.cpp",
+                      "src/imageloadstorejpeg.cpp",
+                      "src/imageloadstorepng.cpp"
+                    ]
+                  },
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "inc/image/image.h",
+                      "inc/image/imagefactory.h",
+                      "inc/image/imageloadstoreinterface.h",
+                      "src/imageloadstorejpeg.h",
+                      "src/imageloadstorepng.h",
+                      ".travis.yml"
+                    ]
+                  }
+                ],
+                "fullName": "libimage.a",
+                "linkerLanguage": "CXX",
+                "name": "image",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/modules/image",
+                "type": "STATIC_LIBRARY"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/imagetest"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/image/test",
+                "fileGroups": [
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0   -std=c++1z",
+                    "defines": [
+                      "COMPILE_DEBUG_LOG"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/modules/image/test/gmock"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/image/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "gmock-gtest-all.cpp",
+                      "main.cpp",
+                      "imageloadingtest.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "imagetest",
+                "linkFlags": "-L/usr/local/opt/llvm/lib",
+                "linkLanguageFlags": "-stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0",
+                "linkLibraries": "../libimage.a ../../utils/libutils.a ../../../../local-clang4/lib/libfmt.a ../../../../local-clang4/lib/libxdg-basedir.a ../../../../local-clang4/lib/libjpeg.a ../../../../local-clang4/lib/libpng.a ../../../../local-clang4/lib/libz.a",
+                "linkerLanguage": "CXX",
+                "name": "imagetest",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/modules/image/test",
+                "type": "EXECUTABLE"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/upnp/libupnpframework.a"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/upnp",
+                "fileGroups": [
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -fdiagnostics-color -fcoroutines-ts -g -O0   -std=c++1z",
+                    "defines": [
+                      "BOOST_NO_AUTO_PTR",
+                      "BOOST_THREAD_PROVIDES_FUTURE",
+                      "BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION",
+                      "COMPILE_DEBUG_LOG"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/upnp/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "src/upnp.avtransport.client.cpp",
+                      "src/upnp.avtransport.service.cpp",
+                      "src/upnp.connectionmanager.client.cpp",
+                      "src/upnp.connectionmanager.service.cpp",
+                      "src/upnp.contentdirectory.client.cpp",
+                      "src/upnp.contentdirectory.service.cpp",
+                      "src/upnp.controlpoint.cpp",
+                      "src/upnp.devicescanner.cpp",
+                      "src/upnp.dlna.info.cpp",
+                      "src/upnp.factory.cpp",
+                      "src/upnp.item.cpp",
+                      "src/upnp.lastchangevariable.cpp",
+                      "src/upnp.mediarenderer.cpp",
+                      "src/upnp.mediaserver.cpp",
+                      "src/upnp.protocolinfo.cpp",
+                      "src/upnp.renderingcontrol.client.cpp",
+                      "src/upnp.rootdevice.cpp",
+                      "src/upnp.renderingcontrol.service.cpp",
+                      "src/upnp.types.cpp",
+                      "src/upnp.action.cpp",
+                      "src/upnp.actionresponse.cpp",
+                      "src/upnp.soap.types.cpp",
+                      "src/upnp.ssdp.client.cpp",
+                      "src/upnp.ssdp.server.cpp",
+                      "src/upnp.http.functions.cpp",
+                      "src/upnp.http.types.cpp",
+                      "src/upnp.http.reader.cpp",
+                      "src/upnp.http.server.cpp",
+                      "src/upnp.http.parser.cpp",
+                      "src/upnp.xml.parseutils.cpp",
+                      "src/upnp.connectionmanager.typeconversions.cpp",
+                      "src/upnp.contentdirectory.typeconversions.cpp",
+                      "src/upnp.renderingcontrol.typeconversions.cpp",
+                      "src/upnp.avtransport.typeconversions.cpp",
+                      "src/upnp.client.cpp",
+                      "src/upnp.gena.server.cpp",
+                      "src/upnp.http.utils.cpp",
+                      "src/upnp.http.client.cpp",
+                      "src/upnp.soap.client.cpp",
+                      "src/http_parser.cpp",
+                      "src/URI.cpp",
+                      "src/guid.cpp"
+                    ]
+                  },
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "inc/upnp/asio.h",
+                      "inc/upnp/upnp.serviceclientbase.h",
+                      "inc/upnp/upnp.avtransport.types.h",
+                      "inc/upnp/upnp.avtransport.client.h",
+                      "inc/upnp/upnp.avtransport.service.h",
+                      "inc/upnp/upnp.clientinterface.h",
+                      "inc/upnp/upnp.connectionmanager.client.h",
+                      "inc/upnp/upnp.connectionmanager.service.h",
+                      "inc/upnp/upnp.connectionmanager.types.h",
+                      "inc/upnp/upnp.contentdirectory.client.h",
+                      "inc/upnp/upnp.contentdirectory.service.h",
+                      "inc/upnp/upnp.contentdirectory.types.h",
+                      "inc/upnp/upnp.controlpoint.h",
+                      "inc/upnp/upnp.device.h",
+                      "inc/upnp/upnp.deviceservice.h",
+                      "inc/upnp/upnp.devicescanner.h",
+                      "inc/upnp/upnp.dlna.info.h",
+                      "inc/upnp/upnp.factory.h",
+                      "inc/upnp/upnpfwd.h",
+                      "inc/upnp/upnp.item.h",
+                      "inc/upnp/upnp.lastchangevariable.h",
+                      "inc/upnp/upnp.mediarenderer.h",
+                      "inc/upnp/upnp.mediaserver.h",
+                      "inc/upnp/upnp.protocolinfo.h",
+                      "inc/upnp/upnp.renderingcontrol.types.h",
+                      "inc/upnp/upnp.renderingcontrol.client.h",
+                      "inc/upnp/upnp.rootdevice.h",
+                      "inc/upnp/upnp.renderingcontrol.service.h",
+                      "inc/upnp/upnp.rootdeviceinterface.h",
+                      "inc/upnp/upnpservicevariable.h",
+                      "inc/upnp/upnpstatevariable.h",
+                      "inc/upnp/upnp.types.h",
+                      "inc/upnp/upnp.flags.h",
+                      "inc/upnp/upnp.utils.h",
+                      "inc/upnp/upnp.action.h",
+                      "inc/upnp/upnp.actionresponse.h",
+                      "inc/upnp/upnp.soap.types.h",
+                      "inc/upnp/upnp.ssdp.client.h",
+                      "inc/upnp/upnp.ssdp.server.h",
+                      "inc/upnp/upnp.http.functions.h",
+                      "inc/upnp/upnp.http.types.h",
+                      "inc/upnp/upnp.http.reader.h",
+                      "inc/upnp/upnp.http.server.h",
+                      "inc/upnp/upnp.http.parser.h",
+                      "inc/upnp/upnp.http.parseutils.h",
+                      "inc/upnp/upnp.xml.parseutils.h",
+                      "inc/upnp/upnp.servicefaults.h",
+                      "inc/upnp/stringview.h",
+                      "src/upnp.enumutils.h",
+                      "src/upnp.connectionmanager.typeconversions.h",
+                      "src/upnp.contentdirectory.typeconversions.h",
+                      "src/upnp.renderingcontrol.typeconversions.h",
+                      "src/upnp.avtransport.typeconversions.h",
+                      "src/upnp.client.h",
+                      "src/upnp.gena.server.h",
+                      "src/upnp.http.utils.h",
+                      "src/upnp.http.client.h",
+                      "src/upnp.soap.client.h",
+                      "src/upnp.ssdp.parseutils.h",
+                      "src/http_parser.h",
+                      "src/URI.h",
+                      "src/guid.h"
+                    ]
+                  }
+                ],
+                "fullName": "libupnpframework.a",
+                "linkerLanguage": "CXX",
+                "name": "upnpframework",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/modules/upnp",
+                "type": "STATIC_LIBRARY"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/upnpframeworktest"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/upnp/test",
+                "fileGroups": [
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "testenvironment.h",
+                      "upnp.clientmock.h",
+                      "upnp.rootdevicemock.h",
+                      "testxmls.h",
+                      "upnp.clienttestbase.h"
+                    ]
+                  },
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -fdiagnostics-color -fcoroutines-ts -g -O0   -std=c++1z",
+                    "defines": [
+                      "BOOST_NO_AUTO_PTR",
+                      "BOOST_THREAD_PROVIDES_FUTURE",
+                      "BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION",
+                      "COMPILE_DEBUG_LOG"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/upnp/test/../src"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/modules/upnp/test/testframework"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/upnp/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "testframework/gmock-gtest-all.cpp",
+                      "main.cpp",
+                      "upnp.utilstest.cpp",
+                      "upnp.clienttest.cpp",
+                      "upnp.lastchangevariabletest.cpp",
+                      "upnp.rootdevicetest.cpp",
+                      "upnp.ssdp.clienttest.cpp",
+                      "upnp.ssdp.servertest.cpp",
+                      "upnp.ssdp.test.cpp",
+                      "upnp.http.clienttest.cpp",
+                      "upnp.soap.clienttest.cpp",
+                      "upnp.http.parsertest.cpp",
+                      "upnp.http.readertest.cpp",
+                      "upnp.gena.servertest.cpp",
+                      "upnp.actiontest.cpp",
+                      "upnp.devicescannertest.cpp",
+                      "upnp.xml.parseutilstest.cpp",
+                      "upnp.soap.parseutilstest.cpp",
+                      "upnp.avtransport.clienttest.cpp",
+                      "upnp.renderingcontrol.clienttest.cpp",
+                      "upnp.connectionmanager.clienttest.cpp",
+                      "upnp.contentdirectory.clienttest.cpp",
+                      "upnp.avtransport.servicetest.cpp",
+                      "upnp.connectionmanager.servicetest.cpp",
+                      "upnp.renderingcontrol.servicetest.cpp",
+                      "upnp.mediaservertest.cpp",
+                      "upnp.mediarenderertest.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "upnpframeworktest",
+                "linkFlags": "-L/usr/local/opt/llvm/lib",
+                "linkLanguageFlags": "-stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -fdiagnostics-color -fcoroutines-ts -g -O0",
+                "linkLibraries": "../libupnpframework.a ../../utils/libutils.a ../../../../local-clang4/lib/libfmt.a ../../../../local-clang4/lib/libxdg-basedir.a ../../../../local-clang4/lib/libboost_thread.a ../../../../local-clang4/lib/libboost_chrono.a ../../../../local-clang4/lib/libboost_system.a ../../../../local-clang4/lib/libboost_date_time.a ../../../../local-clang4/lib/libboost_atomic.a -framework CoreFoundation",
+                "linkerLanguage": "CXX",
+                "name": "upnpframeworktest",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/modules/upnp/test",
+                "type": "EXECUTABLE"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/upnpbenchmark"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/modules/upnp/test",
+                "fileGroups": [
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -fdiagnostics-color -fcoroutines-ts -g -O0   -std=c++1z",
+                    "defines": [
+                      "BOOST_NO_AUTO_PTR",
+                      "BOOST_THREAD_PROVIDES_FUTURE",
+                      "BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION",
+                      "COMPILE_DEBUG_LOG"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/upnp/test/../src"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/modules/upnp/test/testframework"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/upnp/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "upnp.xml.parseutilsbenchmark.cpp",
+                      "benchmark.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "upnpbenchmark",
+                "linkFlags": "-L/usr/local/opt/llvm/lib",
+                "linkLanguageFlags": "-stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -fdiagnostics-color -fcoroutines-ts -g -O0",
+                "linkLibraries": "../libupnpframework.a ../../../../local-clang4/lib/libbenchmark.a ../../utils/libutils.a ../../../../local-clang4/lib/libfmt.a ../../../../local-clang4/lib/libxdg-basedir.a ../../../../local-clang4/lib/libboost_thread.a ../../../../local-clang4/lib/libboost_chrono.a ../../../../local-clang4/lib/libboost_system.a ../../../../local-clang4/lib/libboost_date_time.a ../../../../local-clang4/lib/libboost_atomic.a -framework CoreFoundation",
+                "linkerLanguage": "CXX",
+                "name": "upnpbenchmark",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/modules/upnp/test",
+                "type": "EXECUTABLE"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/renderer/libdoozyrenderer.a"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/renderer",
+                "fileGroups": [
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0   -std=c++1z",
+                    "defines": [
+                      "BOOST_NO_AUTO_PTR",
+                      "BOOST_THREAD_PROVIDES_FUTURE",
+                      "BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION",
+                      "COMPILE_DEBUG_LOG"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/renderer"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/audio/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/image/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/upnp/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/common"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/common/.."
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "renderersettings.cpp",
+                      "mediarendererdevice.cpp",
+                      "playqueue.cpp"
+                    ]
+                  },
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "devicedescriptions.h",
+                      "renderersettings.h",
+                      "mediarendererdevice.h",
+                      "playqueue.h",
+                      "typeconversions.h"
+                    ]
+                  }
+                ],
+                "fullName": "libdoozyrenderer.a",
+                "linkerLanguage": "CXX",
+                "name": "doozyrenderer",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/renderer",
+                "type": "STATIC_LIBRARY"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/controlpoint/libdoozycontrolpoint.a"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/controlpoint",
+                "fileGroups": [
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0   -std=c++1z",
+                    "defines": [
+                      "BOOST_NO_AUTO_PTR",
+                      "BOOST_THREAD_PROVIDES_FUTURE",
+                      "BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION",
+                      "COMPILE_DEBUG_LOG",
+                      "RAPIDJSON_HAS_STDSTRING"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/controlpoint/.."
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/controlpoint"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4/controlpoint"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/upnp/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "doozycontrolpoint.cpp"
+                    ]
+                  },
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "doozycontrolpoint.h"
+                    ]
+                  }
+                ],
+                "fullName": "libdoozycontrolpoint.a",
+                "linkerLanguage": "CXX",
+                "name": "doozycontrolpoint",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/controlpoint",
+                "type": "STATIC_LIBRARY"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/common/libdoozycommon.a"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/common",
+                "fileGroups": [
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0   -std=c++1z",
+                    "defines": [
+                      "COMPILE_DEBUG_LOG"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/common"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/common/.."
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "settings.cpp"
+                    ]
+                  },
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "doozydeviceinterface.h",
+                      "settings.h",
+                      "devicedescriptions.h"
+                    ]
+                  }
+                ],
+                "fullName": "libdoozycommon.a",
+                "linkerLanguage": "CXX",
+                "name": "doozycommon",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/common",
+                "type": "STATIC_LIBRARY"
+              },
+              {
+                "artifacts": [
+                  "/Users/dirk/Projects/doozy/build/ninja-clang4/doozytest"
+                ],
+                "buildDirectory": "/Users/dirk/Projects/doozy/build/ninja-clang4/test",
+                "fileGroups": [
+                  {
+                    "isGenerated": false,
+                    "sources": [
+                      "eventnotification.h",
+                      "eventlistenermock.h",
+                      "settingsmocks.h"
+                    ]
+                  },
+                  {
+                    "compileFlags": " -stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0   -std=c++1z",
+                    "defines": [
+                      "BOOST_NO_AUTO_PTR",
+                      "BOOST_THREAD_PROVIDES_FUTURE",
+                      "BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION",
+                      "COMPILE_DEBUG_LOG"
+                    ],
+                    "includePath": [
+                      {
+                        "path": "/Users/dirk/Projects/doozy/build/ninja-clang4"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/test/testframework"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/renderer"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/audio/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/utils/inc"
+                      },
+                      {
+                        "isSystem": true,
+                        "path": "/Users/dirk/Projects/doozy/build/local-clang4/include"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/image/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/modules/upnp/inc"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/common"
+                      },
+                      {
+                        "path": "/Users/dirk/Projects/doozy/common/.."
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "testframework/gmock-gtest-all.cpp",
+                      "../doozydevicefactory.cpp",
+                      "main.cpp",
+                      "renderer.playqueuetest.cpp",
+                      "renderertest.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "doozytest",
+                "linkFlags": "-L/usr/local/opt/llvm/lib",
+                "linkLanguageFlags": "-stdlib=libc++ -Wall -Wextra -Wnon-virtual-dtor -Wfatal-errors -g -O0",
+                "linkLibraries": "../renderer/libdoozyrenderer.a ../controlpoint/libdoozycontrolpoint.a ../renderer/libdoozyrenderer.a ../common/libdoozycommon.a ../modules/audio/libaudio.a ../../local-clang4/lib/libtag.a ../../local-clang4/lib/libavformat.a ../../local-clang4/lib/libavcodec.a ../../local-clang4/lib/libavutil.a ../../local-clang4/lib/libswresample.a ../../local-clang4/lib/libFLAC++.a ../../local-clang4/lib/libFLAC.a ../../local-clang4/lib/libFLAC++.a ../../local-clang4/lib/libFLAC.a ../../local-clang4/lib/libmad.a ../modules/image/libimage.a ../../local-clang4/lib/libjpeg.a ../../local-clang4/lib/libpng.a ../../local-clang4/lib/libz.a ../modules/upnp/libupnpframework.a ../modules/utils/libutils.a ../../local-clang4/lib/libfmt.a ../../local-clang4/lib/libxdg-basedir.a ../../local-clang4/lib/libboost_thread.a ../../local-clang4/lib/libboost_chrono.a ../../local-clang4/lib/libboost_system.a ../../local-clang4/lib/libboost_date_time.a ../../local-clang4/lib/libboost_atomic.a -framework CoreFoundation",
+                "linkerLanguage": "CXX",
+                "name": "doozytest",
+                "sourceDirectory": "/Users/dirk/Projects/doozy/test",
+                "type": "EXECUTABLE"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "cookie": "0.11083770421744821",
+    "inReplyTo": "codemodel",
+    "type": "reply"
+  }
+}

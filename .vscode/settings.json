@@ -1,0 +1,17 @@
+{
+    "cmake.buildDirectory": "${workspaceRoot}/build/ninja-clang4",
+    "cmake.configureSettings": {
+        "CMAKE_PREFIX_PATH": "${workspaceRoot}/build/local-clang4",
+        "CMAKE_FIND_ROOT_PATH": "${workspaceRoot}/build/local-clang4",
+        "CMAKE_TOOLCHAIN_FILE": "${workspaceRoot}/dependencies/toolchain-clang4.make"
+    },
+    "cmake.installPrefix": "${workspaceRoot}/build/local-clang4",
+    "files.associations": {
+        "*.ipp": "cpp"
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/build/deps-*": true
+    }
+}

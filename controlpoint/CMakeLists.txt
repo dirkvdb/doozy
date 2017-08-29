@@ -1,7 +1,7 @@
 add_definitions("-DRAPIDJSON_HAS_STDSTRING")
 
 find_path(RAPIDJSON_INCLUDE_DIR
-    NAMES rapidjson/writer.h
+    NAMES rapidjson/rapidjson.h
 )
 
 if (NOT RAPIDJSON_INCLUDE_DIR)
