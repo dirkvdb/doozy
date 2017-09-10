@@ -152,7 +152,7 @@ install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       brew upgrade cmake
-      brew install rapidjson
+      brew install rapidjson taglib
     fi
   - |
     git clone --single-branch https://github.com/boostorg/beast.git
