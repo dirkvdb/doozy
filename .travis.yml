@@ -146,9 +146,7 @@ install:
       cd ..
       wget https://github.com/miloyip/rapidjson/archive/v1.1.0.tar.gz
       tar xf v1.1.0.tar.gz
-      cd rapidjson-1.1.0 && cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_DIR}/local . && make -j4 install
-      ls ${DEPS_DIR}/local
-      ls ${DEPS_DIR}/local/raspidjson
+      cd rapidjson-1.1.0 && cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_DIR}/local -DRAPIDJSON_BUILD_DOC=OFF -DRAPIDJSON_BUILD_EXAMPLES=OFF -DRAPIDJSON_BUILD_TESTS=OFF . && make -j4 install
       cd ..
     fi
   - |
