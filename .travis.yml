@@ -147,6 +147,8 @@ install:
       wget https://github.com/miloyip/rapidjson/archive/v1.1.0.tar.gz
       tar xf v1.1.0.tar.gz
       cd rapidjson-1.1.0 && cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_INSTALL_PREFIX:PATH=${DEPS_DIR}/local . && make -j4 install
+      ls ${DEPS_DIR}/local
+      ls ${DEPS_DIR}/local/raspidjson
       cd ..
     fi
   - |
@@ -156,9 +158,7 @@ install:
 
   - |
     git clone --single-branch https://github.com/fmtlib/fmt.git --branch 4.0.0
-    cd fmt
-    cmake -DFMT_DOC=OFF -DFMT_TEST=OFF -DFMT_INSTALL=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/local
-    make install
+    cd fmt && cmake -DFMT_DOC=OFF -DFMT_TEST=OFF -DFMT_INSTALL=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${DEPS_DIR}/local . && make -j4 install
 
   - cd ${TRAVIS_BUILD_DIR}
 
