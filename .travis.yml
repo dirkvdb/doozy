@@ -164,8 +164,8 @@ install:
 
 script:
   - git submodule update --init --recursive
-  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/local .
-  - make -j4
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_PREFIX_PATH=${DEPS_DIR}/local -DCMAKE_FIND_ROOT_PATH=${DEPS_DIR}/local .
+  - cmake --build .
 
 addons:
   coverity_scan:
