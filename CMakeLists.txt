@@ -1,11 +1,9 @@
-cmake_minimum_required(VERSION 3.1)
-cmake_policy(VERSION 3.1)
+cmake_minimum_required(VERSION 3.9)
 enable_testing()
 
 find_package(PkgConfig)
 
 project(doozy LANGUAGES CXX)
-cmake_policy(SET CMP0069 NEW)
 
 set(PACKAGE "doozy")
 set(PACKAGE_NAME "Doozy")
