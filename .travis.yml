@@ -150,6 +150,10 @@ install:
       cd ..
     fi
   - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      brew install rapidjson
+    fi
+  - |
     git clone --single-branch https://github.com/boostorg/beast.git
     mkdir -p ${DEPS_DIR}/local/include/boost
     cp -rv ./beast/include/boost/* ${DEPS_DIR}/local/include/boost/
