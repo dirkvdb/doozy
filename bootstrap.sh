@@ -11,7 +11,7 @@ function checkresult {
 }
 
 if [ "$#" -ne 1 ]; then
-    echo "No toolchain provided. Choices: archarmv6|armv7|android|native|nativegcc6|mingw|clang4"
+    echo "No toolchain provided. Choices: archarmv6|armv7|android|native|nativegcc6|mingw|clang"
     exit 1
 fi
 
@@ -30,9 +30,9 @@ if [ "$1" = "native" ]; then
 elif [ "$1" = "nativegcc6" ]; then
     export ARCH=gcc
     BUILD_GENERATOR="Unix Makefiles"
-elif [ "$1" = "clang4" ]; then
-    export ARCH=clang4
-    BUILD_GENERATOR="Unix Makefiles"
+elif [ "$1" = "clang" ]; then
+    export ARCH=clang
+    BUILD_GENERATOR="Ninja"
 elif [ "$1" = "mingw" ]; then
     export ARCH=mingw
     BUILD_GENERATOR="Unix Makefiles"
@@ -57,7 +57,7 @@ elif [ "$1" = "android" ]; then
     export HOST="arm-linux-androideabi"
     export LDFLAGS="$LDFLAGS -march=armv7-a -Wl,--fix-cortex-a8"
 else
-    echo "Unknown toolchain provided: $1. Choices: archarmv6|armv7|android|native|nativegcc6|mingw|clang4"
+    echo "Unknown toolchain provided: $1. Choices: archarmv6|armv7|android|native|nativegcc6|mingw|clang"
     exit 1
 fi
 
