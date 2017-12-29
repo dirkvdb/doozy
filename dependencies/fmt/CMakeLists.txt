@@ -1,5 +1,5 @@
 set(MAJOR 4)
-set(MINOR 0)
+set(MINOR 1)
 set(REVISION 0)
 set(NAME fmt)
 set(VERSION ${MAJOR}.${MINOR}.${REVISION})

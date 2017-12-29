@@ -1,11 +1,11 @@
 {
-    "cmake.buildDirectory": "${workspaceRoot}/build/ninja-clang4",
+    "cmake.buildDirectory": "${workspaceRoot}/build/doozy-clang",
     "cmake.configureSettings": {
-        "CMAKE_PREFIX_PATH": "${workspaceRoot}/build/local-clang4",
-        "CMAKE_FIND_ROOT_PATH": "${workspaceRoot}/build/local-clang4",
-        "CMAKE_TOOLCHAIN_FILE": "${workspaceRoot}/dependencies/toolchain-clang4.make"
+        "CMAKE_PREFIX_PATH": "${workspaceRoot}/build/local-toolchain-clang",
+        "CMAKE_FIND_ROOT_PATH": "${workspaceRoot}/build/local-toolchain-clang",
+        "CMAKE_TOOLCHAIN_FILE": "${workspaceRoot}/dependencies/toolchain-clang.make"
     },
-    "cmake.installPrefix": "${workspaceRoot}/build/local-clang4",
+    "cmake.installPrefix": "${workspaceRoot}/build/local-toolchain-clang",
     "files.associations": {
         "*.ipp": "cpp"
     },

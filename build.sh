@@ -60,16 +60,16 @@ else
     exit 1
 fi
 
-checkresult mkdir -p ./build/ninja-${ARCH}
-cd ./build/ninja-${ARCH}
+checkresult mkdir -p ./build/doozy-${ARCH}
+cd ./build/doozy-${ARCH}
 pwd=`pwd`
 checkresult cmake \
     -G Ninja \
     $platformopts \
     -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON \
-    -DCMAKE_PREFIX_PATH=${PWD}/../local-${ARCH} \
-    -DCMAKE_INSTALL_PREFIX=${pwd}/../local-${ARCH} \
+    -DCMAKE_PREFIX_PATH=${PWD}/../local-toolchain-${ARCH} \
+    -DCMAKE_INSTALL_PREFIX=${pwd}/../local-toolchain-${ARCH} \
     -DCMAKE_TOOLCHAIN_FILE=${pwd}/../../dependencies/toolchain-${ARCH}.make \
-    -DOPENAL_INCLUDE_DIR=${pwd}/../local-${ARCH}/include \
+    -DOPENAL_INCLUDE_DIR=${pwd}/../local-toolchain-${ARCH}/include \
     -DCMAKE_BUILD_TYPE=Release ../..
 checkresult cmake --build .

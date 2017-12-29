@@ -7,3 +7,4 @@ doozy.iml
 browse.VC.db
 .idea
 CMakeLists.txt.user
+.cmaketools.json

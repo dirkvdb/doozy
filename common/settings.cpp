@@ -20,8 +20,8 @@
 #include <sstream>
 
 #include "utils/log.h"
-#include "utils/stringoperations.h"
 #include "utils/numericoperations.h"
+#include "utils/stringoperations.h"
 
 #include "audioconfig.h"
 
@@ -64,7 +64,6 @@ int32_t Settings::getAsInt(const std::string& setting, int32_t defaultValue) con
     }
 }
 
-
 bool Settings::getAsBool(const std::string& setting) const
 {
     std::string value = stringops::lowercase(getSetting(setting));
@@ -92,19 +91,18 @@ bool Settings::getAsBool(const std::string& setting, bool defaultValue) const no
     }
 }
 
-
 std::vector<std::string> Settings::getAsVector(const std::string& setting) const
 {
-	std::vector<std::string> settings;
-	std::string value = get(setting);
+    std::vector<std::string> settings;
+    std::string              value = get(setting);
 
-	if (!value.empty())
-	{
-		settings = stringops::tokenize(value, ";");
-        std::for_each(settings.begin(), settings.end(), [] (std::string& s) {
-            stringops::trim(s);
+    if (!value.empty())
+    {
+        settings = stringops::tokenize(value, ";");
+        std::for_each(settings.begin(), settings.end(), [](std::string& s) {
+            stringops::trim_in_place(s);
         });
-	}
+    }
 
     return settings;
 }
@@ -153,22 +151,20 @@ void Settings::loadFromFile(const std::string& filepath)
     std::string line;
     while (getline(settingsFile, line))
     {
-        stringops::trim(line);
-        if (line.empty())       continue;
-        if (line.at(0) == '#')  continue;
+        auto trimmedLine = stringops::trimmed_view(line);
+        if (trimmedLine.empty()) continue;
+        if (trimmedLine.at(0) == '#') continue;
 
-        size_t pos = line.find('=');
+        size_t pos = trimmedLine.find('=');
         if (pos == std::string::npos)
         {
             log::warn("Warning: ignoring malformed line in config file: {}" + line);
             continue;
         }
 
-        std::string setting = line.substr(0, pos);
-        std::string value = line.substr(pos + 1);
-        stringops::trim(setting);
-        stringops::trim(value);
-        m_Settings[setting] = value;
+        auto setting                         = trimmedLine.substr(0, pos);
+        auto value                           = trimmedLine.substr(pos + 1);
+        m_Settings[stringops::trim(setting)] = stringops::trim(value);
     }
 }
 
@@ -186,18 +182,18 @@ std::string Settings::getSetting(const std::string& setting) const
 void Settings::loadDefaultSettings()
 {
 #if HAVE_OPENAL
-    m_Settings["AudioOutput"]       = "OpenAL";
+    m_Settings["AudioOutput"] = "OpenAL";
 #endif
 #if HAVE_ALSA
-    m_Settings["AudioOutput"]       = "Alsa";
+    m_Settings["AudioOutput"] = "Alsa";
 #endif
 #if HAVE_PULSE
-    m_Settings["AudioOutput"]       = "PulseAudio";
+    m_Settings["AudioOutput"] = "PulseAudio";
 #endif
 
-    m_Settings["AudioDevice"]       = "default";
-    m_Settings["FriendlyName"]      = "Doozy";
-    m_Settings["UDN"]               = "356a6e90-8e58-11e2-9e96-0800200c9a66";
+    m_Settings["AudioDevice"]  = "default";
+    m_Settings["FriendlyName"] = "Doozy";
+    m_Settings["UDN"]          = "356a6e90-8e58-11e2-9e96-0800200c9a66";
 }
 
-}
+} // namespace doozy

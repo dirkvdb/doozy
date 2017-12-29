@@ -5,6 +5,8 @@ find_package(PkgConfig)
 
 project(doozy LANGUAGES CXX)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/scripts)
+
 set(PACKAGE "doozy")
 set(PACKAGE_NAME "Doozy")
 set(PACKAGE_VERSION_MAJOR 0)

@@ -67,8 +67,8 @@ cd ./build/deps-${ARCH}
 PWD=`pwd`
 checkresult cmake -G "${BUILD_GENERATOR}" \
                   -DHOST=${HOST} \
-                  -DCMAKE_PREFIX_PATH=${PWD}/../local-${ARCH} \
-                  -DCMAKE_INSTALL_PREFIX=${PWD}/../local-${ARCH} \
+                  -DCMAKE_PREFIX_PATH=${PWD}/../local-toolchain-${ARCH} \
+                  -DCMAKE_INSTALL_PREFIX=${PWD}/../local-toolchain-${ARCH} \
                   -DCMAKE_TOOLCHAIN_FILE=${PWD}/../../dependencies/toolchain-${ARCH}.make \
                   -DCMAKE_BUILD_TYPE=Release \
                   ../../dependencies
