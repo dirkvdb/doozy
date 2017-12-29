@@ -322,11 +322,11 @@ void MediaRendererDevice::setTransportVariable(uint32_t instanceId, AVTransport:
     });
 }
 
-upnp::SubscriptionResponse MediaRendererDevice::onEventSubscriptionRequest(const upnp::SubscriptionRequest& request)
+upnp::DeviceSubscriptionResponse MediaRendererDevice::onEventSubscriptionRequest(const upnp::SubscriptionRequest& request)
 {
     log::debug("Renderer: event subscription request {} {}", request.sid, request.url);
 
-    upnp::SubscriptionResponse response;
+    upnp::DeviceSubscriptionResponse response;
     response.timeout = request.timeout;
 
     if (request.url == "/AVTransport/evt")

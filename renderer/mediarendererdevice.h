@@ -82,7 +82,7 @@ private:
     void setInitialValues();
     void setTransportVariable(uint32_t instanceId, upnp::AVTransport::Variable var, const std::string& value);
 
-    upnp::SubscriptionResponse onEventSubscriptionRequest(const upnp::SubscriptionRequest& request);
+    upnp::DeviceSubscriptionResponse onEventSubscriptionRequest(const upnp::SubscriptionRequest& request);
     std::string onControlActionRequest(const upnp::ActionRequest& request);
     bool supportsProtocol(const upnp::ProtocolInfo& info) const;
     void addAlbumArtToWebServer(const PlayQueueItemPtr& item);

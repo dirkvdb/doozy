@@ -17,7 +17,7 @@ IF (CMAKE_CROSSCOMPILING)
     SET(HOST_ARGS --host=${HOST})
 ENDIF ()
 
-IF (NOT HOST MATCHES "^.*musl.*" AND NOT MINGW)
+IF (NOT HOST MATCHES "^.*musl.*" AND NOT MINGW AND NOT APPLE)
     # musl toolchain is used for static builds. libcec only builds shared library
     ADD_SUBDIRECTORY(libplatform)
     ADD_SUBDIRECTORY(libcec)

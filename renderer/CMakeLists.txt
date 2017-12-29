@@ -20,16 +20,12 @@ if (NOT WITHOUT_CEC)
     endif ()
 endif ()
 
-set (RENDERER_SRC
+add_library(doozyrenderer
     devicedescriptions.h
     renderersettings.h          renderersettings.cpp
     mediarendererdevice.h       mediarendererdevice.cpp
     playqueue.h                 playqueue.cpp
     typeconversions.h
-)
-
-add_library(doozyrenderer
-    ${RENDERER_SRC}
 )
 
 target_include_directories(doozyrenderer PUBLIC
@@ -45,7 +41,7 @@ target_link_libraries(doozyrenderer
 )
 
 if (HAVE_LIBCEC)
-    list(APPEND RENDERER_SRC ceccontrol.h ceccontrol.cpp)
+    target_sources(doozyrenderer PRIVATE ceccontrol.h ceccontrol.cpp)
 
     target_include_directories(doozyrenderer SYSTEM PRIVATE
         ${LIBCEC_INCLUDE_DIR}

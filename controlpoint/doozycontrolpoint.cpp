@@ -17,12 +17,12 @@
 #include "doozycontrolpoint.h"
 
 #include "upnp/upnp.factory.h"
-#include "upnp/stringview.h"
 #include "upnp/upnp.mediaserver.h"
 
 #include "utils/stringoperations.h"
 
 #include <algorithm>
+#include <string_view>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
 
