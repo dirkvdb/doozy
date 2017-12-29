@@ -98,7 +98,7 @@ std::vector<std::string> Settings::getAsVector(const std::string& setting) const
 
     if (!value.empty())
     {
-        settings = stringops::tokenize(value, ";");
+        settings = stringops::split(value, ';');
         std::for_each(settings.begin(), settings.end(), [](std::string& s) {
             stringops::trim_in_place(s);
         });
