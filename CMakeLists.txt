@@ -30,7 +30,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 message(STATUS "Host: ${CMAKE_HOST_SYSTEM}")
 message(STATUS "Target: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "Cross compiling: ${CMAKE_CROSSCOMPILING}")
-message(STATUS "Pkg-config root: $ENV{PKG_CONFIG_SYSROOT_DIR}")
 
 option(DOOZY_RENDERER "Renderer device support" ON)
 option(DOOZY_SERVER "Server device support" OFF)
