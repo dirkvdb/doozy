@@ -30,7 +30,7 @@ namespace doozy
 {
 
 using namespace utils;
-using namespace utils::stringops;
+using namespace utils::str;
 using namespace std::chrono_literals;
 
 struct JsonData
@@ -184,17 +184,17 @@ bool ControlPoint::handleRequest(const upnp::http::Request& req, std::function<v
             auto devs = getDevices(m_rendererScanner);
             cb(fmt::format(s_okResponse, devs.size(), devs));
         }
-        else if (utils::stringops::startsWith(req.url(), "/browse?"))
+        else if (utils::str::startsWith(req.url(), "/browse?"))
         {
             auto params = upnp::http::Server::getQueryParameters(req.url());
             browse(getParam(params, "udn"), getParam(params, "id"), cb);
         }
-        else if (utils::stringops::startsWith(req.url(), "/rendererstatus?"))
+        else if (utils::str::startsWith(req.url(), "/rendererstatus?"))
         {
             auto params = upnp::http::Server::getQueryParameters(req.url());
             getRendererStatus(getParam(params, "udn"), cb);
         }
-        else if (utils::stringops::startsWith(req.url(), "/play?"))
+        else if (utils::str::startsWith(req.url(), "/play?"))
         {
             auto params = upnp::http::Server::getQueryParameters(req.url());
             play(getParam(params, "rendererudn"),

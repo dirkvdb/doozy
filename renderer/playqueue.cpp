@@ -208,7 +208,7 @@ static std::vector<std::string> getTracksFromUri(const std::string& transportUri
     std::vector<std::string> trackUris;
 
     const std::string extension = fileops::getFileExtension(transportUri);
-    if (stringops::lowercase(extension) == "m3u")
+    if (str::lowercase(extension) == "m3u")
     {
         upnp::http::Reader client;
         client.open(transportUri);

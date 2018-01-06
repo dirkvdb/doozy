@@ -52,7 +52,7 @@ void printUsage()
 
     std::cout   << "Usage: " PACKAGE_NAME " [options]" << std::endl << std::endl
                 << "Options:" << std::endl
-                << "  -t<s>   : device type (" << stringops::join(supportedDevices, "|") << ")" << std::endl
+                << "  -t<s>   : device type (" << str::join(supportedDevices, "|") << ")" << std::endl
                 << "  -i<s>   : network interface (" << "the name of the network interface to use" << ")" << std::endl
                 << "  -f<s>   : config file" << std::endl
                 << "  -d      : show debug logging" << std::endl
@@ -61,7 +61,7 @@ void printUsage()
 
 std::string getOptArg(const char* arg)
 {
-    return arg == nullptr ? "" : stringops::trim(arg);
+    return arg == nullptr ? "" : str::trim(arg);
 }
 
 }

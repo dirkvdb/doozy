@@ -49,7 +49,7 @@ std::string Settings::get(const std::string& setting, const std::string& default
 
 int32_t Settings::getAsInt(const std::string& setting) const
 {
-    return stringops::toNumeric<int32_t>(getSetting(setting));
+    return str::toNumeric<int32_t>(getSetting(setting));
 }
 
 int32_t Settings::getAsInt(const std::string& setting, int32_t defaultValue) const noexcept
@@ -66,7 +66,7 @@ int32_t Settings::getAsInt(const std::string& setting, int32_t defaultValue) con
 
 bool Settings::getAsBool(const std::string& setting) const
 {
-    std::string value = stringops::lowercase(getSetting(setting));
+    std::string value = str::lowercase(getSetting(setting));
     if (value == "true")
     {
         return true;
@@ -98,9 +98,9 @@ std::vector<std::string> Settings::getAsVector(const std::string& setting) const
 
     if (!value.empty())
     {
-        settings = stringops::split(value, ';');
+        settings = str::split(value, ';');
         std::for_each(settings.begin(), settings.end(), [](std::string& s) {
-            stringops::trim_in_place(s);
+            str::trim_in_place(s);
         });
     }
 
@@ -151,7 +151,7 @@ void Settings::loadFromFile(const std::string& filepath)
     std::string line;
     while (getline(settingsFile, line))
     {
-        auto trimmedLine = stringops::trimmed_view(line);
+        auto trimmedLine = str::trimmed_view(line);
         if (trimmedLine.empty()) continue;
         if (trimmedLine.at(0) == '#') continue;
 
@@ -164,7 +164,7 @@ void Settings::loadFromFile(const std::string& filepath)
 
         auto setting                         = trimmedLine.substr(0, pos);
         auto value                           = trimmedLine.substr(pos + 1);
-        m_Settings[stringops::trim(setting)] = stringops::trim(value);
+        m_Settings[str::trim(setting)] = str::trim(value);
     }
 }
 

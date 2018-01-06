@@ -274,7 +274,7 @@ void MediaRendererDevice::setInitialValues()
 #endif
 
     m_connectionManager.setVariable(ConnectionManager::Variable::SourceProtocolInfo, "");
-    m_connectionManager.setVariable(ConnectionManager::Variable::SinkProtocolInfo, stringops::join(m_supportedProtocols, ","));
+    m_connectionManager.setVariable(ConnectionManager::Variable::SinkProtocolInfo, str::join(m_supportedProtocols, ","));
     m_connectionManager.setVariable(ConnectionManager::Variable::CurrentConnectionIds, "0");
     m_connectionManager.setVariable(ConnectionManager::Variable::ArgumentTypeConnectionStatus, "OK");
 
